@@ -4,7 +4,7 @@ import react from '@vitejs/plugin-react'
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [react()],
-  // 중요: 로컬 실행 시에는 base 설정을 주석 처리하거나 삭제해야 합니다.
-  // GitHub Pages 배포 시에만 '/z-Apocalypse-Simulator/'를 사용하세요.
-  base: '/z-Apocalypse-Simulator/', 
+  // base를 './'로 설정하면 저장소 이름이 무엇이든 상관없이 자동으로 경로를 찾습니다.
+  // 흰 화면 오류를 방지하는 가장 확실한 방법입니다.
+  base: './', 
 })
