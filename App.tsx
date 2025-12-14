@@ -376,7 +376,7 @@ const App: React.FC = () => {
                       </p>
                       {day > 0 && (
                           <p className="text-xs text-slate-400 italic">
-                             High fatigue (>80) leads to dangerous mistakes.
+                             High fatigue (&gt;80) leads to dangerous mistakes.
                           </p>
                       )}
                   </div>
