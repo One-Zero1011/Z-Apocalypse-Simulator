@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { Character, Gender, MBTI, DayLog, CharacterUpdate, RelationshipUpdate, RelationshipStatus } from './types';
-import { MAX_HP, MAX_SANITY, INITIAL_INVENTORY, DEFAULT_RELATIONSHIP_VALUE } from './constants';
+import { MAX_HP, MAX_SANITY, MAX_FATIGUE, INITIAL_INVENTORY, DEFAULT_RELATIONSHIP_VALUE } from './constants';
 import CharacterForm from './components/CharacterForm';
 import CharacterCard from './components/CharacterCard';
 import EventLog from './components/EventLog';
@@ -24,7 +24,12 @@ const App: React.FC = () => {
     }
   }, [darkMode]);
 
-  const addCharacter = (name: string, gender: Gender, mbti: MBTI) => {
+  // Scroll to top whenever the day changes
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [day]);
+
+  const addCharacter = (name: string, gender: Gender, mbti: MBTI, initialRelation?: { targetId: string, type: string }) => {
     const newChar: Character = {
       id: crypto.randomUUID(),
       name,
@@ -32,6 +37,7 @@ const App: React.FC = () => {
       mbti,
       hp: MAX_HP,
       sanity: MAX_SANITY,
+      fatigue: 0, // Initialize Fatigue
       status: 'Alive',
       inventory: [...INITIAL_INVENTORY],
       relationships: {},
@@ -41,22 +47,112 @@ const App: React.FC = () => {
 
     // Initialize relationships with existing characters
     setCharacters(prev => {
-      const updatedPrev = prev.map(c => ({
-        ...c,
-        relationships: {
-          ...c.relationships,
-          [newChar.id]: DEFAULT_RELATIONSHIP_VALUE
-        },
-        relationshipStatuses: {
-           ...c.relationshipStatuses,
-           [newChar.id]: 'None' as RelationshipStatus
+      const updatedPrev = prev.map(c => {
+        let affinity = DEFAULT_RELATIONSHIP_VALUE;
+        let status: RelationshipStatus = 'None';
+
+        // Check if this existing character is the target of the initial relation
+        if (initialRelation && c.id === initialRelation.targetId) {
+            switch (initialRelation.type) {
+                case 'Lover':
+                    affinity = 80;
+                    status = 'Lover';
+                    break;
+                case 'Family':
+                    affinity = 60;
+                    status = 'Family';
+                    break;
+                case 'BestFriend':
+                    affinity = 60;
+                    status = 'BestFriend';
+                    break;
+                case 'Savior':
+                    affinity = 50;
+                    status = 'Savior';
+                    break;
+                case 'Friend':
+                    affinity = 30;
+                    // Friend is generic, keep status None or maybe treat as None for now to allow evolution
+                    break;
+                case 'Colleague':
+                    affinity = 15;
+                    status = 'Colleague';
+                    break;
+                case 'Rival':
+                    affinity = -15;
+                    status = 'Rival';
+                    break;
+                case 'Ex':
+                    affinity = -20;
+                    status = 'Ex';
+                    break;
+                case 'Enemy':
+                    affinity = -50;
+                    status = 'Enemy';
+                    break;
+            }
         }
-      }));
+
+        return {
+          ...c,
+          relationships: {
+            ...c.relationships,
+            [newChar.id]: affinity // Symmetric initialization for simplicity
+          },
+          relationshipStatuses: {
+             ...c.relationshipStatuses,
+             [newChar.id]: status
+          }
+        };
+      });
       
-      // Initialize new char relationships
-      prev.forEach(c => {
-        newChar.relationships[c.id] = DEFAULT_RELATIONSHIP_VALUE;
-        newChar.relationshipStatuses[c.id] = 'None';
+      // Initialize new char relationships from the other side
+      updatedPrev.forEach(c => {
+        let affinity = DEFAULT_RELATIONSHIP_VALUE;
+        let status: RelationshipStatus = 'None';
+
+        if (initialRelation && c.id === initialRelation.targetId) {
+            switch (initialRelation.type) {
+                case 'Lover':
+                    affinity = 80;
+                    status = 'Lover';
+                    break;
+                case 'Family':
+                    affinity = 60;
+                    status = 'Family';
+                    break;
+                case 'BestFriend':
+                    affinity = 60;
+                    status = 'BestFriend';
+                    break;
+                case 'Savior':
+                    affinity = 50;
+                    status = 'Savior';
+                    break;
+                case 'Friend':
+                    affinity = 30;
+                    break;
+                case 'Colleague':
+                    affinity = 15;
+                    status = 'Colleague';
+                    break;
+                case 'Rival':
+                    affinity = -15;
+                    status = 'Rival';
+                    break;
+                case 'Ex':
+                    affinity = -20;
+                    status = 'Ex';
+                    break;
+                case 'Enemy':
+                    affinity = -50;
+                    status = 'Enemy';
+                    break;
+            }
+        }
+        
+        newChar.relationships[c.id] = affinity;
+        newChar.relationshipStatuses[c.id] = status;
       });
 
       return [...updatedPrev, newChar];
@@ -104,6 +200,8 @@ const App: React.FC = () => {
           // Apply basic stats
           if (update.hpChange) char.hp = Math.max(0, Math.min(MAX_HP, char.hp + update.hpChange));
           if (update.sanityChange) char.sanity = Math.max(0, Math.min(MAX_SANITY, char.sanity + update.sanityChange));
+          if (update.fatigueChange) char.fatigue = Math.max(0, Math.min(MAX_FATIGUE, char.fatigue + update.fatigueChange)); // Fatigue
+          
           if (update.status) char.status = update.status;
           if (update.killCountChange) char.killCount += update.killCountChange;
 
@@ -259,7 +357,11 @@ const App: React.FC = () => {
           
           {/* Add Character Section */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-             <CharacterForm onAdd={addCharacter} disabled={loading} />
+             <CharacterForm 
+                onAdd={addCharacter} 
+                disabled={loading} 
+                existingCharacters={characters} // Passed existing characters
+             />
              
              <div className="bg-white dark:bg-slate-800/50 p-6 rounded-lg border border-slate-200 dark:border-slate-700 flex flex-col justify-center items-center text-center shadow-sm">
                 <h3 className="text-lg font-bold text-slate-700 dark:text-slate-300 mb-2">Simulation Status</h3>
@@ -269,12 +371,12 @@ const App: React.FC = () => {
                   <div className="space-y-1">
                       <p className="text-slate-600 dark:text-slate-400 text-sm">
                         {activeSurvivors > 0 
-                          ? "The group is currently surviving. Interactions are generated based on MBTI traits." 
+                          ? "The group is currently surviving. Watch out for fatigue levels!" 
                           : "All survivors have perished."}
                       </p>
                       {day > 0 && (
                           <p className="text-xs text-slate-400 italic">
-                             Check the "Relationship Map" to see how they feel about each other.
+                             High fatigue (>80) leads to dangerous mistakes.
                           </p>
                       )}
                   </div>

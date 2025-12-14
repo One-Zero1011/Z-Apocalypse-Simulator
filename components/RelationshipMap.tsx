@@ -48,7 +48,7 @@ const RelationshipMap: React.FC<Props> = ({ characters, onClose }) => {
         const aToB = source.relationships[target.id] || 0;
         const bToA = target.relationships[source.id] || 0;
         
-        // Check Status (Assume strictly strictly reflected on both sides for simplicity, but check source)
+        // Check Status (Check source for status)
         const status = source.relationshipStatuses[target.id] || 'None';
 
         // Use average for visualization
@@ -61,15 +61,19 @@ const RelationshipMap: React.FC<Props> = ({ characters, onClose }) => {
   }, [nodePositions]);
 
   const getLineStyle = (affinity: number, status: RelationshipStatus) => {
-    // 1. Check Status First
-    if (status === 'Lover') return { stroke: '#ec4899', width: 6, label: '연인', opacity: 1 }; // Pink (True Love)
-    if (status === 'Ex') return { stroke: '#9f1239', width: 2, label: '전 애인', opacity: 0.8, dash: '5,5' }; // Dark Red Dashed
+    // 1. Check Status First (Distinct Styles)
+    if (status === 'Lover') return { stroke: '#ec4899', width: 6, label: '연인', opacity: 1 }; // Pink
+    if (status === 'Family') return { stroke: '#eab308', width: 6, label: '가족', opacity: 1 }; // Yellow
+    if (status === 'BestFriend') return { stroke: '#3b82f6', width: 5, label: '절친', opacity: 1 }; // Blue
+    if (status === 'Savior') return { stroke: '#8b5cf6', width: 4, label: '은인', opacity: 0.9, dash: '10,5' }; // Purple Dashed
+    if (status === 'Colleague') return { stroke: '#64748b', width: 3, label: '동료', opacity: 0.8, dash: '2,2' }; // Slate Dashed
+    if (status === 'Rival') return { stroke: '#f97316', width: 4, label: '라이벌', opacity: 0.9 }; // Orange
+    if (status === 'Enemy') return { stroke: '#ef4444', width: 5, label: '원수', opacity: 0.9, dash: '5,2' }; // Red Dashed
+    if (status === 'Ex') return { stroke: '#9f1239', width: 2, label: '전 애인', opacity: 0.6, dash: '5,5' }; // Dark Red Dashed
 
     // 2. Fallback to Score
-    if (affinity >= 60) return { stroke: '#3b82f6', width: 4, label: '절친', opacity: 0.9 }; // Blue (Best Friend)
-    if (affinity >= 10) return { stroke: '#22c55e', width: 3, label: '친구', opacity: 0.7 }; // Green (Friend)
-    if (affinity <= -40) return { stroke: '#ef4444', width: 5, label: '혐오', opacity: 0.9 }; // Red (Hate)
-    if (affinity <= -10) return { stroke: '#f97316', width: 3, label: '싫어함', opacity: 0.7 }; // Orange (Dislike)
+    if (affinity >= 30) return { stroke: '#22c55e', width: 3, label: '친구', opacity: 0.7 }; // Green
+    if (affinity <= -10) return { stroke: '#f97316', width: 2, label: '싫어함', opacity: 0.5 }; // Orange
     
     return { stroke: '#94a3b8', width: 1, label: '남', opacity: 0.2 }; // Gray/Neutral
   };
@@ -160,34 +164,39 @@ const RelationshipMap: React.FC<Props> = ({ characters, onClose }) => {
             </svg>
 
             {/* Legend */}
-            <div className="absolute bottom-4 left-4 bg-slate-800/80 p-4 rounded-lg border border-slate-700 text-xs backdrop-blur-sm">
-                <h4 className="font-bold text-slate-300 mb-2">관계 범례 (Affinity)</h4>
-                <div className="space-y-1.5">
+            <div className="absolute bottom-4 left-4 bg-slate-800/80 p-4 rounded-lg border border-slate-700 text-xs backdrop-blur-sm grid grid-cols-2 gap-x-4 gap-y-1.5">
                     <div className="flex items-center gap-2">
                         <span className="w-3 h-3 rounded-full bg-pink-500 ring-2 ring-pink-900"></span>
-                        <span className="text-pink-200 font-bold">연인 (고백 성공)</span>
+                        <span className="text-pink-200 font-bold">연인</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <span className="w-3 h-3 rounded-full bg-yellow-500 ring-2 ring-yellow-900"></span>
+                        <span className="text-yellow-200 font-bold">가족</span>
                     </div>
                     <div className="flex items-center gap-2">
                         <span className="w-3 h-3 rounded-full bg-blue-500"></span>
-                        <span className="text-blue-200">절친 (60+)</span>
+                        <span className="text-blue-200">절친</span>
                     </div>
                     <div className="flex items-center gap-2">
-                        <span className="w-3 h-3 rounded-full bg-green-500"></span>
-                        <span className="text-green-200">친구 (10~59)</span>
+                        <span className="w-3 h-3 rounded-full bg-purple-500"></span>
+                        <span className="text-purple-200">생명의 은인</span>
                     </div>
                     <div className="flex items-center gap-2">
-                        <span className="w-3 h-3 rounded-full bg-slate-400"></span>
-                        <span className="text-slate-300">남 (-9~9)</span>
+                        <span className="w-3 h-3 rounded-full bg-orange-500"></span>
+                        <span className="text-orange-200">라이벌</span>
+                    </div>
+                     <div className="flex items-center gap-2">
+                        <span className="w-3 h-3 rounded-full bg-slate-500"></span>
+                        <span className="text-slate-300">직장 동료</span>
+                    </div>
+                     <div className="flex items-center gap-2">
+                        <span className="w-3 h-3 rounded-full bg-red-500"></span>
+                        <span className="text-red-200">원수</span>
                     </div>
                     <div className="flex items-center gap-2">
                         <span className="w-3 h-3 rounded-full bg-rose-900 border border-rose-500"></span>
-                        <span className="text-rose-200">전 애인 (이별)</span>
+                        <span className="text-rose-200">전 애인</span>
                     </div>
-                    <div className="flex items-center gap-2">
-                        <span className="w-3 h-3 rounded-full bg-red-500"></span>
-                        <span className="text-red-200">혐오 (-40 이하)</span>
-                    </div>
-                </div>
             </div>
         </div>
       </div>

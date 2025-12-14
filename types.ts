@@ -8,7 +8,10 @@ export type MBTI =
   | 'ESTJ' | 'ESFJ' | 'ENFJ' | 'ENTJ';
 
 export type Status = 'Alive' | 'Infected' | 'Dead' | 'Missing';
-export type RelationshipStatus = 'Lover' | 'Ex' | 'None';
+export type RelationshipStatus = 
+  | 'Lover' | 'Ex' | 'Family' 
+  | 'BestFriend' | 'Colleague' | 'Rival' | 'Savior' | 'Enemy' 
+  | 'None';
 
 export interface Character {
   id: string;
@@ -17,6 +20,7 @@ export interface Character {
   mbti: MBTI;
   hp: number; // 0-100
   sanity: number; // 0-100
+  fatigue: number; // 0-100 (New: Fatigue system)
   status: Status;
   inventory: string[];
   relationships: Record<string, number>; // characterId -> affinity (-100 to 100)
@@ -40,6 +44,7 @@ export interface CharacterUpdate {
   id: string;
   hpChange?: number;
   sanityChange?: number;
+  fatigueChange?: number; // New
   status?: Status;
   inventoryAdd?: string[];
   inventoryRemove?: string[];
@@ -51,4 +56,12 @@ export interface SimulationResult {
   narrative: string;
   events: string[];
   updates: CharacterUpdate[];
+}
+
+export interface ActionEffect {
+    text: string;
+    hp?: number;
+    sanity?: number;
+    kill?: number;
+    fatigue?: number;
 }

@@ -1,6 +1,6 @@
 import React from 'react';
 import { Character } from '../types';
-import { MAX_HP, MAX_SANITY } from '../constants';
+import { MAX_HP, MAX_SANITY, MAX_FATIGUE, FATIGUE_THRESHOLD } from '../constants';
 
 interface Props {
   character: Character;
@@ -11,11 +11,13 @@ interface Props {
 const CharacterCard: React.FC<Props> = ({ character, allCharacters, onDelete }) => {
   const isDead = character.status === 'Dead' || character.status === 'Missing';
   const isInfected = character.status === 'Infected';
+  const isExhausted = character.fatigue >= FATIGUE_THRESHOLD;
   
   const getStatusColor = () => {
     if (character.status === 'Dead') return 'text-gray-500 bg-gray-100 border-gray-300 dark:text-gray-600 dark:bg-gray-900 dark:border-gray-700 opacity-60';
     if (character.status === 'Infected') return 'text-zombie-green border-zombie-green bg-green-50 dark:bg-green-900/20';
     if (character.status === 'Missing') return 'text-yellow-600 dark:text-yellow-500 border-yellow-500 bg-yellow-50 dark:bg-yellow-900/10';
+    if (isExhausted) return 'text-purple-900 border-purple-300 bg-purple-50 dark:bg-purple-900/20 dark:text-purple-200 dark:border-purple-700';
     return 'text-slate-800 dark:text-slate-200 border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800';
   };
 
@@ -24,9 +26,7 @@ const CharacterCard: React.FC<Props> = ({ character, allCharacters, onDelete }) 
     return target ? target.name : 'Unknown';
   };
 
-  // Check for lover
-  const loverId = Object.keys(character.relationshipStatuses).find(key => character.relationshipStatuses[key] === 'Lover');
-  const loverName = loverId ? getRelationshipName(loverId) : null;
+  const hasStatus = (status: string) => Object.values(character.relationshipStatuses).includes(status as any);
 
   // Sort relationships by affinity
   const topRelationships = Object.entries(character.relationships)
@@ -45,7 +45,10 @@ const CharacterCard: React.FC<Props> = ({ character, allCharacters, onDelete }) 
         <div>
           <h3 className="font-bold text-xl flex items-center gap-2">
               {character.name}
-              {loverName && <span title={`Lover: ${loverName}`} className="text-sm cursor-help">❤️</span>}
+              {hasStatus('Lover') && <span title="Has Lover" className="text-sm cursor-help">❤️</span>}
+              {hasStatus('Family') && <span title="Has Family" className="text-sm cursor-help">🏠</span>}
+              {hasStatus('BestFriend') && <span title="Has Best Friend" className="text-sm cursor-help">🤞</span>}
+              {isExhausted && !isDead && <span title="Exhausted" className="text-sm animate-pulse">💤</span>}
           </h3>
           <div className="flex items-center gap-2 text-xs uppercase tracking-wide opacity-80">
             <span className="bg-slate-200 dark:bg-slate-700 px-1 rounded text-slate-700 dark:text-slate-300">{character.mbti}</span>
@@ -98,6 +101,20 @@ const CharacterCard: React.FC<Props> = ({ character, allCharacters, onDelete }) 
             ></div>
           </div>
         </div>
+
+        {/* Fatigue Bar */}
+        <div className="w-full">
+          <div className="flex justify-between mb-0.5">
+            <span className={isExhausted ? "text-purple-600 font-bold" : ""}>FATIGUE</span>
+            <span>{character.fatigue}/{MAX_FATIGUE}</span>
+          </div>
+          <div className="h-2 w-full bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
+            <div 
+              className={`h-full transition-all duration-500 ${isExhausted ? 'bg-purple-600 animate-pulse' : 'bg-slate-500 dark:bg-slate-400'}`}
+              style={{ width: `${(character.fatigue / MAX_FATIGUE) * 100}%` }}
+            ></div>
+          </div>
+        </div>
       </div>
 
       <div className="mt-4 pt-3 border-t border-slate-200 dark:border-white/10">
@@ -112,6 +129,12 @@ const CharacterCard: React.FC<Props> = ({ character, allCharacters, onDelete }) 
                       {getRelationshipName(id)}
                       {status === 'Lover' && '❤️'}
                       {status === 'Ex' && '💔'}
+                      {status === 'Family' && '🏠'}
+                      {status === 'BestFriend' && '🤝'}
+                      {status === 'Colleague' && '💼'}
+                      {status === 'Rival' && '⚔️'}
+                      {status === 'Savior' && '🦸'}
+                      {status === 'Enemy' && '👿'}
                   </span>
                   <span className={(score as number) > 0 ? 'text-green-600 dark:text-green-400' : (score as number) < 0 ? 'text-red-600 dark:text-red-400' : 'text-gray-400'}>
                     {(score as number) > 0 ? '+' : ''}{score as number}

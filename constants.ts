@@ -9,6 +9,8 @@ export const MBTI_TYPES: MBTI[] = [
 
 export const MAX_HP = 100;
 export const MAX_SANITY = 100;
+export const MAX_FATIGUE = 100;
+export const FATIGUE_THRESHOLD = 80; // Above this, bad things happen
 
 export const INITIAL_INVENTORY = ['Bottle of Water', 'Pocket Knife'];
 

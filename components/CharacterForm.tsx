@@ -1,25 +1,39 @@
 import React, { useState } from 'react';
-import { MBTI, Gender } from '../types';
+import { MBTI, Gender, Character } from '../types';
 import { MBTI_TYPES } from '../constants';
 
 interface Props {
-  onAdd: (name: string, gender: Gender, mbti: MBTI) => void;
+  onAdd: (name: string, gender: Gender, mbti: MBTI, initialRelation?: { targetId: string, type: string }) => void;
   disabled?: boolean;
+  existingCharacters?: Character[];
 }
 
-const CharacterForm: React.FC<Props> = ({ onAdd, disabled }) => {
+const CharacterForm: React.FC<Props> = ({ onAdd, disabled, existingCharacters = [] }) => {
   const [name, setName] = useState('');
   const [gender, setGender] = useState<Gender>('Male');
   const [mbti, setMbti] = useState<MBTI>('ISTJ');
+  
+  // Relationship State
+  const [targetId, setTargetId] = useState<string>('');
+  const [relationType, setRelationType] = useState<string>('Friend');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (name.trim()) {
-      onAdd(name, gender, mbti);
+      let relationPayload = undefined;
+      if (targetId && relationType) {
+          relationPayload = { targetId, type: relationType };
+      }
+      onAdd(name, gender, mbti, relationPayload);
+      
       setName('');
-      // Keep previous gender/mbti for faster batch entry
+      // Reset relation
+      setTargetId('');
+      setRelationType('Friend');
     }
   };
+
+  const livingCharacters = existingCharacters.filter(c => c.status !== 'Dead' && c.status !== 'Missing');
 
   return (
     <form onSubmit={handleSubmit} className="bg-white dark:bg-slate-800 p-4 rounded-lg border border-slate-200 dark:border-slate-700 shadow-md">
@@ -67,6 +81,41 @@ const CharacterForm: React.FC<Props> = ({ onAdd, disabled }) => {
             </select>
           </div>
         </div>
+
+        {livingCharacters.length > 0 && (
+            <div className="pt-2 border-t border-slate-200 dark:border-slate-700 mt-2">
+                <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-2 uppercase">초기 관계 (선택)</label>
+                <div className="grid grid-cols-2 gap-2">
+                    <select
+                        value={targetId}
+                        onChange={(e) => setTargetId(e.target.value)}
+                        className="w-full bg-gray-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded p-2 text-sm text-slate-900 dark:text-slate-100 focus:border-zombie-green dark:focus:border-zombie-green focus:outline-none"
+                        disabled={disabled}
+                    >
+                        <option value="">(관계 없음)</option>
+                        {livingCharacters.map(char => (
+                            <option key={char.id} value={char.id}>{char.name}</option>
+                        ))}
+                    </select>
+                    <select
+                        value={relationType}
+                        onChange={(e) => setRelationType(e.target.value)}
+                        className="w-full bg-gray-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded p-2 text-sm text-slate-900 dark:text-slate-100 focus:border-zombie-green dark:focus:border-zombie-green focus:outline-none"
+                        disabled={!targetId || disabled}
+                    >
+                        <option value="BestFriend">절친 (+60)</option>
+                        <option value="Savior">생명의 은인 (+50)</option>
+                        <option value="Friend">친구 (+30)</option>
+                        <option value="Colleague">직장 동료 (+15)</option>
+                        <option value="Lover">연인 (+80)</option>
+                        <option value="Family">가족 (+60)</option>
+                        <option value="Rival">라이벌 (-15)</option>
+                        <option value="Ex">전 애인 (-20)</option>
+                        <option value="Enemy">원수 (-50)</option>
+                    </select>
+                </div>
+            </div>
+        )}
 
         <button
           type="submit"
