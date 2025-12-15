@@ -27,6 +27,14 @@ import {
     // EXPLORERS is implied as 'rest' in logic
 } from "./events/mbtiEvents";
 
+const LOOT_TABLE = [
+    { name: '붕대', chance: 0.3 },
+    { name: '항생제', chance: 0.1 },
+    { name: '통조림', chance: 0.25 },
+    { name: '초콜릿', chance: 0.2 },
+    { name: '비타민', chance: 0.15 }
+];
+
 export const simulateDay = async (
   day: number,
   characters: Character[]
@@ -39,7 +47,8 @@ export const simulateDay = async (
     return {
       narrative: "침묵이 캠프에 내려앉았습니다. 생존자가 더 이상 없습니다.",
       events: ["게임 오버."],
-      updates: []
+      updates: [],
+      loot: []
     };
   }
 
@@ -47,6 +56,7 @@ export const simulateDay = async (
   const narrative = GLOBAL_EVENTS[Math.floor(Math.random() * GLOBAL_EVENTS.length)];
   const events: string[] = [];
   const updates: CharacterUpdate[] = [];
+  const loot: string[] = [];
 
   // Helper to find or create update
   const getUpdate = (id: string) => {
@@ -57,6 +67,32 @@ export const simulateDay = async (
     }
     return u;
   };
+
+  // Looting Phase (New)
+  // 40% chance to find an item if there are survivors
+  if (Math.random() < 0.4) {
+      const roll = Math.random();
+      let cumulativeChance = 0;
+      let foundItem = null;
+
+      // Simple weighted random
+      const totalWeight = LOOT_TABLE.reduce((sum, item) => sum + item.chance, 0);
+      const normalizedRoll = roll * totalWeight;
+
+      for (const item of LOOT_TABLE) {
+          cumulativeChance += item.chance;
+          if (normalizedRoll < cumulativeChance) {
+              foundItem = item.name;
+              break;
+          }
+      }
+
+      if (foundItem) {
+          loot.push(foundItem);
+          events.push(`📦 주변을 수색하여 [${foundItem}]을(를) 획득했습니다!`);
+      }
+  }
+
 
   // 3. Process Individual Events (Living)
   const shuffledChars = [...livingCharacters].sort(() => Math.random() - 0.5);
@@ -271,6 +307,7 @@ export const simulateDay = async (
   return {
       narrative,
       events,
-      updates
+      updates,
+      loot
   };
 };

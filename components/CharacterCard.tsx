@@ -23,7 +23,7 @@ const CharacterCard: React.FC<Props> = ({ character, allCharacters, onDelete }) 
 
   const getRelationshipName = (id: string) => {
     const target = allCharacters.find(c => c.id === id);
-    return target ? target.name : 'Unknown';
+    return target ? target.name : '알 수 없음';
   };
 
   const hasStatus = (status: string) => Object.values(character.relationshipStatuses).includes(status as any);
@@ -45,14 +45,14 @@ const CharacterCard: React.FC<Props> = ({ character, allCharacters, onDelete }) 
         <div>
           <h3 className="font-bold text-xl flex items-center gap-2">
               {character.name}
-              {hasStatus('Lover') && <span title="Has Lover" className="text-sm cursor-help">❤️</span>}
-              {hasStatus('Family') && <span title="Has Family" className="text-sm cursor-help">🏠</span>}
-              {hasStatus('BestFriend') && <span title="Has Best Friend" className="text-sm cursor-help">🤞</span>}
-              {isExhausted && !isDead && <span title="Exhausted" className="text-sm animate-pulse">💤</span>}
+              {hasStatus('Lover') && <span title="연인 있음" className="text-sm cursor-help">❤️</span>}
+              {hasStatus('Family') && <span title="가족 있음" className="text-sm cursor-help">🏠</span>}
+              {hasStatus('BestFriend') && <span title="절친 있음" className="text-sm cursor-help">🤞</span>}
+              {isExhausted && !isDead && <span title="탈진 상태" className="text-sm animate-pulse">💤</span>}
           </h3>
           <div className="flex items-center gap-2 text-xs uppercase tracking-wide opacity-80">
             <span className="bg-slate-200 dark:bg-slate-700 px-1 rounded text-slate-700 dark:text-slate-300">{character.mbti}</span>
-            <span className="text-slate-600 dark:text-slate-400">{character.gender}</span>
+            <span className="text-slate-600 dark:text-slate-400">{character.gender === 'Male' ? '남성' : character.gender === 'Female' ? '여성' : '논바이너리'}</span>
           </div>
         </div>
         <div className="text-right text-xs flex flex-col items-end gap-1 relative z-20">
@@ -62,13 +62,13 @@ const CharacterCard: React.FC<Props> = ({ character, allCharacters, onDelete }) 
                     onDelete(character.id);
                 }}
                 className="text-slate-400 hover:text-red-500 p-1.5 rounded-full hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
-                title="Delete Survivor"
+                title="생존자 삭제"
             >
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
                     <path fillRule="evenodd" d="M8.75 1A2.75 2.75 0 006 3.75v.443c-.795.077-1.584.176-2.365.298a.75.75 0 10.23 1.482l.149-.022.841 10.518A2.75 2.75 0 007.596 19h4.807a2.75 2.75 0 002.742-2.53l.841-10.52.149.023a.75.75 0 00.23-1.482A41.03 41.03 0 0014 4.193V3.75A2.75 2.75 0 0011.25 1h-2.5zM10 4c.84 0 1.673.025 2.5.075V3.75c0-.69-.56-1.25-1.25-1.25h-2.5c-.69 0-1.25.56-1.25 1.25v.325C8.327 4.025 9.16 4 10 4zM8.58 7.72a.75.75 0 00-1.5.06l.3 7.5a.75.75 0 101.5-.06l-.3-7.5zm4.34.06a.75.75 0 10-1.5-.06l-.3 7.5a.75.75 0 101.5.06l.3-7.5z" clipRule="evenodd" />
                 </svg>
             </button>
-            <div className="font-mono text-slate-600 dark:text-slate-400">Kills: {character.killCount}</div>
+            <div className="font-mono text-slate-600 dark:text-slate-400">처치: {character.killCount}</div>
             <div className={`font-bold ${isInfected ? 'text-green-600 dark:text-green-400 animate-pulse' : ''}`}>{character.status}</div>
         </div>
       </div>
@@ -77,7 +77,7 @@ const CharacterCard: React.FC<Props> = ({ character, allCharacters, onDelete }) 
         {/* HP Bar */}
         <div className="w-full">
           <div className="flex justify-between mb-0.5">
-            <span>HP</span>
+            <span>체력</span>
             <span>{character.hp}/{MAX_HP}</span>
           </div>
           <div className="h-2 w-full bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
@@ -91,7 +91,7 @@ const CharacterCard: React.FC<Props> = ({ character, allCharacters, onDelete }) 
         {/* Sanity Bar */}
         <div className="w-full">
           <div className="flex justify-between mb-0.5">
-            <span>SANITY</span>
+            <span>정신력</span>
             <span>{character.sanity}/{MAX_SANITY}</span>
           </div>
           <div className="h-2 w-full bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
@@ -105,7 +105,7 @@ const CharacterCard: React.FC<Props> = ({ character, allCharacters, onDelete }) 
         {/* Fatigue Bar */}
         <div className="w-full">
           <div className="flex justify-between mb-0.5">
-            <span className={isExhausted ? "text-purple-600 font-bold" : ""}>FATIGUE</span>
+            <span className={isExhausted ? "text-purple-600 font-bold" : ""}>피로도</span>
             <span>{character.fatigue}/{MAX_FATIGUE}</span>
           </div>
           <div className="h-2 w-full bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
@@ -118,7 +118,7 @@ const CharacterCard: React.FC<Props> = ({ character, allCharacters, onDelete }) 
       </div>
 
       <div className="mt-4 pt-3 border-t border-slate-200 dark:border-white/10">
-        <h4 className="text-xs uppercase text-slate-500 dark:text-slate-400 mb-1">Key Relationships</h4>
+        <h4 className="text-xs uppercase text-slate-500 dark:text-slate-400 mb-1">호감도 (Top 3)</h4>
         {topRelationships.length > 0 ? (
           <ul className="space-y-1 text-xs">
             {topRelationships.map(([id, score]) => {
@@ -144,7 +144,7 @@ const CharacterCard: React.FC<Props> = ({ character, allCharacters, onDelete }) 
             })}
           </ul>
         ) : (
-            <p className="text-xs text-slate-400 dark:text-slate-500 italic">No significant bonds yet.</p>
+            <p className="text-xs text-slate-400 dark:text-slate-500 italic">아직 특별한 유대 관계가 없습니다.</p>
         )}
       </div>
     </div>

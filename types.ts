@@ -56,6 +56,7 @@ export interface SimulationResult {
   narrative: string;
   events: string[];
   updates: CharacterUpdate[];
+  loot: string[]; // New: Items found during the day
 }
 
 export interface ActionEffect {

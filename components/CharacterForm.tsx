@@ -37,16 +37,16 @@ const CharacterForm: React.FC<Props> = ({ onAdd, disabled, existingCharacters = 
 
   return (
     <form onSubmit={handleSubmit} className="bg-white dark:bg-slate-800 p-4 rounded-lg border border-slate-200 dark:border-slate-700 shadow-md">
-      <h3 className="text-lg font-bold mb-4 text-zombie-green">New Survivor</h3>
+      <h3 className="text-lg font-bold mb-4 text-zombie-green">새로운 생존자</h3>
       <div className="space-y-4">
         <div>
-          <label className="block text-sm text-slate-600 dark:text-slate-400 mb-1">Name</label>
+          <label className="block text-sm text-slate-600 dark:text-slate-400 mb-1">이름</label>
           <input
             type="text"
             value={name}
             onChange={(e) => setName(e.target.value)}
             className="w-full bg-gray-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded p-2 text-slate-900 dark:text-slate-100 focus:border-zombie-green dark:focus:border-zombie-green focus:outline-none"
-            placeholder="Survivor Name"
+            placeholder="생존자 이름"
             maxLength={20}
             required
             disabled={disabled}
@@ -55,16 +55,16 @@ const CharacterForm: React.FC<Props> = ({ onAdd, disabled, existingCharacters = 
         
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm text-slate-600 dark:text-slate-400 mb-1">Gender</label>
+            <label className="block text-sm text-slate-600 dark:text-slate-400 mb-1">성별</label>
             <select
               value={gender}
               onChange={(e) => setGender(e.target.value as Gender)}
               className="w-full bg-gray-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded p-2 text-slate-900 dark:text-slate-100 focus:border-zombie-green dark:focus:border-zombie-green focus:outline-none"
               disabled={disabled}
             >
-              <option value="Male">Male</option>
-              <option value="Female">Female</option>
-              <option value="Non-Binary">Non-Binary</option>
+              <option value="Male">남성</option>
+              <option value="Female">여성</option>
+              <option value="Non-Binary">논바이너리</option>
             </select>
           </div>
           <div>
@@ -122,7 +122,7 @@ const CharacterForm: React.FC<Props> = ({ onAdd, disabled, existingCharacters = 
           disabled={!name.trim() || disabled}
           className="w-full bg-zombie-green hover:bg-lime-600 text-white dark:text-slate-900 font-bold py-2 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
         >
-          Add to Group
+          그룹에 추가
         </button>
       </div>
     </form>
