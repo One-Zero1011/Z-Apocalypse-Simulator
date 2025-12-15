@@ -1,10 +1,12 @@
-import React, { useState, useCallback, useEffect } from 'react';
-import { Character, Gender, MBTI, DayLog, CharacterUpdate, RelationshipUpdate, RelationshipStatus } from './types';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
+import { Character, Gender, MBTI, DayLog, CharacterUpdate, RelationshipUpdate, RelationshipStatus, GameState } from './types';
 import { MAX_HP, MAX_SANITY, MAX_FATIGUE, INITIAL_INVENTORY, DEFAULT_RELATIONSHIP_VALUE } from './constants';
 import CharacterForm from './components/CharacterForm';
 import CharacterCard from './components/CharacterCard';
 import EventLog from './components/EventLog';
-import RelationshipMap from './components/RelationshipMap'; // Import
+import RelationshipMap from './components/RelationshipMap'; 
+import SystemMenu from './components/SystemMenu'; 
+import ConfirmationModal from './components/ConfirmationModal'; // Import New Component
 import { simulateDay } from './services/simulation';
 
 // Define Item Effects
@@ -16,6 +18,14 @@ const ITEM_EFFECTS: Record<string, { desc: string, hp?: number, sanity?: number,
     '비타민': { desc: '피로도 -10, 정신력 +5', fatigue: -10, sanity: 5 }
 };
 
+// Confirmation State Type
+interface ConfirmState {
+    title: string;
+    message: string;
+    action: () => void;
+    isDangerous?: boolean;
+}
+
 const App: React.FC = () => {
   const [day, setDay] = useState(0);
   const [characters, setCharacters] = useState<Character[]>([]);
@@ -23,11 +33,19 @@ const App: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [darkMode, setDarkMode] = useState(false);
-  const [showRelationshipMap, setShowRelationshipMap] = useState(false); 
+  const [showRelationshipMap, setShowRelationshipMap] = useState(false);
+  const [showSystemMenu, setShowSystemMenu] = useState(false);
+  
+  // Custom Confirmation Modal State
+  const [confirmState, setConfirmState] = useState<ConfirmState | null>(null);
   
   // New Inventory State
   const [inventory, setInventory] = useState<string[]>([]);
   const [selectedItem, setSelectedItem] = useState<string | null>(null);
+
+  // File Input Refs
+  const rosterInputRef = useRef<HTMLInputElement>(null);
+  const gameSaveInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (darkMode) {
@@ -41,6 +59,232 @@ const App: React.FC = () => {
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [day]);
+
+  // --- New Game System ---
+  const handleNewGame = () => {
+      // 1. Logic to execute
+      const executeReset = () => {
+          setDay(0);
+          setCharacters([]);
+          setLogs([]);
+          setInventory([]);
+          setSelectedItem(null);
+          setError(null);
+          setConfirmState(null); // Close modal
+          
+          setTimeout(() => {
+              alert("새 게임이 시작되었습니다. 생존자를 등록해주세요.");
+          }, 100);
+      };
+
+      setShowSystemMenu(false); // Close menu first
+
+      // 2. Check conditions
+      if (characters.length > 0 || day > 0) {
+          setConfirmState({
+              title: "새 게임 시작",
+              message: "정말로 새 게임을 시작하시겠습니까?\n현재 진행 중인 모든 데이터가 삭제되고 초기화됩니다.",
+              action: executeReset,
+              isDangerous: true
+          });
+      } else {
+          executeReset();
+      }
+  };
+
+  // --- Full Game Save/Load System ---
+
+  const handleSaveGame = () => {
+      if (characters.length === 0 && day === 0) {
+          setError("저장할 데이터가 없습니다.");
+          return;
+      }
+
+      const gameState: GameState = {
+          type: 'FULL_SAVE',
+          version: 1,
+          timestamp: new Date().toISOString(),
+          day,
+          characters,
+          inventory,
+          logs
+      };
+
+      const blob = new Blob([JSON.stringify(gameState, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `z-save-day${day}-${new Date().toISOString().slice(0,10)}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      setShowSystemMenu(false);
+  };
+
+  const handleLoadGameTrigger = () => {
+      if (gameSaveInputRef.current) {
+          gameSaveInputRef.current.value = '';
+          gameSaveInputRef.current.click();
+      }
+  };
+
+  const handleLoadGameFile = (event: React.ChangeEvent<HTMLInputElement>) => {
+      const file = event.target.files?.[0];
+      if (!file) return;
+
+      // Close system menu if open
+      setShowSystemMenu(false);
+
+      const reader = new FileReader();
+      reader.onload = (e) => {
+          try {
+              const content = e.target?.result as string;
+              const parsed = JSON.parse(content);
+              
+              if (parsed.type === 'FULL_SAVE' && Array.isArray(parsed.characters)) {
+                  
+                  const executeLoad = () => {
+                      setDay(parsed.day || 0);
+                      setCharacters(parsed.characters || []);
+                      setInventory(parsed.inventory || []);
+                      setLogs(parsed.logs || []);
+                      setError(null);
+                      setConfirmState(null);
+                      
+                      setTimeout(() => {
+                          alert(`${parsed.day}일차 게임 데이터를 성공적으로 불러왔습니다.`);
+                      }, 100);
+                  };
+
+                  if (characters.length > 0 || day > 0) {
+                      setConfirmState({
+                          title: "게임 불러오기",
+                          message: "현재 진행 중인 게임을 중단하고 선택한 파일을 불러오시겠습니까?\n'확인'을 누르면 현재 데이터가 덮어씌워집니다.",
+                          action: executeLoad,
+                          isDangerous: true
+                      });
+                  } else {
+                      executeLoad();
+                  }
+
+              } else {
+                  setError("올바르지 않은 세이브 파일입니다.");
+              }
+          } catch (err) {
+              console.error(err);
+              setError("파일을 불러오는 중 오류가 발생했습니다.");
+          }
+      };
+      reader.readAsText(file);
+  };
+
+
+  // --- Roster Save/Load System ---
+
+  const handleSaveRoster = () => {
+      if (characters.length === 0) {
+          setError("저장할 생존자가 없습니다.");
+          return;
+      }
+
+      const rosterData = characters.map(c => ({
+          id: c.id, 
+          name: c.name,
+          gender: c.gender,
+          mbti: c.mbti,
+          hp: MAX_HP,
+          sanity: MAX_SANITY,
+          fatigue: 0,
+          status: 'Alive',
+          inventory: [...INITIAL_INVENTORY],
+          relationships: c.relationships,
+          relationshipStatuses: c.relationshipStatuses,
+          killCount: 0
+      }));
+
+      const blob = new Blob([JSON.stringify(rosterData, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `z-roster-export-${new Date().toISOString().slice(0,10)}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      setShowSystemMenu(false);
+  };
+
+  const handleLoadRosterTrigger = () => {
+      if (rosterInputRef.current) {
+          rosterInputRef.current.value = '';
+          rosterInputRef.current.click();
+      }
+  };
+
+  const handleLoadRosterFile = (event: React.ChangeEvent<HTMLInputElement>) => {
+      const file = event.target.files?.[0];
+      if (!file) return;
+
+      setShowSystemMenu(false);
+
+      const reader = new FileReader();
+      reader.onload = (e) => {
+          try {
+              const content = e.target?.result as string;
+              const parsed = JSON.parse(content);
+              
+              if (Array.isArray(parsed) && parsed.length > 0 && parsed[0].name && parsed[0].mbti) {
+                  
+                  const executeLoadRoster = () => {
+                      const initializedCharacters = parsed.map((c: any) => ({
+                          ...c,
+                          hp: MAX_HP,
+                          sanity: MAX_SANITY,
+                          fatigue: 0,
+                          status: 'Alive', 
+                          inventory: [...INITIAL_INVENTORY],
+                          killCount: 0,
+                          relationships: c.relationships || {},
+                          relationshipStatuses: c.relationshipStatuses || {}
+                      })) as Character[];
+
+                      setCharacters(initializedCharacters);
+                      setDay(0);
+                      setLogs([]);
+                      setInventory([]); 
+                      setSelectedItem(null);
+                      setError(null);
+                      setConfirmState(null);
+                      
+                      setTimeout(() => {
+                          alert(`${parsed.length}명의 생존자 명단을 불러왔습니다. 모든 상태가 1일차로 초기화되었습니다.`);
+                      }, 100);
+                  };
+
+                  if (characters.length > 0 || day > 0) {
+                       setConfirmState({
+                          title: "명단 불러오기",
+                          message: "현재 진행 중인 게임을 중단하고 생존자 명단을 불러오시겠습니까?\n'확인'을 누르면 현재 게임이 초기화되고 새 게임이 시작됩니다.",
+                          action: executeLoadRoster,
+                          isDangerous: true
+                      });
+                  } else {
+                      executeLoadRoster();
+                  }
+
+              } else {
+                  setError("올바르지 않은 생존자 명단 파일입니다.");
+              }
+          } catch (err) {
+              console.error(err);
+              setError("파일을 불러오는 중 오류가 발생했습니다.");
+          }
+      };
+      reader.readAsText(file);
+  };
+
+  // ---------------------------
 
   const addCharacter = (name: string, gender: Gender, mbti: MBTI, initialRelation?: { targetId: string, type: string }) => {
     const newChar: Character = {
@@ -329,7 +573,34 @@ const App: React.FC = () => {
           </button>
         </div>
         
+        {/* Hidden File Inputs */}
+        <input 
+            type="file" 
+            ref={rosterInputRef} 
+            style={{ display: 'none' }} 
+            accept=".json" 
+            onChange={handleLoadRosterFile} 
+        />
+        <input 
+            type="file" 
+            ref={gameSaveInputRef} 
+            style={{ display: 'none' }} 
+            accept=".json" 
+            onChange={handleLoadGameFile} 
+        />
+
         <div className="flex flex-wrap justify-end items-center gap-4">
+            {/* System Menu Button */}
+            <button
+                onClick={() => setShowSystemMenu(true)}
+                className="flex items-center gap-2 px-4 py-2 rounded font-bold text-sm transition-all border border-slate-300 hover:bg-slate-100 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
+            >
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 6h9.75M10.5 6a1.5 1.5 0 11-3 0m3 0a1.5 1.5 0 10-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-9.75 0h9.75" />
+                </svg>
+                시스템 (저장/불러오기)
+            </button>
+
             <button
                 onClick={() => setShowRelationshipMap(true)}
                 disabled={activeSurvivors < 2}
@@ -423,12 +694,35 @@ const App: React.FC = () => {
           </div>
       )}
 
+      {/* Confirmation Modal (New) */}
+      {confirmState && (
+          <ConfirmationModal
+            title={confirmState.title}
+            message={confirmState.message}
+            onConfirm={confirmState.action}
+            onCancel={() => setConfirmState(null)}
+            isDangerous={confirmState.isDangerous}
+          />
+      )}
+
       {/* Relationship Map Modal */}
       {showRelationshipMap && (
           <RelationshipMap 
             characters={characters} 
             onClose={() => setShowRelationshipMap(false)} 
           />
+      )}
+      
+      {/* System Menu Modal */}
+      {showSystemMenu && (
+        <SystemMenu 
+            onClose={() => setShowSystemMenu(false)}
+            onNewGame={handleNewGame} // Pass function
+            onSaveRoster={handleSaveRoster}
+            onLoadRoster={handleLoadRosterTrigger}
+            onSaveGame={handleSaveGame}
+            onLoadGame={handleLoadGameTrigger}
+        />
       )}
 
       <main className="grid grid-cols-1 lg:grid-cols-12 gap-8">

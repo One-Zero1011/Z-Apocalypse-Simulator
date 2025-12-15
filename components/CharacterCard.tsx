@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Character } from '../types';
 import { MAX_HP, MAX_SANITY, MAX_FATIGUE, FATIGUE_THRESHOLD } from '../constants';
 
@@ -9,6 +9,8 @@ interface Props {
 }
 
 const CharacterCard: React.FC<Props> = ({ character, allCharacters, onDelete }) => {
+  const [isExpanded, setIsExpanded] = useState(false);
+  
   const isDead = character.status === 'Dead' || character.status === 'Missing';
   const isInfected = character.status === 'Infected';
   const isExhausted = character.fatigue >= FATIGUE_THRESHOLD;
@@ -29,9 +31,11 @@ const CharacterCard: React.FC<Props> = ({ character, allCharacters, onDelete }) 
   const hasStatus = (status: string) => Object.values(character.relationshipStatuses).includes(status as any);
 
   // Sort relationships by affinity
-  const topRelationships = Object.entries(character.relationships)
-    .sort(([, a], [, b]) => Math.abs(b as number) - Math.abs(a as number)) // Sort by intensity
-    .slice(0, 3); // Top 3
+  const allRelationships = Object.entries(character.relationships)
+    .sort(([, a], [, b]) => Math.abs(b as number) - Math.abs(a as number));
+
+  const visibleRelationships = isExpanded ? allRelationships : allRelationships.slice(0, 3);
+  const hiddenCount = allRelationships.length - 3;
 
   return (
     <div className={`border p-4 rounded-lg shadow-sm hover:shadow-md transition-all ${getStatusColor()} relative overflow-hidden group`}>
@@ -118,31 +122,46 @@ const CharacterCard: React.FC<Props> = ({ character, allCharacters, onDelete }) 
       </div>
 
       <div className="mt-4 pt-3 border-t border-slate-200 dark:border-white/10">
-        <h4 className="text-xs uppercase text-slate-500 dark:text-slate-400 mb-1">호감도 (Top 3)</h4>
-        {topRelationships.length > 0 ? (
-          <ul className="space-y-1 text-xs">
-            {topRelationships.map(([id, score]) => {
-              const status = character.relationshipStatuses[id];
-              return (
-                <li key={id} className="flex justify-between items-center">
-                  <span className="text-slate-700 dark:text-slate-300 flex items-center gap-1">
-                      {getRelationshipName(id)}
-                      {status === 'Lover' && '❤️'}
-                      {status === 'Ex' && '💔'}
-                      {status === 'Family' && '🏠'}
-                      {status === 'BestFriend' && '🤝'}
-                      {status === 'Colleague' && '💼'}
-                      {status === 'Rival' && '⚔️'}
-                      {status === 'Savior' && '🦸'}
-                      {status === 'Enemy' && '👿'}
-                  </span>
-                  <span className={(score as number) > 0 ? 'text-green-600 dark:text-green-400' : (score as number) < 0 ? 'text-red-600 dark:text-red-400' : 'text-gray-400'}>
-                    {(score as number) > 0 ? '+' : ''}{score as number}
-                  </span>
-                </li>
-              );
-            })}
-          </ul>
+        <h4 className="text-xs uppercase text-slate-500 dark:text-slate-400 mb-1 flex justify-between items-center">
+            <span>호감도 {allRelationships.length > 0 && `(${allRelationships.length})`}</span>
+        </h4>
+        {visibleRelationships.length > 0 ? (
+          <div className="space-y-1">
+            <ul className="space-y-1 text-xs">
+              {visibleRelationships.map(([id, score]) => {
+                const status = character.relationshipStatuses[id];
+                return (
+                  <li key={id} className="flex justify-between items-center animate-fade-in">
+                    <span className="text-slate-700 dark:text-slate-300 flex items-center gap-1">
+                        {getRelationshipName(id)}
+                        {status === 'Lover' && '❤️'}
+                        {status === 'Ex' && '💔'}
+                        {status === 'Family' && '🏠'}
+                        {status === 'BestFriend' && '🤝'}
+                        {status === 'Colleague' && '💼'}
+                        {status === 'Rival' && '⚔️'}
+                        {status === 'Savior' && '🦸'}
+                        {status === 'Enemy' && '👿'}
+                    </span>
+                    <span className={(score as number) > 0 ? 'text-green-600 dark:text-green-400' : (score as number) < 0 ? 'text-red-600 dark:text-red-400' : 'text-gray-400'}>
+                      {(score as number) > 0 ? '+' : ''}{score as number}
+                    </span>
+                  </li>
+                );
+              })}
+            </ul>
+            {allRelationships.length > 3 && (
+                <button 
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        setIsExpanded(!isExpanded);
+                    }}
+                    className="w-full text-center text-[10px] text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 pt-1 pb-1 hover:bg-slate-50 dark:hover:bg-slate-800/50 rounded transition-colors"
+                >
+                    {isExpanded ? '접기 ▲' : `더 보기 (+${hiddenCount}) ▼`}
+                </button>
+            )}
+          </div>
         ) : (
             <p className="text-xs text-slate-400 dark:text-slate-500 italic">아직 특별한 유대 관계가 없습니다.</p>
         )}

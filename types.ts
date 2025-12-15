@@ -66,3 +66,14 @@ export interface ActionEffect {
     kill?: number;
     fatigue?: number;
 }
+
+// New: Full Game Save State
+export interface GameState {
+    type: 'FULL_SAVE';
+    version: number;
+    timestamp: string;
+    day: number;
+    characters: Character[];
+    inventory: string[];
+    logs: DayLog[];
+}
