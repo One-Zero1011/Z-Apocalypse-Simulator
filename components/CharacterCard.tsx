@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Character } from '../types';
 import { MAX_HP, MAX_SANITY, MAX_FATIGUE, FATIGUE_THRESHOLD } from '../constants';
@@ -14,11 +15,15 @@ const CharacterCard: React.FC<Props> = ({ character, allCharacters, onDelete }) 
   const isDead = character.status === 'Dead' || character.status === 'Missing';
   const isInfected = character.status === 'Infected';
   const isExhausted = character.fatigue >= FATIGUE_THRESHOLD;
+  // Fallback for mentalState if not present (backward compatibility)
+  const mentalState = character.mentalState || 'Normal';
+  const hasMentalIllness = mentalState !== 'Normal';
   
   const getStatusColor = () => {
     if (character.status === 'Dead') return 'text-gray-500 bg-gray-100 border-gray-300 dark:text-gray-600 dark:bg-gray-900 dark:border-gray-700 opacity-60';
     if (character.status === 'Infected') return 'text-zombie-green border-zombie-green bg-green-50 dark:bg-green-900/20';
     if (character.status === 'Missing') return 'text-yellow-600 dark:text-yellow-500 border-yellow-500 bg-yellow-50 dark:bg-yellow-900/10';
+    if (hasMentalIllness) return 'border-red-400 bg-red-50 dark:bg-red-900/10 dark:border-red-800'; // Mental illness warning color
     if (isExhausted) return 'text-purple-900 border-purple-300 bg-purple-50 dark:bg-purple-900/20 dark:text-purple-200 dark:border-purple-700';
     return 'text-slate-800 dark:text-slate-200 border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800';
   };
@@ -50,13 +55,15 @@ const CharacterCard: React.FC<Props> = ({ character, allCharacters, onDelete }) 
           <h3 className="font-bold text-xl flex items-center gap-2">
               {character.name}
               {hasStatus('Lover') && <span title="연인 있음" className="text-sm cursor-help">❤️</span>}
-              {hasStatus('Family') && <span title="가족 있음" className="text-sm cursor-help">🏠</span>}
-              {hasStatus('BestFriend') && <span title="절친 있음" className="text-sm cursor-help">🤞</span>}
               {isExhausted && !isDead && <span title="탈진 상태" className="text-sm animate-pulse">💤</span>}
+              {hasMentalIllness && !isDead && <span title="정신 이상" className="text-sm animate-pulse">🧠</span>}
           </h3>
-          <div className="flex items-center gap-2 text-xs uppercase tracking-wide opacity-80">
+          <div className="flex items-center gap-2 text-xs uppercase tracking-wide opacity-80 mt-1">
             <span className="bg-slate-200 dark:bg-slate-700 px-1 rounded text-slate-700 dark:text-slate-300">{character.mbti}</span>
             <span className="text-slate-600 dark:text-slate-400">{character.gender === 'Male' ? '남성' : character.gender === 'Female' ? '여성' : '논바이너리'}</span>
+            {hasMentalIllness && (
+                <span className="bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-300 px-1.5 rounded font-bold">{mentalState}</span>
+            )}
           </div>
         </div>
         <div className="text-right text-xs flex flex-col items-end gap-1 relative z-20">
@@ -95,12 +102,14 @@ const CharacterCard: React.FC<Props> = ({ character, allCharacters, onDelete }) 
         {/* Sanity Bar */}
         <div className="w-full">
           <div className="flex justify-between mb-0.5">
-            <span>정신력</span>
+            <span className={character.sanity <= 10 ? 'text-red-500 font-bold animate-pulse' : ''}>
+                {hasMentalIllness ? '정신력 (불안정)' : '정신력'}
+            </span>
             <span>{character.sanity}/{MAX_SANITY}</span>
           </div>
           <div className="h-2 w-full bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
             <div 
-              className="h-full bg-blue-500 transition-all duration-500" 
+              className={`h-full transition-all duration-500 ${hasMentalIllness ? 'bg-purple-600' : 'bg-blue-500'}`} 
               style={{ width: `${(character.sanity / MAX_SANITY) * 100}%` }}
             ></div>
           </div>

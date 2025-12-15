@@ -1,21 +1,23 @@
+
 import React, { useState, useCallback, useEffect, useRef } from 'react';
-import { Character, Gender, MBTI, DayLog, CharacterUpdate, RelationshipUpdate, RelationshipStatus, GameState } from './types';
+import { Character, Gender, MBTI, DayLog, CharacterUpdate, RelationshipUpdate, RelationshipStatus, GameState, MentalState } from './types';
 import { MAX_HP, MAX_SANITY, MAX_FATIGUE, INITIAL_INVENTORY, DEFAULT_RELATIONSHIP_VALUE } from './constants';
 import CharacterForm from './components/CharacterForm';
 import CharacterCard from './components/CharacterCard';
 import EventLog from './components/EventLog';
 import RelationshipMap from './components/RelationshipMap'; 
 import SystemMenu from './components/SystemMenu'; 
-import ConfirmationModal from './components/ConfirmationModal'; // Import New Component
+import ConfirmationModal from './components/ConfirmationModal'; 
 import { simulateDay } from './services/simulation';
 
 // Define Item Effects
-const ITEM_EFFECTS: Record<string, { desc: string, hp?: number, sanity?: number, fatigue?: number }> = {
+const ITEM_EFFECTS: Record<string, { desc: string, hp?: number, sanity?: number, fatigue?: number, cureMental?: boolean }> = {
     '붕대': { desc: '체력 +20', hp: 20 },
-    '항생제': { desc: '체력 +30, 감염 치료(미구현)', hp: 30 },
+    '항생제': { desc: '체력 +30', hp: 30 },
     '통조림': { desc: '피로도 -20', fatigue: -20 },
     '초콜릿': { desc: '정신력 +15', sanity: 15 },
-    '비타민': { desc: '피로도 -10, 정신력 +5', fatigue: -10, sanity: 5 }
+    '비타민': { desc: '피로도 -10, 정신력 +5', fatigue: -10, sanity: 5 },
+    '정신병약': { desc: '정신병 치료, 정신력 +30', sanity: 30, cureMental: true } // New Item Effect
 };
 
 // Confirmation State Type
@@ -43,6 +45,9 @@ const App: React.FC = () => {
   const [inventory, setInventory] = useState<string[]>([]);
   const [selectedItem, setSelectedItem] = useState<string | null>(null);
 
+  // Story Chain State
+  const [storyNodeId, setStoryNodeId] = useState<string | null>(null);
+
   // File Input Refs
   const rosterInputRef = useRef<HTMLInputElement>(null);
   const gameSaveInputRef = useRef<HTMLInputElement>(null);
@@ -69,6 +74,7 @@ const App: React.FC = () => {
           setLogs([]);
           setInventory([]);
           setSelectedItem(null);
+          setStoryNodeId(null); // Reset story chain
           setError(null);
           setConfirmState(null); // Close modal
           
@@ -107,7 +113,8 @@ const App: React.FC = () => {
           day,
           characters,
           inventory,
-          logs
+          logs,
+          storyNodeId // Save story state
       };
 
       const blob = new Blob([JSON.stringify(gameState, null, 2)], { type: 'application/json' });
@@ -146,9 +153,15 @@ const App: React.FC = () => {
                   
                   const executeLoad = () => {
                       setDay(parsed.day || 0);
-                      setCharacters(parsed.characters || []);
+                      // Fallback for mentalState for old save files
+                      const loadedChars = parsed.characters.map((c: any) => ({
+                          ...c,
+                          mentalState: c.mentalState || 'Normal'
+                      }));
+                      setCharacters(loadedChars || []);
                       setInventory(parsed.inventory || []);
                       setLogs(parsed.logs || []);
+                      setStoryNodeId(parsed.storyNodeId || null); // Load story state
                       setError(null);
                       setConfirmState(null);
                       
@@ -197,6 +210,7 @@ const App: React.FC = () => {
           sanity: MAX_SANITY,
           fatigue: 0,
           status: 'Alive',
+          mentalState: 'Normal', // Reset Mental
           inventory: [...INITIAL_INVENTORY],
           relationships: c.relationships,
           relationshipStatuses: c.relationshipStatuses,
@@ -243,6 +257,7 @@ const App: React.FC = () => {
                           sanity: MAX_SANITY,
                           fatigue: 0,
                           status: 'Alive', 
+                          mentalState: 'Normal', // Initialize
                           inventory: [...INITIAL_INVENTORY],
                           killCount: 0,
                           relationships: c.relationships || {},
@@ -254,6 +269,7 @@ const App: React.FC = () => {
                       setLogs([]);
                       setInventory([]); 
                       setSelectedItem(null);
+                      setStoryNodeId(null);
                       setError(null);
                       setConfirmState(null);
                       
@@ -286,7 +302,7 @@ const App: React.FC = () => {
 
   // ---------------------------
 
-  const addCharacter = (name: string, gender: Gender, mbti: MBTI, initialRelation?: { targetId: string, type: string }) => {
+  const addCharacter = (name: string, gender: Gender, mbti: MBTI, mentalState: MentalState, initialRelation?: { targetId: string, type: string }) => {
     const newChar: Character = {
       id: crypto.randomUUID(),
       name,
@@ -294,8 +310,9 @@ const App: React.FC = () => {
       mbti,
       hp: MAX_HP,
       sanity: MAX_SANITY,
-      fatigue: 0, // Initialize Fatigue
+      fatigue: 0, 
       status: 'Alive',
+      mentalState: mentalState, // Apply selected mental state
       inventory: [...INITIAL_INVENTORY],
       relationships: {},
       relationshipStatuses: {},
@@ -442,7 +459,8 @@ const App: React.FC = () => {
     
     try {
       const nextDay = day + 1;
-      const result = await simulateDay(nextDay, characters);
+      // Pass storyNodeId to simulateDay
+      const result = await simulateDay(nextDay, characters, storyNodeId);
 
       // Apply Updates
       setCharacters(prev => {
@@ -460,6 +478,8 @@ const App: React.FC = () => {
           if (update.fatigueChange) char.fatigue = Math.max(0, Math.min(MAX_FATIGUE, char.fatigue + update.fatigueChange)); // Fatigue
           
           if (update.status) char.status = update.status;
+          if (update.mentalState) char.mentalState = update.mentalState; // Update Mental State
+
           if (update.killCountChange) char.killCount += update.killCountChange;
 
           // Apply Inventory (Character private inventory logic preserved but not main focus)
@@ -506,6 +526,7 @@ const App: React.FC = () => {
       }]);
 
       setDay(nextDay);
+      setStoryNodeId(result.nextStoryNodeId); // Update story chain
 
     } catch (err) {
       console.error(err);
@@ -513,7 +534,7 @@ const App: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [day, characters, loading]);
+  }, [day, characters, loading, storyNodeId]); // Add storyNodeId to dependency
 
   const handleUseItem = (targetId: string) => {
       if (!selectedItem) return;
@@ -527,6 +548,12 @@ const App: React.FC = () => {
               if (effect.hp) updatedChar.hp = Math.min(MAX_HP, updatedChar.hp + effect.hp);
               if (effect.sanity) updatedChar.sanity = Math.min(MAX_SANITY, updatedChar.sanity + effect.sanity);
               if (effect.fatigue) updatedChar.fatigue = Math.max(0, updatedChar.fatigue + effect.fatigue);
+              
+              // Mental Illness Cure Logic
+              if (effect.cureMental && updatedChar.mentalState !== 'Normal') {
+                  updatedChar.mentalState = 'Normal';
+              }
+
               return updatedChar;
           }
           return char;
@@ -673,10 +700,15 @@ const App: React.FC = () => {
                               onClick={() => handleUseItem(char.id)}
                               className="w-full text-left p-3 rounded bg-slate-100 dark:bg-slate-700 hover:bg-blue-50 dark:hover:bg-blue-900/30 border border-transparent hover:border-blue-300 transition-colors flex justify-between items-center"
                           >
-                              <span className="font-bold text-slate-700 dark:text-slate-200">{char.name}</span>
+                              <div className="flex flex-col">
+                                <span className="font-bold text-slate-700 dark:text-slate-200 flex items-center gap-1">
+                                    {char.name}
+                                    {char.mentalState !== 'Normal' && <span className="text-[10px] bg-red-100 text-red-800 px-1 rounded">{char.mentalState}</span>}
+                                </span>
+                              </div>
                               <div className="text-xs text-slate-500 space-x-2">
                                   <span>HP: {char.hp}</span>
-                                  <span>피로: {char.fatigue}</span>
+                                  <span className={char.sanity <= 10 ? 'text-red-500 font-bold' : ''}>멘탈: {char.sanity}</span>
                               </div>
                           </button>
                       )) : (
@@ -782,6 +814,7 @@ const App: React.FC = () => {
                             </svg>
                             <p>보관된 아이템이 없습니다.</p>
                             <p className="text-xs mt-1">시뮬레이션을 진행하여 물자를 확보하세요.</p>
+                            <p className="text-xs mt-1"> 아이템은 터치해 사용이 가능합니다.</p>
                         </div>
                     ) : (
                         <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
@@ -798,7 +831,8 @@ const App: React.FC = () => {
                                          item === '통조림' ? '🥫' : 
                                          item === '항생제' ? '💊' : 
                                          item === '초콜릿' ? '🍫' : 
-                                         item === '비타민' ? '🍋' : '📦'}
+                                         item === '비타민' ? '🍋' : 
+                                         item === '정신병약' ? '💊' : '📦'}
                                     </span>
                                     <span>{item}</span>
                                     <span className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"></span>

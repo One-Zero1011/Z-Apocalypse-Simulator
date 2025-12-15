@@ -1,9 +1,10 @@
+
 import React, { useState } from 'react';
-import { MBTI, Gender, Character } from '../types';
+import { MBTI, Gender, Character, MentalState } from '../types';
 import { MBTI_TYPES } from '../constants';
 
 interface Props {
-  onAdd: (name: string, gender: Gender, mbti: MBTI, initialRelation?: { targetId: string, type: string }) => void;
+  onAdd: (name: string, gender: Gender, mbti: MBTI, mentalState: MentalState, initialRelation?: { targetId: string, type: string }) => void;
   disabled?: boolean;
   existingCharacters?: Character[];
 }
@@ -12,6 +13,7 @@ const CharacterForm: React.FC<Props> = ({ onAdd, disabled, existingCharacters = 
   const [name, setName] = useState('');
   const [gender, setGender] = useState<Gender>('Male');
   const [mbti, setMbti] = useState<MBTI>('ISTJ');
+  const [mentalState, setMentalState] = useState<MentalState>('Normal');
   
   // Relationship State
   const [targetId, setTargetId] = useState<string>('');
@@ -24,9 +26,10 @@ const CharacterForm: React.FC<Props> = ({ onAdd, disabled, existingCharacters = 
       if (targetId && relationType) {
           relationPayload = { targetId, type: relationType };
       }
-      onAdd(name, gender, mbti, relationPayload);
+      onAdd(name, gender, mbti, mentalState, relationPayload);
       
       setName('');
+      setMentalState('Normal');
       // Reset relation
       setTargetId('');
       setRelationType('Friend');
@@ -53,7 +56,7 @@ const CharacterForm: React.FC<Props> = ({ onAdd, disabled, existingCharacters = 
           />
         </div>
         
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
             <label className="block text-sm text-slate-600 dark:text-slate-400 mb-1">성별</label>
             <select
@@ -78,6 +81,22 @@ const CharacterForm: React.FC<Props> = ({ onAdd, disabled, existingCharacters = 
               {MBTI_TYPES.map(type => (
                 <option key={type} value={type}>{type}</option>
               ))}
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm text-slate-600 dark:text-slate-400 mb-1">정신 상태</label>
+            <select
+              value={mentalState}
+              onChange={(e) => setMentalState(e.target.value as MentalState)}
+              className={`w-full bg-gray-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded p-2 text-slate-900 dark:text-slate-100 focus:border-zombie-green dark:focus:border-zombie-green focus:outline-none ${mentalState !== 'Normal' ? 'text-red-600 font-bold' : ''}`}
+              disabled={disabled}
+            >
+              <option value="Normal">정상 (Normal)</option>
+              <option value="PTSD">PTSD (외상 후 스트레스)</option>
+              <option value="Depression">우울증 (Depression)</option>
+              <option value="Schizophrenia">조현병 (Schizophrenia)</option>
+              <option value="Paranoia">편집증 (Paranoia)</option>
+              <option value="DID">자아분열 (DID)</option>
             </select>
           </div>
         </div>

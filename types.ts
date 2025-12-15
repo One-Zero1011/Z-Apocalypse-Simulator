@@ -13,6 +13,9 @@ export type RelationshipStatus =
   | 'BestFriend' | 'Colleague' | 'Rival' | 'Savior' | 'Enemy' 
   | 'None';
 
+// New: Mental States
+export type MentalState = 'Normal' | 'PTSD' | 'Depression' | 'Schizophrenia' | 'Paranoia' | 'DID';
+
 export interface Character {
   id: string;
   name: string;
@@ -20,11 +23,12 @@ export interface Character {
   mbti: MBTI;
   hp: number; // 0-100
   sanity: number; // 0-100
-  fatigue: number; // 0-100 (New: Fatigue system)
+  fatigue: number; // 0-100
   status: Status;
+  mentalState: MentalState; // New Field
   inventory: string[];
-  relationships: Record<string, number>; // characterId -> affinity (-100 to 100)
-  relationshipStatuses: Record<string, RelationshipStatus>; // characterId -> Status (Lover/Ex)
+  relationships: Record<string, number>; 
+  relationshipStatuses: Record<string, RelationshipStatus>;
   killCount: number;
 }
 
@@ -44,8 +48,9 @@ export interface CharacterUpdate {
   id: string;
   hpChange?: number;
   sanityChange?: number;
-  fatigueChange?: number; // New
+  fatigueChange?: number;
   status?: Status;
+  mentalState?: MentalState; // New
   inventoryAdd?: string[];
   inventoryRemove?: string[];
   relationshipUpdates?: RelationshipUpdate[];
@@ -56,7 +61,8 @@ export interface SimulationResult {
   narrative: string;
   events: string[];
   updates: CharacterUpdate[];
-  loot: string[]; // New: Items found during the day
+  loot: string[];
+  nextStoryNodeId: string | null;
 }
 
 export interface ActionEffect {
@@ -67,13 +73,13 @@ export interface ActionEffect {
     fatigue?: number;
 }
 
-// New: Full Game Save State
 export interface GameState {
     type: 'FULL_SAVE';
-    version: number;
+    version: 1;
     timestamp: string;
     day: number;
     characters: Character[];
     inventory: string[];
     logs: DayLog[];
+    storyNodeId?: string | null;
 }
