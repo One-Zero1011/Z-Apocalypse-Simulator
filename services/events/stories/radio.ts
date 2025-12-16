@@ -49,8 +49,10 @@ export const RADIO_NODES: Record<string, StoryNode> = {
         id: 'radio_5_broadcast',
         text: "🎙️ DJ가 방심한 틈을 타 마이크를 잡았습니다. 어떤 방송을 내보낼까요?",
         next: [
-            { id: 'radio_6_help', weight: 0.5 },
-            { id: 'radio_6_music', weight: 0.5 }
+            { id: 'radio_6_help', weight: 0.5, choiceText: "구조 요청 (일반)" },
+            { id: 'radio_6_singer', weight: 0.0, choiceText: "노래로 좀비 진정시키기 (가수/아이돌 필요)", req: { job: '가수' } },
+            { id: 'radio_6_dev', weight: 0.0, choiceText: "군용 통신망 해킹 (개발자 필요)", req: { job: '개발자' } },
+            { id: 'radio_6_music', weight: 0.5, choiceText: "음악 송출 (좀비 유인/디펜스)" }
         ]
     },
     'radio_6_help': {
@@ -58,6 +60,18 @@ export const RADIO_NODES: Record<string, StoryNode> = {
         text: "🆘 \"여기에 생존자가 있다!\" 구조 요청을 반복 송출했습니다. 방송을 듣고 누군가 오겠지만, 그게 구조대일지 좀비일지는 모릅니다.",
         next: [{ id: 'radio_7_defense', weight: 1.0 }],
         effect: { target: 'ALL', sanity: 10 }
+    },
+    'radio_6_singer': {
+        id: 'radio_6_singer',
+        text: "🎤 마이크를 잡고 호소력 짙은 노래를 불렀습니다. 거리에 울려 퍼지는 목소리에 좀비들의 움직임이 일시적으로 멈추고, 생존자들은 희망을 얻습니다.",
+        next: [{ id: 'radio_9_rescue', weight: 1.0 }], // 바로 구조 엔딩
+        effect: { target: 'ALL', sanity: 30, fatigue: -10 }
+    },
+    'radio_6_dev': {
+        id: 'radio_6_dev',
+        text: "💻 방송 장비의 주파수를 조작해 암호화된 군용 채널에 접속했습니다. 정확한 좌표를 전송하여 구조 헬기를 불렀습니다!",
+        next: [{ id: 'radio_9_rescue', weight: 1.0 }], // 바로 구조 엔딩
+        effect: { target: 'ALL', sanity: 20 }
     },
     'radio_6_music': {
         id: 'radio_6_music',

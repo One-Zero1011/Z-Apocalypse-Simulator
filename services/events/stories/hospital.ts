@@ -18,11 +18,11 @@ export const HOSPITAL_NODES: Record<string, StoryNode> = {
     },
     'hospital_1_lobby': {
         id: 'hospital_1_lobby',
-        text: "🚪 로비에 들어서자 썩은 냄새가 코를 찌릅니다. 어디를 먼저 수색할까요?",
+        text: "🚪 병원 로비에 들어서자 썩은 냄새가 코를 찌릅니다. 어디를 먼저 수색할까요?",
         next: [
-            { id: 'hospital_2a_stairs', weight: 0.4 }, // 위로 (기존)
-            { id: 'hospital_2b_vents', weight: 0.3 },   // 은신 (기존)
-            { id: 'hospital_2c_morgue', weight: 0.3 }   // 지하 영안실 (신규 분기)
+            { id: 'hospital_2a_stairs', weight: 0.4, choiceText: "계단으로 (빠름, 전투 위험)" }, 
+            { id: 'hospital_2b_vents', weight: 0.3, choiceText: "환기구로 은신 (안전함, 스트레스)" },   
+            { id: 'hospital_2c_morgue', weight: 0.3, choiceText: "지하 영안실 탐색 (귀중품, 공포)" }   
         ],
         effect: { target: 'ALL', sanity: -5 }
     },
@@ -99,13 +99,30 @@ export const HOSPITAL_NODES: Record<string, StoryNode> = {
     },
     'hospital_4_surgery': {
         id: 'hospital_4_surgery',
-        text: "🔪 수술실을 지나가야 합니다. 수술대 위에 묶여 있던 무언가가 사슬을 끊으려 발버둥 치고 있습니다.",
-        next: [{ id: 'hospital_5_boss', weight: 1.0 }],
-        effect: { target: 'ALL', sanity: -10 }
+        text: "🔪 수술실을 지나가야 합니다. 좀비가 된 외과 의사가 메스를 들고 배회합니다. 주변엔 정밀 의료 도구들이 보입니다.",
+        next: [
+            { id: 'hospital_5_surgery_expert', weight: 0.0, choiceText: "조용한 제압 및 파밍 (의사/간호사 필요)", req: { job: '의사' } },
+            { id: 'hospital_5_surgery_expert_nurse', weight: 0.0, choiceText: "조용한 제압 및 파밍 (의사/간호사 필요)", req: { job: '간호사' } },
+            { id: 'hospital_5_boss', weight: 1.0, choiceText: "정면 돌파" }
+        ],
+        effect: { target: 'ALL', sanity: -5 }
     },
+    'hospital_5_surgery_expert': {
+        id: 'hospital_5_surgery_expert',
+        text: "🩺 의료진의 지식으로 좀비의 급소를 정확히 찌르고, 쓸만한 수술 도구(맥가이버 칼 대용)를 챙겼습니다.",
+        next: [{ id: 'hospital_6_win', weight: 1.0 }],
+        effect: { target: 'ALL', loot: ['맥가이버 칼', '붕대'], sanity: 5 }
+    },
+    'hospital_5_surgery_expert_nurse': { // Same as above
+        id: 'hospital_5_surgery_expert_nurse',
+        text: "💉 능숙한 솜씨로 좀비를 유인해 처리하고, 멸균된 붕대와 도구들을 챙겼습니다.",
+        next: [{ id: 'hospital_6_win', weight: 1.0 }],
+        effect: { target: 'ALL', loot: ['맥가이버 칼', '붕대'], sanity: 5 }
+    },
+
     'hospital_5_boss': {
         id: 'hospital_5_boss',
-        text: "🧟‍♂️ [BOSS] 약제실 앞에서 의사 가운을 입은 거대 변종 좀비, '더 서전(The Surgeon)'이 길을 막아섭니다!",
+        text: "🧟‍♂️ [BOSS] 변종 '더 서전(The Surgeon)'이 괴성을 지르며 달려듭니다! 우리는 도구는커녕 목숨을 건지기 위해 싸워야 합니다.",
         next: [
             { id: 'hospital_6_win', weight: 0.6 },
             { id: 'hospital_6_run', weight: 0.4 }

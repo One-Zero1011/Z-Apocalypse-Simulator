@@ -32,7 +32,7 @@ export const STORY_NODES: Record<string, StoryNode> = {
 
 // 시작 가능한 메인 아크의 첫 번째 노드 ID 목록
 export const STARTER_NODE_IDS = [
-    // Main Arcs
+    // Main Arcs (10)
     'hospital_0_start',
     'winter_0_start',
     'metro_0_start',
@@ -40,11 +40,11 @@ export const STARTER_NODE_IDS = [
     'wander_0_start',
     'cult_0_start',
     'bunker_0_signal',
-    'school_0_start', // New
-    'prison_0_start', // New
-    'amusement_0_start', // New
+    'school_0_start', 
+    'prison_0_start', 
+    'amusement_0_start', 
     
-    // One-offs (Expanded)
+    // One-offs (Environmental/Atmospheric) (15)
     'sunny_day',
     'foggy_day',
     'heavy_rain',
@@ -60,12 +60,29 @@ export const STARTER_NODE_IDS = [
     'board_game',
     'stray_dog',
     'rat_swarm',
-    'abandoned_truck',
-    'pharmacy_ruin', // Modified to give Vaccine
     'creepy_doll',
     'flower_field',
     'weapon_maintenance',
-    'cannibal_meal', // New
-    'vaccine_drop', // New (Boost Vaccine chance)
-    'military_convoy' // New (Boost Vaccine chance)
+
+    // Loot Events (Weighted x2 to reach ~20%) (Total 8 entries)
+    'abandoned_truck',
+    'pharmacy_ruin',
+    'vaccine_drop',
+    'cannibal_meal',
+    'military_convoy',
+    
+    // Duplicates for Probability Boost (30% -> 20% Target)
+    'abandoned_truck',
+    'pharmacy_ruin',
+    'vaccine_drop',
+
+    // New Interactive Item Events (High Value)
+    'oneoff_locked_box',
+    'oneoff_confusing_path',
+    'oneoff_zombie_dog',
+    'oneoff_faint_signal',
+    'oneoff_broken_bridge',
+    // Boost probability for new events
+    'oneoff_locked_box',
+    'oneoff_zombie_dog'
 ];

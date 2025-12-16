@@ -6,9 +6,9 @@ export const WANDER_NODES: Record<string, StoryNode> = {
         id: 'wander_0_start',
         text: "🏕️ 숲속 공터에서 다른 생존자 그룹의 캠프를 발견했습니다. 규모가 꽤 커 보입니다.",
         next: [
-            { id: 'wander_1_approach', weight: 0.5 },
-            { id: 'wander_1_trade', weight: 0.3 }, // 신규: 거래 시도
-            { id: 'wander_1_steal', weight: 0.2 }
+            { id: 'wander_1_approach', weight: 0.5, choiceText: "평화롭게 접근 (합류/배신)" },
+            { id: 'wander_1_trade', weight: 0.3, choiceText: "거래 시도 (물물교환)" }, 
+            { id: 'wander_1_steal', weight: 0.2, choiceText: "약탈 시도 (하이 리스크)" }
         ]
     },
     
@@ -17,9 +17,21 @@ export const WANDER_NODES: Record<string, StoryNode> = {
         id: 'wander_1_trade',
         text: "💰 무기를 내리고 물물교환을 제안합니다. 우리가 가진 잉여 물자와 그들의 물자를 교환할 수 있을까요?",
         next: [
-            { id: 'wander_2_trade_good', weight: 0.6 },
+            { id: 'wander_2_trade_expert', weight: 0.0, choiceText: "전문가 협상 (영업직/회계사/정치인 필요)", req: { job: '영업직' } },
+            { id: 'wander_2_trade_expert_acc', weight: 0.0, choiceText: "전문가 협상 (영업직/회계사/정치인 필요)", req: { job: '회계사' } },
+            { id: 'wander_2_trade_good', weight: 0.6, choiceText: "일반 거래 시도" },
             { id: 'wander_2_trade_bad', weight: 0.4 }
         ]
+    },
+    'wander_2_trade_expert': {
+        id: 'wander_2_trade_expert',
+        text: "🗣️ 화려한 언변과 협상 기술로 상대를 구워삶았습니다. 쓸모없는 잡동사니를 주고 귀한 항생제를 잔뜩 얻어냅니다.",
+        effect: { target: 'ALL', loot: ['항생제', '항생제', '고기'], sanity: 5 }
+    },
+    'wander_2_trade_expert_acc': { // Same as above
+        id: 'wander_2_trade_expert_acc',
+        text: "🧮 물자의 가치를 정확히 계산하여 우리에게 유리한 조건으로 거래를 성사시켰습니다.",
+        effect: { target: 'ALL', loot: ['항생제', '고기', '붕대'], sanity: 5 }
     },
     'wander_2_trade_good': {
         id: 'wander_2_trade_good',
@@ -60,7 +72,7 @@ export const WANDER_NODES: Record<string, StoryNode> = {
         id: 'wander_2_betrayal',
         text: "🍷 음식에 수면제가 들어있었습니다! 눈을 떠보니 우리는 묶여있고 짐은 사라졌습니다.",
         next: [{ id: 'wander_4_escape', weight: 1.0 }],
-        effect: { target: 'ALL', inventoryRemove: ['통조림', '붕대'], sanity: -20 }
+        effect: { target: 'ALL', inventoryRemove: ['통조림', '붕대', '물', '무기', '지도'], sanity: -20 }
     },
     'wander_3_success': {
         id: 'wander_3_success',

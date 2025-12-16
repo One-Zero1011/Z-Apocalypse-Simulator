@@ -6,9 +6,9 @@ export const CULT_NODES: Record<string, StoryNode> = {
         id: 'cult_0_start',
         text: "🕯️ 숲속 깊은 곳에서 기괴한 촛불 의식이 거행되는 것을 목격했습니다. '정화'라는 단어가 반복해서 들립니다.",
         next: [
-            { id: 'cult_1_spy', weight: 0.5 },
-            { id: 'cult_1_join', weight: 0.3 }, 
-            { id: 'cult_1_run', weight: 0.2 }
+            { id: 'cult_1_spy', weight: 0.5, choiceText: "몰래 염탐 (정보 수집)" },
+            { id: 'cult_1_join', weight: 0.3, choiceText: "위장 잠입 (내부 진입)" }, 
+            { id: 'cult_1_run', weight: 0.2, choiceText: "도망치기 (안전 우선)" }
         ],
         effect: { target: 'ALL', sanity: -5 }
     },
@@ -34,10 +34,24 @@ export const CULT_NODES: Record<string, StoryNode> = {
         id: 'cult_3_inner',
         text: "⛩️ 안내받은 지하실에는 충격적인 광경이 펼쳐져 있습니다. 그들은 좀비를 '신 인류'라 부르며 숭배하고, 산 사람을 먹이로 주고 있었습니다!",
         next: [
-            { id: 'cult_4_truth_fight', weight: 0.5 }, // 교주와 싸움
-            { id: 'cult_4_truth_sabotage', weight: 0.5 } // 시설 파괴
+            { id: 'cult_4_truth_fight', weight: 0.5, choiceText: "교주와 정면 승부" },
+            { id: 'cult_4_truth_gun', weight: 0.0, choiceText: "권총으로 저격 (권총 필요)", req: { item: '권총' } },
+            { id: 'cult_4_truth_soldier', weight: 0.0, choiceText: "전술적 진압 (군인/경찰 필요)", req: { job: '군인' } },
+            { id: 'cult_4_truth_sabotage', weight: 0.5, choiceText: "시설 파괴 및 도주" }
         ],
         effect: { target: 'ALL', sanity: -20 }
+    },
+    'cult_4_truth_gun': {
+        id: 'cult_4_truth_gun',
+        text: "💥 주저 없이 교주의 머리를 향해 방아쇠를 당겼습니다. 교주가 쓰러지자 신도들은 패닉에 빠져 도망칩니다.",
+        next: [{ id: 'cult_5_victory_boss', weight: 1.0 }],
+        effect: { target: 'ALL', sanity: 5, fatigue: 5 }
+    },
+    'cult_4_truth_soldier': {
+        id: 'cult_4_truth_soldier',
+        text: "⚔️ 전문적인 전투 기술로 호위무사들을 순식간에 제압하고 교주를 인질로 잡았습니다. 상황 종료.",
+        next: [{ id: 'cult_5_victory_boss', weight: 1.0 }],
+        effect: { target: 'ALL', sanity: 10 }
     },
     'cult_4_truth_fight': {
         id: 'cult_4_truth_fight',

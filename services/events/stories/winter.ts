@@ -10,11 +10,11 @@ export const WINTER_NODES: Record<string, StoryNode> = {
     },
     'winter_1_blizzard': {
         id: 'winter_1_blizzard',
-        text: "🌨️ 화이트아웃. 눈보라가 시야를 가립니다. 이동 경로를 선택해야 합니다.",
+        text: "🌨️ 화이트아웃. 눈보라가 시야를 가립니다. 얼어 죽기 전에 대피할 곳을 찾아야 합니다.",
         next: [
-            { id: 'winter_2_shelter', weight: 0.4 }, // 산장 찾기 (기존)
-            { id: 'winter_2_cave', weight: 0.3 },    // 동굴 (신규)
-            { id: 'winter_2_lake', weight: 0.3 }     // 얼어붙은 호수 (신규 - 지름길)
+            { id: 'winter_2_shelter', weight: 0.4, choiceText: "산장 찾기 (안전, 시간 소모)" }, 
+            { id: 'winter_2_cave', weight: 0.3, choiceText: "동굴 탐색 (맹수 위험)" },    
+            { id: 'winter_2_lake', weight: 0.3, choiceText: "얼어붙은 호수 횡단 (빠름, 익사 위험)" }
         ],
         effect: { target: 'ALL', hp: -5, fatigue: 5 }
     },
@@ -24,10 +24,17 @@ export const WINTER_NODES: Record<string, StoryNode> = {
         id: 'winter_2_lake',
         text: "🧊 시간을 단축하기 위해 꽁꽁 언 호수를 가로지르기로 합니다. 얼음이 쩍쩍 갈라지는 소리가 들립니다.",
         next: [
-            { id: 'winter_3_lake_safe', weight: 0.6 },
+            { id: 'winter_3_lake_expert', weight: 0.0, choiceText: "얼음 두께 측정 및 경로 탐색 (연구원 필요)", req: { job: '연구원' } },
+            { id: 'winter_3_lake_safe', weight: 0.6, choiceText: "조심해서 건너기" },
             { id: 'winter_3_lake_crack', weight: 0.4 }
         ],
         effect: { target: 'ALL', sanity: -5 }
+    },
+    'winter_3_lake_expert': {
+        id: 'winter_3_lake_expert',
+        text: "🔬 연구원의 분석 덕분에 가장 두껍고 안전한 얼음길을 찾아냈습니다. 미끄러지듯 빠르게 이동하여 시간을 아꼈습니다.",
+        next: [{ id: 'winter_5_thaw', weight: 1.0 }],
+        effect: { target: 'ALL', fatigue: -20, sanity: 5 }
     },
     'winter_3_lake_safe': {
         id: 'winter_3_lake_safe',

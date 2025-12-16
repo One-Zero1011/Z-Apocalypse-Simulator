@@ -32,8 +32,10 @@ export const SCHOOL_NODES: Record<string, StoryNode> = {
         id: 'school_2_hallway',
         text: "복도는 어둡고 습합니다. 사물함들이 쏟아져 나와 길을 막고 있습니다. 어디를 먼저 수색할까요?",
         next: [
-            { id: 'school_3_cafeteria', weight: 0.5 }, // 급식실
-            { id: 'school_3_library', weight: 0.5 }    // 도서관
+            { id: 'school_3_cafeteria', weight: 0.5, choiceText: "급식실 (식량)" }, 
+            { id: 'school_3_library', weight: 0.5, choiceText: "도서관 (정보)" },
+            { id: 'school_3_science_lab', weight: 0.0, choiceText: "과학실 (약품/제조)", req: { job: '교사/교수' } },
+            { id: 'school_3_science_lab_res', weight: 0.0, choiceText: "과학실 (약품/제조)", req: { job: '연구원' } }
         ]
     },
 
@@ -49,6 +51,18 @@ export const SCHOOL_NODES: Record<string, StoryNode> = {
         text: "📚 도서관은 난장판이지만, 생존자들이 남긴 '주변 지역 안전 지도'를 발견했습니다. 귀중한 정보입니다.",
         next: [{ id: 'school_4_broadcast', weight: 1.0 }],
         effect: { target: 'ALL', sanity: 10, loot: ['지도'] }
+    },
+    'school_3_science_lab': {
+        id: 'school_3_science_lab',
+        text: "🧪 과학실에는 실험용 약품들이 남아있습니다. 전문 지식을 활용해 '화염병'과 '소독약'을 제조했습니다.",
+        next: [{ id: 'school_4_broadcast', weight: 1.0 }],
+        effect: { target: 'ALL', loot: ['항생제', '권총'], sanity: 5 } // 권총은 화염병/무기 대용
+    },
+    'school_3_science_lab_res': { // Duplicate for Researcher check
+        id: 'school_3_science_lab_res',
+        text: "🧪 과학실에는 실험용 약품들이 남아있습니다. 전문 지식을 활용해 '화염병'과 '소독약'을 제조했습니다.",
+        next: [{ id: 'school_4_broadcast', weight: 1.0 }],
+        effect: { target: 'ALL', loot: ['항생제', '권총'], sanity: 5 }
     },
 
     // Depth 4: 방송실의 신호
@@ -67,8 +81,8 @@ export const SCHOOL_NODES: Record<string, StoryNode> = {
         id: 'school_5_survivors',
         text: "👥 방송실에는 앳된 얼굴의 학생들이 무장하고 경계 중이었습니다. 그들은 우리를 외부의 약탈자로 오해하고 활을 겨눕니다.",
         next: [
-            { id: 'school_6_negotiate', weight: 0.5 },
-            { id: 'school_6_fight', weight: 0.5 }
+            { id: 'school_6_negotiate', weight: 0.5, choiceText: "대화 시도 (설득/협상)" },
+            { id: 'school_6_fight', weight: 0.5, choiceText: "무력 제압 (전투/제압)" }
         ],
         effect: { target: 'ALL', sanity: -5 }
     },

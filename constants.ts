@@ -47,3 +47,11 @@ export const JOB_CATEGORIES: Record<string, string[]> = {
         "대학생", "고등학생", "중학생", "초등학생", "백수", "거지/노숙자", "조폭/마피아", "도박사", "죄수"
     ]
 };
+
+// Jobs that have a higher chance (30%) to generate loot daily
+export const PRODUCTION_JOBS = [
+    "농부", "요리사", "사냥꾼", "사육사", "어부", // Food
+    "의사", "약사", "간호사", "수의사", "응급구조사", // Meds
+    "형사", "탐정", "기자", "도박사", "영업직", "노숙자", // Search/Luck
+    "기술자(엔지니어)", "정비공", "배관공", "목수" // Tech/Utility
+];

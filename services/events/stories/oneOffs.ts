@@ -82,11 +82,29 @@ export const ONE_OFF_NODES: Record<string, StoryNode> = {
         text: "🐀 쥐 떼가 식량 창고를 습격했습니다! 급하게 쫓아냈지만 식량 일부가 오염되었습니다.",
         effect: { target: 'ALL', sanity: -5, inventoryRemove: ['통조림'] }
     },
+    
+    // Updated: Truck with Choice
     'abandoned_truck': {
         id: 'abandoned_truck',
-        text: "🚚 갓길에 버려진 택배 트럭을 발견했습니다. 상자를 뜯어보니 쓸만한 물건들이 남아있습니다!",
-        effect: { target: 'ALL', loot: ['통조림'] }
+        text: "🚚 갓길에 버려진 택배 트럭을 발견했습니다. 뒷문은 굳게 잠겨있습니다.",
+        next: [
+            { id: 'truck_lockpick', weight: 0.0, choiceText: "자물쇠 따기 (기술자/정비공 필요)", req: { job: '기술자(엔지니어)' } },
+            { id: 'truck_lockpick_mech', weight: 0.0, choiceText: "자물쇠 따기 (기술자/정비공 필요)", req: { job: '정비공' } },
+            { id: 'truck_force', weight: 1.0, choiceText: "힘으로 부수기 (피로도 증가)" }
+        ]
     },
+    'truck_lockpick': {
+        id: 'truck_lockpick',
+        text: "🔧 전문 기술을 발휘해 소리 없이 문을 열었습니다. 안에는 유용한 물건들이 가득합니다!",
+        effect: { target: 'ALL', loot: ['통조림', '통조림', '붕대'], sanity: 5 }
+    },
+    'truck_lockpick_mech': { id: 'truck_lockpick', text: "🔧 전문 기술을 발휘해 소리 없이 문을 열었습니다. 안에는 유용한 물건들이 가득합니다!", effect: { target: 'ALL', loot: ['통조림', '통조림', '붕대'], sanity: 5 } },
+    'truck_force': {
+        id: 'truck_force',
+        text: "🔨 한참을 두드리고 부순 끝에 문을 열었습니다. 요란한 소리 때문에 서둘러 물건만 챙겨 떠납니다.",
+        effect: { target: 'ALL', loot: ['통조림', '붕대'], fatigue: 15 }
+    },
+
     'pharmacy_ruin': {
         id: 'pharmacy_ruin',
         text: "💊 약국 폐허의 금고가 열려있습니다. 누군가 털어가려다 실패한 것 같습니다. 안에는 귀한 백신과 약품이 그대로 있습니다!",
@@ -123,7 +141,130 @@ export const ONE_OFF_NODES: Record<string, StoryNode> = {
     },
     'military_convoy': {
         id: 'military_convoy',
-        text: "🚛 전복된 군용 수송 차량 행렬을 발견했습니다. 호송하던 군인들은 모두 죽었지만, 삼엄하게 지키던 화물 상자에서 백신과 무기를 확보했습니다.",
-        effect: { target: 'ALL', sanity: 10, loot: ['백신', '권총', '통조림'] }
+        text: "🚛 전복된 군용 수송 차량 행렬을 발견했습니다. 호송하던 군인들은 모두 죽었지만, 화물 상자는 굳게 잠겨있습니다.",
+        next: [
+            { id: 'convoy_loot', weight: 0.5, choiceText: "수색 강행 (백신/무기, 위험)" },
+            { id: 'convoy_ignore', weight: 0.5, choiceText: "무시하고 이동 (안전)" }
+        ]
+    },
+    'convoy_loot': {
+        id: 'convoy_loot',
+        text: "📦 위험을 무릅쓰고 상자를 엽니다. 안에서 백신과 무기를 확보했지만, 매복해있던 군인 좀비가 튀어나옵니다!",
+        effect: { target: 'ALL', sanity: 5, hp: -10, loot: ['백신', '권총', '통조림'] }
+    },
+    'convoy_ignore': {
+        id: 'convoy_ignore',
+        text: "👀 너무 위험해 보입니다. 아쉬움을 뒤로하고 조용히 자리를 뜹니다.",
+        effect: { target: 'ALL', fatigue: 5 }
+    },
+
+    // =========================================================================
+    // 신규 아이템 상호작용 이벤트 5종 (Item Interaction Events)
+    // =========================================================================
+
+    // 1. 잠긴 군용 보급상자 (맥가이버 칼 필요)
+    'oneoff_locked_box': {
+        id: 'oneoff_locked_box',
+        text: "🔒 수풀 속에 숨겨진 군용 보급 상자를 발견했습니다. 열쇠 구멍은 녹슬었고, 틈새는 좁습니다.",
+        next: [
+            { id: 'box_knife', weight: 0.0, choiceText: "맥가이버 칼로 따기 (맥가이버 칼 필요)", req: { item: '맥가이버 칼' } },
+            { id: 'box_smash', weight: 1.0, choiceText: "돌로 내리찍기 (소음 발생)" }
+        ]
+    },
+    'box_knife': {
+        id: 'box_knife',
+        text: "🔪 맥가이버 칼의 도구들을 이용해 정밀하게 자물쇠를 해체했습니다. 안에는 최고급 보급품이 가득합니다!",
+        effect: { target: 'ALL', loot: ['권총', '통조림', '항생제', '지도'], sanity: 10 }
+    },
+    'box_smash': {
+        id: 'box_smash',
+        text: "🔨 돌로 수십 번을 내리찍어 겨우 상자를 열었습니다. 그 과정에서 내용물 일부가 부서졌고, 소음을 듣고 좀비가 몰려와 급히 자리를 떴습니다.",
+        effect: { target: 'ALL', loot: ['통조림'], fatigue: 15 }
+    },
+
+    // 2. 안개 속의 갈림길 (지도 필요)
+    'oneoff_confusing_path': {
+        id: 'oneoff_confusing_path',
+        text: "🌫️ 짙은 안개 때문에 방향 감각을 상실했습니다. 눈앞에 세 갈래 길이 나타났는데, 어디가 안전한지 알 수 없습니다.",
+        next: [
+            { id: 'path_map', weight: 0.0, choiceText: "지도로 위치 확인 (지도 필요)", req: { item: '지도' } },
+            { id: 'path_guess', weight: 1.0, choiceText: "감으로 찍어서 이동" }
+        ]
+    },
+    'path_map': {
+        id: 'path_map',
+        text: "🗺️ 지도를 펼쳐 주변 지형지물과 대조했습니다. 숨겨진 안전 가옥으로 가는 지름길을 찾아냈습니다! 편안하게 휴식을 취합니다.",
+        effect: { target: 'ALL', fatigue: -20, hp: 5, sanity: 5 }
+    },
+    'path_guess': {
+        id: 'path_guess',
+        text: "🌀 감을 믿고 이동했지만, 늪지대를 헤매며 체력만 낭비했습니다. 결국 제자리로 돌아왔습니다.",
+        effect: { target: 'ALL', fatigue: 20, sanity: -5 }
+    },
+
+    // 3. 광견(좀비견)의 습격 (권총 필요)
+    'oneoff_zombie_dog': {
+        id: 'oneoff_zombie_dog',
+        text: "🐕르르릉... 덩치 큰 좀비견 세 마리가 좁은 골목길을 막아서고 침을 흘리고 있습니다. 도망칠 곳이 없습니다!",
+        next: [
+            { id: 'dog_shoot', weight: 0.0, choiceText: "권총 사격 (권총 필요)", req: { item: '권총' } },
+            { id: 'dog_fight', weight: 1.0, choiceText: "근접전 돌입 (부상 위험)" }
+        ]
+    },
+    'dog_shoot': {
+        id: 'dog_shoot',
+        text: "🔫 탕! 탕! 탕! 침착하게 권총을 발사해 달려드는 짐승들을 제압했습니다. 다친 사람 없이 위기를 넘겼습니다.",
+        effect: { target: 'ALL', sanity: 5, fatigue: 5 }
+    },
+    'dog_fight': {
+        id: 'dog_fight',
+        text: "⚔️ 무기를 들고 육탄전을 벌였습니다. 놈들을 처치했지만, 날카로운 이빨에 물리고 뜯겨 심한 상처를 입었습니다.",
+        effect: { target: 'RANDOM_HALF', hp: -20, infection: 15, fatigue: 20 }
+    },
+
+    // 4. 수수께끼의 주파수 (무전기 필요)
+    'oneoff_faint_signal': {
+        id: 'oneoff_faint_signal',
+        text: "📡 버려진 통신탑 근처를 지나는데, 끊어진 전선들 사이에서 미세한 잡음이 들리는 것 같습니다.",
+        next: [
+            { id: 'signal_radio', weight: 0.0, choiceText: "주파수 스캔 (무전기 필요)", req: { item: '무전기' } },
+            { id: 'signal_ignore', weight: 1.0, choiceText: "무시하고 이동" }
+        ]
+    },
+    'signal_radio': {
+        id: 'signal_radio',
+        text: "📻 무전기를 켜고 주파수를 맞추자, 생존자 그룹의 좌표 방송이 잡혔습니다! 그들이 숨겨둔 보급품 위치를 알아냈습니다.",
+        effect: { target: 'ALL', loot: ['통조림', '통조림', '비타민', '안정제'], sanity: 10 }
+    },
+    'signal_ignore': {
+        id: 'signal_ignore',
+        text: "🔇 바람 소리겠거니 하고 지나쳤습니다. 무언가 중요한 기회를 놓친 것 같은 찜찜함이 남습니다.",
+        effect: { target: 'ALL', fatigue: 5 }
+    },
+
+    // 5. 끊긴 다리와 덩굴 (맥가이버 칼 필요)
+    'oneoff_broken_bridge': {
+        id: 'oneoff_broken_bridge',
+        text: "🌉 협곡을 건너는 다리가 끊어져 있습니다. 반대편에는 안전한 쉼터가 보입니다. 주변에 튼튼해 보이는 덩굴 식물이 있습니다.",
+        next: [
+            { id: 'bridge_cut', weight: 0.0, choiceText: "덩굴 잘라 밧줄 만들기 (맥가이버 칼 필요)", req: { item: '맥가이버 칼' } },
+            { id: 'bridge_tech', weight: 0.0, choiceText: "임시 다리 건설 (기술자 필요)", req: { job: '기술자(엔지니어)' } },
+            { id: 'bridge_detour', weight: 1.0, choiceText: "먼 길로 우회하기" }
+        ]
+    },
+    'bridge_cut': {
+        id: 'bridge_cut',
+        text: "🔪 맥가이버 칼의 톱날로 덩굴을 잘라 튼튼한 밧줄을 만들었습니다. 타잔처럼 줄을 타고 건너 시간을 대폭 단축했습니다.",
+        effect: { target: 'ALL', fatigue: -15, sanity: 5 }
+    },
+    'bridge_tech': { // Same effect
+        id: 'bridge_tech',
+        text: "🔧 주변의 자재를 모아 임시 다리를 뚝딱 만들어냈습니다. 모두가 안전하고 편하게 건넜습니다.",
+        effect: { target: 'ALL', fatigue: -15, sanity: 5 }
+    },
+    'bridge_detour': {
+        id: 'bridge_detour',
+        text: "🚶 도구도 기술도 없습니다. 어쩔 수 없이 산을 하나 넘어서 돌아가야 했습니다. 다리가 퉁퉁 부었습니다.",
+        effect: { target: 'ALL', fatigue: 25, hp: -5 }
     }
 };

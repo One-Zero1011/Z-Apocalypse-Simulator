@@ -12,12 +12,18 @@ interface Props {
   onToggleSameSex: () => void; 
   allowIncest: boolean; 
   onToggleIncest: () => void; 
-  pureLoveMode: boolean; // Added
-  onTogglePureLove: () => void; // Added
+  pureLoveMode: boolean; 
+  onTogglePureLove: () => void; 
   developerMode: boolean; 
   onToggleDeveloperMode: () => void;
   useMentalStates: boolean;
   onToggleMentalStates: () => void;
+  allowInteractions: boolean; 
+  onToggleInteractions: () => void;
+  enableStoryChoices: boolean;
+  onToggleStoryChoices: () => void;
+  enablePregnancy: boolean; // Added
+  onTogglePregnancy: () => void; // Added
   onShowTutorial: () => void;
 }
 
@@ -38,6 +44,12 @@ const SystemMenu: React.FC<Props> = ({
     onToggleDeveloperMode,
     useMentalStates,
     onToggleMentalStates,
+    allowInteractions, 
+    onToggleInteractions,
+    enableStoryChoices,
+    onToggleStoryChoices,
+    enablePregnancy, // Added
+    onTogglePregnancy, // Added
     onShowTutorial
 }) => {
   return (
@@ -67,6 +79,60 @@ const SystemMenu: React.FC<Props> = ({
                게임 설정 (Settings)
              </h3>
              
+             {/* Interaction Toggle */}
+             <div className="flex items-center justify-between bg-slate-50 dark:bg-slate-700/50 p-3 rounded-lg border border-slate-200 dark:border-slate-700">
+                <div>
+                    <div className="font-bold text-slate-700 dark:text-slate-200">생존자 상호작용 (Interactions)</div>
+                    <div className="text-xs text-slate-500 dark:text-slate-400">
+                        활성화 시 생존자들끼리 대화, 다툼, 연애 등 상호작용을 합니다.
+                    </div>
+                </div>
+                <button 
+                    onClick={onToggleInteractions}
+                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 ${allowInteractions ? 'bg-green-600' : 'bg-slate-300 dark:bg-slate-600'}`}
+                >
+                    <span 
+                        className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${allowInteractions ? 'translate-x-6' : 'translate-x-1'}`} 
+                    />
+                </button>
+             </div>
+
+             {/* Story Choices Toggle */}
+             <div className="flex items-center justify-between bg-slate-50 dark:bg-slate-700/50 p-3 rounded-lg border border-slate-200 dark:border-slate-700">
+                <div>
+                    <div className="font-bold text-slate-700 dark:text-slate-200">스토리 선택지 (Interactive Story)</div>
+                    <div className="text-xs text-slate-500 dark:text-slate-400">
+                        활성화 시 중요 분기점에서 직접 선택합니다. 끄면 확률에 따라 자동 진행됩니다.
+                    </div>
+                </div>
+                <button 
+                    onClick={onToggleStoryChoices}
+                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:ring-offset-2 ${enableStoryChoices ? 'bg-yellow-600' : 'bg-slate-300 dark:bg-slate-600'}`}
+                >
+                    <span 
+                        className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${enableStoryChoices ? 'translate-x-6' : 'translate-x-1'}`} 
+                    />
+                </button>
+             </div>
+
+             {/* Pregnancy Toggle (New) */}
+             <div className="flex items-center justify-between bg-slate-50 dark:bg-slate-700/50 p-3 rounded-lg border border-slate-200 dark:border-slate-700">
+                <div>
+                    <div className="font-bold text-slate-700 dark:text-slate-200">임신/출산 시스템 (Pregnancy)</div>
+                    <div className="text-xs text-slate-500 dark:text-slate-400">
+                        활성화 시 부부 사이에서 아기 이벤트가 발생합니다. (꺼도 기존 아기는 유지됩니다)
+                    </div>
+                </div>
+                <button 
+                    onClick={onTogglePregnancy}
+                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-pink-500 focus:ring-offset-2 ${enablePregnancy ? 'bg-pink-600' : 'bg-slate-300 dark:bg-slate-600'}`}
+                >
+                    <span 
+                        className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${enablePregnancy ? 'translate-x-6' : 'translate-x-1'}`} 
+                    />
+                </button>
+             </div>
+
              {/* Same Sex Couples Toggle */}
              <div className="flex items-center justify-between bg-slate-50 dark:bg-slate-700/50 p-3 rounded-lg border border-slate-200 dark:border-slate-700">
                 <div>
@@ -104,10 +170,9 @@ const SystemMenu: React.FC<Props> = ({
                 <div>
                     <div className="font-bold text-slate-700 dark:text-slate-200 flex items-center gap-2">
                         순애 모드 (일부일처)
-                        <span className="text-[10px] bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300 px-1.5 py-0.5 rounded">NEW</span>
                     </div>
                     <div className="text-xs text-slate-500 dark:text-slate-400">
-                        활성화 시 파트너가 있는 상태에서 다른 사람과 사귈 수 없습니다. (헤어져야 가능)
+                        활성화 시 파트너가 있는 상태에서 다른 사람과 사귈 수 없습니다.
                     </div>
                 </div>
                 <button 

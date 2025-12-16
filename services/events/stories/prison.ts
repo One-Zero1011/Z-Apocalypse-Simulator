@@ -7,8 +7,8 @@ export const PRISON_NODES: Record<string, StoryNode> = {
         id: 'prison_0_start',
         text: "🏰 높은 콘크리트 벽과 감시탑이 보입니다. 주립 교도소입니다. 내부는 좀비들로 가득할까요, 아니면 죄수들이 장악했을까요?",
         next: [
-            { id: 'prison_1_front_assault', weight: 0.3 },
-            { id: 'prison_1_sewer_sneak', weight: 0.7 }
+            { id: 'prison_1_front_assault', weight: 0.3, choiceText: "정면 돌파 (무력 진입)" },
+            { id: 'prison_1_sewer_sneak', weight: 0.7, choiceText: "하수구 잠입 (은밀 침투)" }
         ]
     },
 
@@ -31,13 +31,15 @@ export const PRISON_NODES: Record<string, StoryNode> = {
         id: 'prison_2_block_c',
         text: "⛓️ C동 감방 구역. 철창 너머로 감염된 죄수들이 팔을 뻗으며 울부짖습니다. 바닥에는 '폭동'의 흔적이 역력합니다.",
         next: [
-            { id: 'prison_3_armory', weight: 0.5 },
-            { id: 'prison_3_infirmary', weight: 0.5 }
+            { id: 'prison_3_armory', weight: 0.5, choiceText: "무기고 수색" },
+            { id: 'prison_3_infirmary', weight: 0.5, choiceText: "의무실 수색" },
+            { id: 'prison_3_control_room', weight: 0.0, choiceText: "중앙 통제실 (교도관/개발자 필요)", req: { job: '교도관' } },
+            { id: 'prison_3_control_room_dev', weight: 0.0, choiceText: "중앙 통제실 (교도관/개발자 필요)", req: { job: '개발자' } }
         ],
         effect: { target: 'ALL', sanity: -5 }
     },
 
-    // Depth 3: 자원 수색
+    // Depth 3: 자원 수색 (Normal)
     'prison_3_armory': {
         id: 'prison_3_armory',
         text: "🔫 무기고 문은 열려있습니다. 대부분 털렸지만, 진압봉과 방패, 약간의 탄약을 챙겼습니다.",
@@ -50,6 +52,15 @@ export const PRISON_NODES: Record<string, StoryNode> = {
         next: [{ id: 'prison_4_warden', weight: 1.0 }],
         effect: { target: 'RANDOM_1', hp: -5, loot: ['항생제', '안정제', '붕대'] }
     },
+    
+    // Depth 3: 자원 수색 (Special)
+    'prison_3_control_room': {
+        id: 'prison_3_control_room',
+        text: "🖥️ 보안 코드를 입력하고 안전하게 통제실에 진입했습니다. CCTV로 적의 위치를 파악하고, 전자식 무기고를 원격으로 열어 최고급 장비를 챙깁니다.",
+        next: [{ id: 'prison_4_warden', weight: 1.0 }],
+        effect: { target: 'ALL', loot: ['권총', '권총', '무전기'], sanity: 10 }
+    },
+    'prison_3_control_room_dev': { id: 'prison_3_control_room', text: "🖥️ 보안 코드를 입력하고 안전하게 통제실에 진입했습니다. CCTV로 적의 위치를 파악하고, 전자식 무기고를 원격으로 열어 최고급 장비를 챙깁니다.", next: [{ id: 'prison_4_warden', weight: 1.0 }], effect: { target: 'ALL', loot: ['권총', '권총', '무전기'], sanity: 10 } },
 
     // Depth 4: 소장실
     'prison_4_warden': {

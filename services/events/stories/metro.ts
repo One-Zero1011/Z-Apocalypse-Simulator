@@ -19,9 +19,9 @@ export const METRO_NODES: Record<string, StoryNode> = {
         id: 'metro_1_entrance',
         text: "🔦 개찰구를 넘어 승강장으로 내려갑니다. 어디선가 물 떨어지는 소리와 쥐들이 움직이는 소리가 들립니다.",
         next: [
-            { id: 'metro_2_tunnel', weight: 0.4 }, // 선로
-            { id: 'metro_2_utility', weight: 0.3 }, // 관리실
-            { id: 'metro_2_mall', weight: 0.3 }  // 신규: 지하상가
+            { id: 'metro_2_tunnel', weight: 0.4, choiceText: "선로 진입 (빠름, 위험)" }, 
+            { id: 'metro_2_utility', weight: 0.3, choiceText: "관리실 수색 (전력/자판기)" }, 
+            { id: 'metro_2_mall', weight: 0.3, choiceText: "지하상가 수색 (물자/가스)" }
         ],
         effect: { target: 'ALL', sanity: -5 }
     },
@@ -94,7 +94,7 @@ export const METRO_NODES: Record<string, StoryNode> = {
         text: "🛤️ 끝없는 터널을 걷고 있습니다. 벽면에는 '그들이 소리를 듣는다'라는 낙서가 피로 쓰여있습니다.",
         next: [
             { id: 'metro_3_echo', weight: 0.5 },
-            { id: 'metro_3_train', weight: 0.5 }
+            { id: 'metro_3_train', weight: 0.5, choiceText: "전동차 수색" }
         ],
         effect: { target: 'ALL', fatigue: 10 }
     },
@@ -106,10 +106,33 @@ export const METRO_NODES: Record<string, StoryNode> = {
     },
     'metro_3_train': {
         id: 'metro_3_train',
-        text: "🚃 멈춰선 전동차를 발견했습니다. 객차 안에서 잠시 휴식을 취하며 물자를 수색합니다.",
-        next: [{ id: 'metro_4_nest', weight: 1.0 }],
-        effect: { target: 'ALL', fatigue: -10, loot: ['초콜릿'] }
+        text: "🚃 멈춰선 전동차를 발견했습니다. 배터리가 방전된 것 같지만, 기술이 있다면 살릴 수 있을지도 모릅니다.",
+        next: [
+            { id: 'metro_3_train_repair', weight: 0.0, choiceText: "엔진 수리 및 가동 (정비공/기술자 필요)", req: { job: '정비공' } },
+            { id: 'metro_3_train_repair_tech', weight: 0.0, choiceText: "엔진 수리 및 가동 (정비공/기술자 필요)", req: { job: '기술자(엔지니어)' } },
+            { id: 'metro_3_train_rest', weight: 1.0, choiceText: "단순 휴식 및 수색" }
+        ],
+        effect: { target: 'ALL', fatigue: -5 }
     },
+    'metro_3_train_repair': {
+        id: 'metro_3_train_repair',
+        text: "🔧 \"이 정도는 껌이지.\" 엔진을 수리하고 비상 전력을 연결했습니다. 전동차가 움직입니다! 편안하게 다음 역까지 이동합니다.",
+        next: [{ id: 'metro_7_end', weight: 1.0 }],
+        effect: { target: 'ALL', fatigue: -20, sanity: 10 }
+    },
+    'metro_3_train_repair_tech': { // Same as above
+        id: 'metro_3_train_repair_tech',
+        text: "🔧 복잡한 배선을 다시 연결하여 전동차를 움직이게 만들었습니다. 좀비 떼를 따돌리고 쾌속으로 이동합니다!",
+        next: [{ id: 'metro_7_end', weight: 1.0 }],
+        effect: { target: 'ALL', fatigue: -20, sanity: 10 }
+    },
+    'metro_3_train_rest': {
+        id: 'metro_3_train_rest',
+        text: "🛋️ 객차 안에서 잠시 휴식을 취하며 물자를 수색했습니다. 초콜릿을 발견했지만, 차는 움직이지 않습니다. 걸어가야 합니다.",
+        next: [{ id: 'metro_4_nest', weight: 1.0 }],
+        effect: { target: 'ALL', fatigue: -5, loot: ['초콜릿'] }
+    },
+
     'metro_4_nest': {
         id: 'metro_4_nest',
         text: "🕸️ 터널의 천장이 이상한 점액질로 뒤덮여 있습니다. 이곳은 평범한 좀비가 아닌, 변종 '크롤러'들의 둥지입니다!",

@@ -17,8 +17,10 @@ export const AMUSEMENT_NODES: Record<string, StoryNode> = {
         id: 'amusement_1_ticket',
         text: "🎫 매표소 입구. 회전식 개찰구에 좀비들이 끼어있습니다. 담을 넘어 입장합니다. 바닥엔 팝콘 대신 탄피가 흩어져 있습니다.",
         next: [
-            { id: 'amusement_2_haunted', weight: 0.5 },
-            { id: 'amusement_2_arcade', weight: 0.5 }
+            { id: 'amusement_2_haunted', weight: 0.5, choiceText: "유령의 집 (지름길, 공포)" },
+            { id: 'amusement_2_arcade', weight: 0.5, choiceText: "오락실 (물자 파밍)" },
+            { id: 'amusement_2_arcade_gamer', weight: 0.0, choiceText: "오락실 털기 (프로게이머/학생 필요)", req: { job: '프로게이머' } },
+            { id: 'amusement_2_arcade_student', weight: 0.0, choiceText: "오락실 털기 (프로게이머/학생 필요)", req: { job: '중학생' } }
         ]
     },
 
@@ -34,6 +36,18 @@ export const AMUSEMENT_NODES: Record<string, StoryNode> = {
         text: "🕹️ 오락실. 먼지 쌓인 인형 뽑기 기계 안에 초콜릿 바와 건전지가 들어있습니다. 유리를 깨고 꺼냅니다.",
         next: [{ id: 'amusement_3_rollercoaster', weight: 1.0 }],
         effect: { target: 'ALL', loot: ['초콜릿', '초콜릿'] }
+    },
+    'amusement_2_arcade_gamer': {
+        id: 'amusement_2_arcade_gamer',
+        text: "🕹️ 오락실의 숨겨진 직원용 창고를 찾아냈습니다! 동체시력이 좋은 눈으로 구석구석 뒤져 귀한 간식과 상품을 싹쓸이합니다.",
+        next: [{ id: 'amusement_3_rollercoaster', weight: 1.0 }],
+        effect: { target: 'ALL', loot: ['초콜릿', '초콜릿', '비타민', '맥가이버 칼'], sanity: 10 }
+    },
+    'amusement_2_arcade_student': { // Same as above
+        id: 'amusement_2_arcade_student',
+        text: "🕹️ 오락실의 숨겨진 직원용 창고를 찾아냈습니다! 익숙한 지형이라 구석구석 뒤져 귀한 간식과 상품을 싹쓸이합니다.",
+        next: [{ id: 'amusement_3_rollercoaster', weight: 1.0 }],
+        effect: { target: 'ALL', loot: ['초콜릿', '초콜릿', '비타민', '맥가이버 칼'], sanity: 10 }
     },
 
     // Depth 3: 롤러코스터
