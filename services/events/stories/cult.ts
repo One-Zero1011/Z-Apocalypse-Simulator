@@ -58,7 +58,7 @@ export const CULT_NODES: Record<string, StoryNode> = {
     'cult_5_victory_boss': {
         id: 'cult_5_victory_boss',
         text: "🗡️ 교주를 쓰러뜨렸습니다. 광신도들은 리더를 잃고 흩어집니다. 교주의 방에서 귀중한 물자들을 챙깁니다.",
-        effect: { target: 'ALL', sanity: 10, loot: ['권총', '안정제', '금괴(무쓸모)'] }
+        effect: { target: 'ALL', sanity: 10, loot: ['권총', '안정제', '인육'] }
     },
     'cult_5_defeat_captive': {
         id: 'cult_5_defeat_captive',

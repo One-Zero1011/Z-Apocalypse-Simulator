@@ -89,8 +89,8 @@ export const ONE_OFF_NODES: Record<string, StoryNode> = {
     },
     'pharmacy_ruin': {
         id: 'pharmacy_ruin',
-        text: "💊 약국 폐허를 지나가다 구석에 떨어져 있던 구급상자를 발견했습니다.",
-        effect: { target: 'ALL', loot: ['붕대', '항생제', '비타민'] }
+        text: "💊 약국 폐허의 금고가 열려있습니다. 누군가 털어가려다 실패한 것 같습니다. 안에는 귀한 백신과 약품이 그대로 있습니다!",
+        effect: { target: 'ALL', loot: ['붕대', '항생제', '비타민', '백신'] }
     },
     'creepy_doll': {
         id: 'creepy_doll',
@@ -106,5 +106,24 @@ export const ONE_OFF_NODES: Record<string, StoryNode> = {
         id: 'weapon_maintenance',
         text: "🔫 오늘은 이동을 멈추고 무기를 손질하고 장비를 점검하기로 했습니다. 준비된 상태가 마음을 편하게 합니다.",
         effect: { target: 'ALL', fatigue: 5, sanity: 5 }
+    },
+    
+    // --- Dark Events ---
+    'cannibal_meal': {
+        id: 'cannibal_meal',
+        text: "🍖 충격적인 광경을 목격했습니다. 누군가가 남기고 간 '고기'가 있습니다. 사람이었던 것 같습니다... 굶주림 앞에서는 선택의 여지가 없을지도 모릅니다.",
+        effect: { target: 'ALL', sanity: -20, loot: ['인육', '인육'] }
+    },
+
+    // --- Special Loot (High Value) ---
+    'vaccine_drop': {
+        id: 'vaccine_drop',
+        text: "🚁 추락한 군용 드론의 잔해를 발견했습니다. 화물칸에 'Z-백신'이라고 적힌 앰플이 기적적으로 깨지지 않고 남아있습니다!",
+        effect: { target: 'ALL', sanity: 15, loot: ['백신'] }
+    },
+    'military_convoy': {
+        id: 'military_convoy',
+        text: "🚛 전복된 군용 수송 차량 행렬을 발견했습니다. 호송하던 군인들은 모두 죽었지만, 삼엄하게 지키던 화물 상자에서 백신과 무기를 확보했습니다.",
+        effect: { target: 'ALL', sanity: 10, loot: ['백신', '권총', '통조림'] }
     }
 };

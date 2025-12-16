@@ -90,10 +90,14 @@ export interface ActionEffect {
     actorFatigue?: number; // For Interactions
     affinity?: number; // For Interactions
     loot?: string[]; // Added for Job Events and others
+    status?: Status; // Added
+    inventoryRemove?: string[]; // Added
 }
 
 export interface GameSettings {
     allowSameSexCouples: boolean;
+    allowIncest: boolean; // Added: 근친 허용
+    pureLoveMode: boolean; // Added: 순애 모드 (일부일처제)
     developerMode: boolean; // Added developerMode
     useMentalStates: boolean; // Added useMentalStates
 }
@@ -121,6 +125,7 @@ export interface StoryEffect {
     loot?: string[]; // 획득 아이템
     inventoryRemove?: string[]; // 제거할 아이템
     affinity?: number; // New: Global affinity change
+    hunger?: number; // Added
 }
 
 export interface StoryNode {

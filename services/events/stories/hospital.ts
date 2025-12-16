@@ -119,7 +119,7 @@ export const HOSPITAL_NODES: Record<string, StoryNode> = {
     },
     'hospital_6_win': {
         id: 'hospital_6_win',
-        text: "💊 치열한 사투 끝에 변종을 쓰러뜨렸습니다! 약제실은 보물창고였습니다. 희귀한 약품들을 가방 가득 챙깁니다.",
-        effect: { target: 'ALL', sanity: 30, loot: ['항생제', '항생제', '안정제', '비타민'] }
+        text: "💊 치열한 사투 끝에 변종을 쓰러뜨렸습니다! 약제실은 보물창고였습니다. 희귀한 약품과 백신을 확보합니다.",
+        effect: { target: 'ALL', sanity: 30, loot: ['항생제', '안정제', '비타민', '백신'] }
     }
 };

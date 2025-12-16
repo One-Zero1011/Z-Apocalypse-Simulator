@@ -8,6 +8,9 @@ import { WANDER_NODES } from "./stories/wander";
 import { CULT_NODES } from "./stories/cult";
 import { ONE_OFF_NODES } from "./stories/oneOffs";
 import { BUNKER_NODES } from "./stories/bunker";
+import { SCHOOL_NODES } from "./stories/school";
+import { PRISON_NODES } from "./stories/prison";
+import { AMUSEMENT_NODES } from "./stories/amusement";
 
 // =================================================================
 // Story Arcs Aggregation
@@ -21,7 +24,10 @@ export const STORY_NODES: Record<string, StoryNode> = {
     ...WANDER_NODES,
     ...CULT_NODES,
     ...ONE_OFF_NODES,
-    ...BUNKER_NODES
+    ...BUNKER_NODES,
+    ...SCHOOL_NODES,
+    ...PRISON_NODES,
+    ...AMUSEMENT_NODES
 };
 
 // 시작 가능한 메인 아크의 첫 번째 노드 ID 목록
@@ -33,7 +39,10 @@ export const STARTER_NODE_IDS = [
     'radio_0_start',
     'wander_0_start',
     'cult_0_start',
-    'bunker_0_signal', // New Bunker Story
+    'bunker_0_signal',
+    'school_0_start', // New
+    'prison_0_start', // New
+    'amusement_0_start', // New
     
     // One-offs (Expanded)
     'sunny_day',
@@ -52,8 +61,11 @@ export const STARTER_NODE_IDS = [
     'stray_dog',
     'rat_swarm',
     'abandoned_truck',
-    'pharmacy_ruin',
+    'pharmacy_ruin', // Modified to give Vaccine
     'creepy_doll',
     'flower_field',
-    'weapon_maintenance'
+    'weapon_maintenance',
+    'cannibal_meal', // New
+    'vaccine_drop', // New (Boost Vaccine chance)
+    'military_convoy' // New (Boost Vaccine chance)
 ];

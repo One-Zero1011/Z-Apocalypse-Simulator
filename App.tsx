@@ -70,6 +70,8 @@ const App: React.FC = () => {
   const [forcedEvents, setForcedEvents] = useState<ForcedEvent[]>([]);
   const [gameSettings, setGameSettings] = useState<GameSettings>({
       allowSameSexCouples: true, // Default ON
+      allowIncest: false, // Default OFF
+      pureLoveMode: false, // Default OFF (New)
       developerMode: false, // Default OFF
       useMentalStates: true // Default ON
   });
@@ -206,7 +208,9 @@ const App: React.FC = () => {
                       setStoryNodeId(parsed.storyNodeId || null);
                       if (parsed.settings) {
                           setGameSettings({ 
-                              allowSameSexCouples: true, 
+                              allowSameSexCouples: true,
+                              allowIncest: false,
+                              pureLoveMode: false,
                               developerMode: false, 
                               useMentalStates: true,
                               ...parsed.settings 
@@ -312,9 +316,13 @@ const App: React.FC = () => {
 
   // --- Character Logic ---
   const addCharacter = (name: string, gender: Gender, mbti: MBTI, job: string, mentalState: MentalState, initialRelations: { targetId: string, type: string }[] = []) => {
+    const newId = crypto.randomUUID();
     const newChar: Character = {
-      id: crypto.randomUUID(), name, gender, mbti, job, hp: MAX_HP, sanity: MAX_SANITY, fatigue: 0, infection: 0, hunger: MAX_HUNGER, hasMuzzle: false,
-      status: 'Alive', mentalState: mentalState, inventory: [...INITIAL_INVENTORY], relationships: {}, relationshipStatuses: {}, killCount: 0
+      id: newId, name, gender, mbti, job, 
+      hp: MAX_HP, sanity: MAX_SANITY, fatigue: 0, infection: 0, hunger: MAX_HUNGER, hasMuzzle: false,
+      status: 'Alive', mentalState: mentalState, 
+      inventory: [...INITIAL_INVENTORY], 
+      relationships: {}, relationshipStatuses: {}, killCount: 0
     };
 
     setCharacters(prev => {
@@ -330,7 +338,10 @@ const App: React.FC = () => {
             if (status === 'Family') return 'Family';
             if (status === 'Colleague') return 'Colleague';
             if (status === 'Ex') return 'Ex';
-            return 'None'; // Default or asymmetric (e.g. Savior)
+            if (status === 'Friend') return 'Friend'; // Added Friend symmetry
+            // Savior might be asymmetric, but for simplicity, let's keep it None or consider Friend.
+            // Keeping None for Savior to imply one-way gratitude unless specified otherwise.
+            return 'None'; 
         };
 
         const updatedPrev = prev.map(existingChar => {
@@ -357,13 +368,14 @@ const App: React.FC = () => {
                 const newToExistingStatus = relationDef.type as RelationshipStatus;
                 const existingToNewStatus = getReverseStatus(relationDef.type);
 
+                // Update New Character's Relationships (Mutation here is on the local object before state update, which is fine)
                 newChar.relationships[existingChar.id] = affinity;
                 newChar.relationshipStatuses[existingChar.id] = newToExistingStatus;
 
                 return {
                     ...existingChar,
-                    relationships: { ...existingChar.relationships, [newChar.id]: affinity },
-                    relationshipStatuses: { ...existingChar.relationshipStatuses, [newChar.id]: existingToNewStatus }
+                    relationships: { ...existingChar.relationships, [newId]: affinity },
+                    relationshipStatuses: { ...existingChar.relationshipStatuses, [newId]: existingToNewStatus }
                 };
             }
             return existingChar;
@@ -635,6 +647,10 @@ const App: React.FC = () => {
             onLoadGame={handleLoadGameTrigger} 
             allowSameSex={gameSettings.allowSameSexCouples} 
             onToggleSameSex={() => setGameSettings(prev => ({...prev, allowSameSexCouples: !prev.allowSameSexCouples}))} 
+            allowIncest={gameSettings.allowIncest}
+            onToggleIncest={() => setGameSettings(prev => ({...prev, allowIncest: !prev.allowIncest}))}
+            pureLoveMode={gameSettings.pureLoveMode}
+            onTogglePureLove={() => setGameSettings(prev => ({...prev, pureLoveMode: !prev.pureLoveMode}))}
             developerMode={gameSettings.developerMode} 
             onToggleDeveloperMode={() => setGameSettings(prev => ({...prev, developerMode: !prev.developerMode}))}
             useMentalStates={gameSettings.useMentalStates}

@@ -33,11 +33,14 @@ const DevEventLists: React.FC<Props> = ({ type, activeId, onSelectStory, onOpenM
                 case 'wander': groupName = 'WANDERER (조우)'; break;
                 case 'cult': groupName = 'CULT (광신도)'; break;
                 case 'bunker': groupName = 'BUNKER (지하 벙커)'; break;
+                case 'school': groupName = 'SCHOOL (학교)'; break; // New
+                case 'prison': groupName = 'PRISON (교도소)'; break; // New
+                case 'amusement': groupName = 'AMUSEMENT (놀이공원)'; break; // New
             }
             if (!acc[groupName]) acc[groupName] = [];
-            acc[groupName].push({ id, text: node.text });
+            acc[groupName].push({ id, text: node.text, effect: node.effect });
             return acc;
-        }, {} as Record<string, {id: string, text: string}[]>);
+        }, {} as Record<string, {id: string, text: string, effect?: any}[]>);
     }, []);
     
     const storyCategories = Object.keys(groupedStoryNodes).sort();
@@ -56,6 +59,64 @@ const DevEventLists: React.FC<Props> = ({ type, activeId, onSelectStory, onOpenM
         if (!searchTerm) return true;
         const lower = searchTerm.toLowerCase();
         return text.toLowerCase().includes(lower) || id.toLowerCase().includes(lower);
+    };
+
+    // --- Stat Formatter ---
+    const formatStats = (effect: any) => {
+        if (!effect) return null;
+        const changes = [];
+        // HP
+        if (effect.hp || effect.actorHp || effect.targetHp) {
+            const val = (effect.hp || 0) + (effect.actorHp || 0) + (effect.targetHp || 0);
+            if (val !== 0) changes.push({ icon: '❤️', val, color: val > 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400' });
+        }
+        // Sanity
+        if (effect.sanity || effect.actorSanity || effect.targetSanity || effect.victimSanityChange) {
+            const val = (effect.sanity || 0) + (effect.actorSanity || 0) + (effect.targetSanity || 0) + (effect.victimSanityChange || 0);
+            if (val !== 0) changes.push({ icon: '🧠', val, color: val > 0 ? 'text-blue-600 dark:text-blue-400' : 'text-red-600 dark:text-red-400' });
+        }
+        // Fatigue (Low is good)
+        if (effect.fatigue || effect.actorFatigue || effect.targetFatigue) {
+            const val = (effect.fatigue || 0) + (effect.actorFatigue || 0) + (effect.targetFatigue || 0);
+            if (val !== 0) changes.push({ icon: '💤', val, color: val < 0 ? 'text-green-600 dark:text-green-400' : 'text-purple-600 dark:text-purple-400' });
+        }
+        // Infection
+        if (effect.infection) {
+            changes.push({ icon: '🦠', val: effect.infection, color: effect.infection > 0 ? 'text-lime-600 dark:text-lime-400' : 'text-blue-500' });
+        }
+        // Hunger
+        if (effect.hunger) {
+            changes.push({ icon: '🍖', val: effect.hunger, color: 'text-orange-600 dark:text-orange-400' });
+        }
+        // Kill
+        if (effect.kill) {
+            changes.push({ icon: '💀', val: effect.kill, color: 'text-slate-500 dark:text-slate-400' });
+        }
+        // Affinity
+        if (effect.affinity || effect.affinityChange) {
+            const val = effect.affinity || effect.affinityChange;
+            changes.push({ icon: '💞', val, color: val > 0 ? 'text-pink-500 dark:text-pink-400' : 'text-slate-500' });
+        }
+        // Loot
+        if (effect.loot && effect.loot.length > 0) {
+            changes.push({ icon: '📦', text: effect.loot.join(', '), color: 'text-amber-600 dark:text-amber-400' });
+        }
+        // Inventory Remove
+        if (effect.inventoryRemove && effect.inventoryRemove.length > 0) {
+            changes.push({ icon: '🗑️', text: effect.inventoryRemove.join(', '), color: 'text-slate-500' });
+        }
+
+        if (changes.length === 0) return null;
+
+        return (
+            <div className="flex flex-wrap gap-1.5 mt-1.5">
+                {changes.map((c, i) => (
+                    <span key={i} className={`text-[10px] font-bold px-1.5 py-0.5 bg-slate-100 dark:bg-slate-700 rounded border border-slate-200 dark:border-slate-600 ${c.color}`}>
+                        {c.icon} {c.text ? c.text : (c.val > 0 ? `+${c.val}` : c.val)}
+                    </span>
+                ))}
+            </div>
+        );
     };
 
     return (
@@ -110,11 +171,12 @@ const DevEventLists: React.FC<Props> = ({ type, activeId, onSelectStory, onOpenM
                                     key={node.id}
                                     onClick={() => onSelectStory(node.id, node.text)}
                                     className={`group flex flex-col text-left p-3 rounded-xl border-2 transition-all ${
-                                        activeId === node.id ? 'bg-blue-50 border-blue-500' : 'bg-white dark:bg-slate-800 border-transparent hover:border-slate-300'
+                                        activeId === node.id ? 'bg-blue-50 border-blue-500' : 'bg-white dark:bg-slate-800 border-transparent hover:border-slate-300 dark:hover:border-slate-600'
                                     }`}
                                 >
                                     <span className="text-[10px] font-mono mb-1 px-1 bg-slate-200 dark:bg-slate-700 rounded w-fit text-slate-600 dark:text-slate-300">{node.id}</span>
                                     <p className="text-xs text-slate-700 dark:text-slate-300 line-clamp-2">{node.text}</p>
+                                    {formatStats(node.effect)}
                                 </button>
                             ))}
                             {groupedStoryNodes[activeStoryTab]?.filter(node => matchesSearch(node.text, node.id)).length === 0 && (
@@ -135,15 +197,16 @@ const DevEventLists: React.FC<Props> = ({ type, activeId, onSelectStory, onOpenM
 
                                 return (
                                     <div key={mbtiType} className="bg-white dark:bg-slate-800 rounded-xl p-4 shadow-sm border border-slate-200 dark:border-slate-700">
-                                        <h3 className="text-lg font-bold text-purple-600 dark:text-purple-400 mb-3 border-b pb-2">{mbtiType}</h3>
+                                        <h3 className="text-lg font-bold text-purple-600 dark:text-purple-400 mb-3 border-b pb-2 dark:border-slate-700">{mbtiType}</h3>
                                         <ul className="space-y-2">
                                             {filteredEvents.map(({ idx, preview }) => (
                                                 <li key={idx}>
                                                     <button 
                                                         onClick={() => onOpenModal('MBTI', mbtiType, idx, preview.text)}
-                                                        className="w-full text-left text-sm text-slate-700 dark:text-slate-300 bg-slate-50 dark:bg-slate-900/50 p-2 rounded hover:bg-purple-100 dark:hover:bg-purple-900/30 transition-colors border border-transparent hover:border-purple-300"
+                                                        className="w-full text-left text-sm text-slate-700 dark:text-slate-300 bg-slate-50 dark:bg-slate-900/50 p-2 rounded hover:bg-purple-100 dark:hover:bg-purple-900/30 transition-colors border border-transparent hover:border-purple-300 group"
                                                     >
-                                                        {preview.text}
+                                                        <div>{preview.text}</div>
+                                                        {formatStats(preview)}
                                                     </button>
                                                 </li>
                                             ))}
@@ -151,7 +214,6 @@ const DevEventLists: React.FC<Props> = ({ type, activeId, onSelectStory, onOpenM
                                     </div>
                                 );
                              })}
-                             {/* Empty State Logic for MBTI not easily implemented without refactor, skipping for simplicity */}
                         </div>
                     )}
 
@@ -159,19 +221,21 @@ const DevEventLists: React.FC<Props> = ({ type, activeId, onSelectStory, onOpenM
                     {type === 'INTERACTION' && (
                         <div className="grid grid-cols-1 gap-3">
                             {INTERACTION_POOL[activeInteractionTab]?.map((item, idx) => {
-                                let text = "";
+                                let preview = { text: "" };
                                 if (typeof item === 'function') {
                                     const result = item('Actor', 'Target');
-                                    text = typeof result === 'string' ? result : result.text;
+                                    if (typeof result === 'string') preview.text = result;
+                                    else preview = result;
                                 }
-                                return { idx, text };
-                            }).filter(item => matchesSearch(item.text)).map(({ idx, text }) => (
+                                return { idx, preview };
+                            }).filter(item => matchesSearch(item.preview.text)).map(({ idx, preview }) => (
                                 <button
                                     key={idx}
-                                    onClick={() => onOpenModal('INTERACTION', activeInteractionTab, idx, text)}
-                                    className="w-full text-left bg-white dark:bg-slate-800 p-3 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-pink-50 dark:hover:bg-pink-900/20 hover:border-pink-300 transition-colors"
+                                    onClick={() => onOpenModal('INTERACTION', activeInteractionTab, idx, preview.text)}
+                                    className="w-full text-left bg-white dark:bg-slate-800 p-3 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-pink-50 dark:hover:bg-pink-900/20 hover:border-pink-300 transition-colors group"
                                 >
-                                    <p className="text-sm text-slate-700 dark:text-slate-300">{text}</p>
+                                    <p className="text-sm text-slate-700 dark:text-slate-300">{preview.text}</p>
+                                    {formatStats(preview)}
                                 </button>
                             ))}
                              {INTERACTION_POOL[activeInteractionTab]?.filter((item) => {

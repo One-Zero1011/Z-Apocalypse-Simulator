@@ -10,6 +10,10 @@ interface Props {
   onNewGame: () => void;
   allowSameSex: boolean; 
   onToggleSameSex: () => void; 
+  allowIncest: boolean; 
+  onToggleIncest: () => void; 
+  pureLoveMode: boolean; // Added
+  onTogglePureLove: () => void; // Added
   developerMode: boolean; 
   onToggleDeveloperMode: () => void;
   useMentalStates: boolean;
@@ -26,6 +30,10 @@ const SystemMenu: React.FC<Props> = ({
     onNewGame,
     allowSameSex,
     onToggleSameSex,
+    allowIncest,
+    onToggleIncest,
+    pureLoveMode,
+    onTogglePureLove,
     developerMode,
     onToggleDeveloperMode,
     useMentalStates,
@@ -71,6 +79,43 @@ const SystemMenu: React.FC<Props> = ({
                 >
                     <span 
                         className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${allowSameSex ? 'translate-x-6' : 'translate-x-1'}`} 
+                    />
+                </button>
+             </div>
+
+             {/* Allow Incest Toggle */}
+             <div className="flex items-center justify-between bg-slate-50 dark:bg-slate-700/50 p-3 rounded-lg border border-slate-200 dark:border-slate-700">
+                <div>
+                    <div className="font-bold text-slate-700 dark:text-slate-200">근친(가족간 연애) 허용</div>
+                    <div className="text-xs text-slate-500 dark:text-slate-400">활성화 시 가족 관계(부모/자식/형제)에서도 연인 관계가 발생할 수 있습니다.</div>
+                </div>
+                <button 
+                    onClick={onToggleIncest}
+                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-pink-500 focus:ring-offset-2 ${allowIncest ? 'bg-pink-600' : 'bg-slate-300 dark:bg-slate-600'}`}
+                >
+                    <span 
+                        className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${allowIncest ? 'translate-x-6' : 'translate-x-1'}`} 
+                    />
+                </button>
+             </div>
+
+             {/* Pure Love Mode Toggle */}
+             <div className="flex items-center justify-between bg-slate-50 dark:bg-slate-700/50 p-3 rounded-lg border border-slate-200 dark:border-slate-700">
+                <div>
+                    <div className="font-bold text-slate-700 dark:text-slate-200 flex items-center gap-2">
+                        순애 모드 (일부일처)
+                        <span className="text-[10px] bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300 px-1.5 py-0.5 rounded">NEW</span>
+                    </div>
+                    <div className="text-xs text-slate-500 dark:text-slate-400">
+                        활성화 시 파트너가 있는 상태에서 다른 사람과 사귈 수 없습니다. (헤어져야 가능)
+                    </div>
+                </div>
+                <button 
+                    onClick={onTogglePureLove}
+                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 ${pureLoveMode ? 'bg-green-600' : 'bg-slate-300 dark:bg-slate-600'}`}
+                >
+                    <span 
+                        className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${pureLoveMode ? 'translate-x-6' : 'translate-x-1'}`} 
                     />
                 </button>
              </div>
