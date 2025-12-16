@@ -22,6 +22,59 @@ export const INTERACTION_TEMPLATES = {
     ]
 };
 
+// New: Fatigue Relief Interactions
+// Returns: { text: string, targetFatigue: number, actorFatigue: number, affinity: number }
+export const FATIGUE_RELIEF_INTERACTIONS = [
+    (actor: string, target: string) => ({
+        text: `💆 ${actor}은(는) 지친 ${target}의 뭉친 어깨를 오랫동안 주물러 주었습니다.`,
+        targetFatigue: -15,
+        actorFatigue: 5,
+        affinity: 5
+    }),
+    (actor: string, target: string) => ({
+        text: `🛡️ ${actor}은(는) 졸고 있는 ${target}을(를) 위해 대신 불침번을 서주었습니다.`,
+        targetFatigue: -25,
+        actorFatigue: 15, // Actor gets tired instead
+        affinity: 10
+    }),
+    (actor: string, target: string) => ({
+        text: `☕ ${actor}은(는) ${target}에게 따뜻하게 데운 물 한 잔을 건네며 휴식을 권했습니다.`,
+        targetFatigue: -10,
+        actorFatigue: 0,
+        affinity: 5
+    }),
+    (actor: string, target: string) => ({
+        text: `🛏️ ${actor}은(는) ${target}이(가) 편히 잘 수 있도록 잠자리를 정돈해주었습니다.`,
+        targetFatigue: -10,
+        actorFatigue: 2,
+        affinity: 5
+    }),
+    (actor: string, target: string) => ({
+        text: `🔥 ${actor}와(과) ${target}은(는) 모닥불 곁에 앉아 아무 말 없이 멍하니 불을 바라보며 피로를 잊었습니다. (불멍)`,
+        targetFatigue: -15,
+        actorFatigue: -15, // Both rest
+        affinity: 5
+    }),
+    (actor: string, target: string) => ({
+        text: `🧼 ${actor}은(는) 더러워진 ${target}의 얼굴과 손을 닦아주며 위생을 챙겨주었습니다.`,
+        targetFatigue: -5,
+        actorFatigue: 2,
+        affinity: 5
+    }),
+    (actor: string, target: string) => ({
+        text: `👂 ${actor}은(는) ${target}의 투정을 묵묵히 들어주며 정신적인 피로를 덜어주었습니다.`,
+        targetFatigue: -10, // Mental fatigue relief
+        actorFatigue: 5,
+        affinity: 5
+    }),
+    (actor: string, target: string) => ({
+        text: `👞 ${actor}은(는) ${target}의 해진 신발을 수선해주어 걷기 편하게 해주었습니다.`,
+        targetFatigue: -5,
+        actorFatigue: 5,
+        affinity: 5
+    })
+];
+
 export const LOVER_EVENTS = [
     (a: string, b: string) => `${a}은(는) ${b}에게 몰래 숨겨둔 초콜릿을 주며 사랑을 속삭였습니다.`,
     (a: string, b: string) => `${a}와(과) ${b}은(는) 좀비 떼를 피해 숨은 곳에서 손을 꼭 잡고 있었습니다.`,
@@ -50,8 +103,29 @@ export const REUNION_EVENTS = [
     (a: string, b: string) => `${a}와(과) ${b}은(는) 헤어져 있던 시간만큼 더 뜨겁게 사랑하기로 했습니다.`
 ];
 
-// New Relationship Events
-export const FAMILY_EVENTS = [
+// New Granular Family Events
+export const SPOUSE_EVENTS = [
+    (a: string, b: string) => `${a}은(는) ${b}의 닳아버린 결혼반지를 닦아주며 "살아서 돌아가자"고 약속했습니다.`,
+    (a: string, b: string) => `${a}와(과) ${b}은(는) 아이들의 사진을 보며 함께 조용히 눈물을 흘렸습니다.`,
+    (a: string, b: string) => `${a}은(는) ${b}의 잠든 얼굴을 보며 험한 세상에서 반드시 지키겠다고 다짐했습니다.`,
+    (a: string, b: string) => `${a}은(는) ${b}에게 "여보, 조금만 더 힘내"라며 마지막 남은 물을 건넸습니다.`
+];
+
+export const SIBLING_EVENTS = [
+    (a: string, b: string) => `${a}은(는) ${b}에게 "어렸을 때 기억나?"라며 추억을 이야기하며 긴장을 풀었습니다.`,
+    (a: string, b: string) => `${a}와(과) ${b}은(는) 사소한 일로 투닥거렸지만, 금세 화해하고 식량을 나눴습니다.`,
+    (a: string, b: string) => `${a}은(는) ${b}에게 짓궂은 장난을 쳤지만, 위험할 땐 누구보다 먼저 달려갔습니다.`,
+    (a: string, b: string) => `${a}은(는) ${b}의 머리를 쓰다듬으며 "내가 형(오빠/누나/언니)이니까 널 지킬게"라고 말했습니다.`
+];
+
+export const PARENT_CHILD_EVENTS = [
+    (a: string, b: string) => `${a}은(는) ${b}의 신발 끈을 고쳐 매주며 "조심해야 한다"고 당부했습니다.`,
+    (a: string, b: string) => `${a}은(는) 끔찍한 광경으로부터 ${b}의 눈을 가려주었습니다.`,
+    (a: string, b: string) => `${a}은(는) 자신의 몫을 덜어 ${b}에게 주며 배가 부르다고 거짓말을 했습니다.`,
+    (a: string, b: string) => `${a}와(과) ${b}은(는) 꼭 붙어 자며 서로의 온기를 느꼈습니다.`
+];
+
+export const FAMILY_EVENTS = [ // Generic Relatives
     (a: string, b: string) => `${a}은(는) ${b}에게 옷을 여며주며 "아프지 마"라고 걱정했습니다.`,
     (a: string, b: string) => `${a}와(과) ${b}은(는) 죽은 친척들을 떠올리며 서로를 위로했습니다.`,
     (a: string, b: string) => `${a}은(는) ${b}에게 맛있는 부분을 덜어주며 "많이 먹어"라고 챙겼습니다.`,
@@ -97,3 +171,24 @@ export const EX_LOVER_EVENTS = [
     (a: string, b: string) => `${a}은(는) ${b}에게 "너 성격은 여전하구나"라며 비꼬았습니다.`,
     (a: string, b: string) => `${a}은(는) ${b}가 다른 사람과 웃는 것을 보고 질투와 안도감을 동시에 느꼈습니다.`
 ];
+
+// Unified Export for Developer Menu & Simulation
+export const INTERACTION_POOL: Record<string, any[]> = {
+    'POSITIVE': INTERACTION_TEMPLATES.POSITIVE,
+    'NEGATIVE': INTERACTION_TEMPLATES.NEGATIVE,
+    'FATIGUE_RELIEF': FATIGUE_RELIEF_INTERACTIONS,
+    'LOVER': LOVER_EVENTS,
+    'CONFESSION': CONFESSION_EVENTS,
+    'BREAKUP': BREAKUP_EVENTS,
+    'REUNION': REUNION_EVENTS,
+    'SPOUSE': SPOUSE_EVENTS,
+    'SIBLING': SIBLING_EVENTS,
+    'PARENT_CHILD': PARENT_CHILD_EVENTS,
+    'FAMILY': FAMILY_EVENTS,
+    'BEST_FRIEND': BEST_FRIEND_EVENTS,
+    'COLLEAGUE': COLLEAGUE_EVENTS,
+    'RIVAL': RIVAL_EVENTS,
+    'SAVIOR': SAVIOR_EVENTS,
+    'ENEMY': ENEMY_EVENTS,
+    'EX_LOVER': EX_LOVER_EVENTS,
+};
