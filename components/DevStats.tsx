@@ -25,45 +25,45 @@ const DevStats: React.FC<Props> = ({ character, allCharacters, onUpdate }) => {
             {/* Status & Mental */}
             <div className="grid grid-cols-2 gap-4">
                 <div className="bg-white dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700">
-                    <label className="block text-xs font-bold uppercase text-slate-500 mb-2">Status</label>
+                    <label className="block text-xs font-bold uppercase text-slate-500 mb-2">상태 (Status)</label>
                     <select 
                         value={character.status} 
                         onChange={(e) => onUpdate(character, 'status', e.target.value as Status)}
                         className="w-full p-2 rounded border bg-slate-50 dark:bg-slate-900 dark:border-slate-600 dark:text-white"
                     >
-                        <option value="Alive">Alive</option>
-                        <option value="Infected">Infected</option>
-                        <option value="Zombie">Zombie</option>
-                        <option value="Dead">Dead</option>
-                        <option value="Missing">Missing</option>
+                        <option value="Alive">생존 (Alive)</option>
+                        <option value="Infected">감염됨 (Infected)</option>
+                        <option value="Zombie">좀비 (Zombie)</option>
+                        <option value="Dead">사망 (Dead)</option>
+                        <option value="Missing">실종 (Missing)</option>
                     </select>
                 </div>
                 <div className="bg-white dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700">
-                    <label className="block text-xs font-bold uppercase text-slate-500 mb-2">Mental State</label>
+                    <label className="block text-xs font-bold uppercase text-slate-500 mb-2">정신 상태 (Mental)</label>
                     <select 
                         value={character.mentalState || 'Normal'} 
                         onChange={(e) => onUpdate(character, 'mentalState', e.target.value as MentalState)}
                         className="w-full p-2 rounded border bg-slate-50 dark:bg-slate-900 dark:border-slate-600 dark:text-white"
                     >
-                        <option value="Normal">Normal</option>
-                        <option value="PTSD">PTSD</option>
-                        <option value="Depression">Depression</option>
-                        <option value="Schizophrenia">Schizophrenia</option>
-                        <option value="Paranoia">Paranoia</option>
-                        <option value="DID">DID</option>
+                        <option value="Normal">평온 (Normal)</option>
+                        <option value="Trauma">트라우마 (Trauma)</option>
+                        <option value="Despair">절망 (Despair)</option>
+                        <option value="Delusion">망상 (Delusion)</option>
+                        <option value="Anxiety">불안 (Anxiety)</option>
+                        <option value="Madness">광기 (Madness)</option>
                     </select>
                 </div>
             </div>
 
             {/* Core Attributes */}
             <div className="bg-white dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700 space-y-4">
-                <h4 className="font-bold border-b pb-2 dark:text-slate-200">Attributes</h4>
+                <h4 className="font-bold border-b pb-2 dark:text-slate-200">속성 (Attributes)</h4>
                 
-                {[{key: 'hp', label: 'HP (체력)', max: 100, color: 'accent-red-500'}, 
-                  {key: 'sanity', label: 'Sanity (정신력)', max: 100, color: 'accent-blue-500'}, 
-                  {key: 'fatigue', label: 'Fatigue (피로도)', max: 100, color: 'accent-purple-500'}, 
-                  {key: 'infection', label: 'Infection (감염도)', max: 100, color: 'accent-green-500'},
-                  {key: 'hunger', label: 'Hunger (허기 - 좀비용)', max: 100, color: 'accent-orange-500'}].map((attr) => (
+                {[{key: 'hp', label: '체력 (HP)', max: 100, color: 'accent-red-500'}, 
+                  {key: 'sanity', label: '정신력 (Sanity)', max: 100, color: 'accent-blue-500'}, 
+                  {key: 'fatigue', label: '피로도 (Fatigue)', max: 100, color: 'accent-purple-500'}, 
+                  {key: 'infection', label: '감염도 (Infection)', max: 100, color: 'accent-green-500'},
+                  {key: 'hunger', label: '허기 (Hunger - 좀비용)', max: 100, color: 'accent-orange-500'}].map((attr) => (
                     <div key={attr.key}>
                         <div className="flex justify-between text-xs font-bold mb-1 dark:text-slate-400">
                             <label>{attr.label}</label>
@@ -83,7 +83,7 @@ const DevStats: React.FC<Props> = ({ character, allCharacters, onUpdate }) => {
 
             {/* Relationships */}
             <div className="bg-white dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700 space-y-4">
-                <h4 className="font-bold border-b pb-2 dark:text-slate-200">Relationships (호감도)</h4>
+                <h4 className="font-bold border-b pb-2 dark:text-slate-200">관계도 (Relationships)</h4>
                 {allCharacters.filter(c => c.id !== character.id).map(target => (
                     <div key={target.id} className="flex items-center gap-3">
                         <span className="text-xs font-bold w-16 truncate dark:text-slate-300" title={target.name}>{target.name}</span>
@@ -103,7 +103,7 @@ const DevStats: React.FC<Props> = ({ character, allCharacters, onUpdate }) => {
                         />
                     </div>
                 ))}
-                {allCharacters.length <= 1 && <p className="text-xs text-slate-400 italic">No other characters to relate with.</p>}
+                {allCharacters.length <= 1 && <p className="text-xs text-slate-400 italic">관계 맺을 다른 캐릭터가 없습니다.</p>}
             </div>
         </div>
     );

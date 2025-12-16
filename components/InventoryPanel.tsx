@@ -46,7 +46,7 @@ const InventoryPanel: React.FC<Props> = ({ inventory, onSelectItem }) => {
                                         item === '항생제' ? '💊' : 
                                         item === '초콜릿' ? '🍫' : 
                                         item === '비타민' ? '🍋' : 
-                                        item === '정신병약' ? '💊' : 
+                                        item === '안정제' ? '💊' : 
                                         item === '백신' ? '💉' :
                                         item === '입마개' ? '😷' :
                                         item === '고기' ? '🥩' :

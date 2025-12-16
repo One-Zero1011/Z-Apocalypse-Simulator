@@ -7,6 +7,7 @@ import { RADIO_NODES } from "./stories/radio";
 import { WANDER_NODES } from "./stories/wander";
 import { CULT_NODES } from "./stories/cult";
 import { ONE_OFF_NODES } from "./stories/oneOffs";
+import { BUNKER_NODES } from "./stories/bunker";
 
 // =================================================================
 // Story Arcs Aggregation
@@ -19,7 +20,8 @@ export const STORY_NODES: Record<string, StoryNode> = {
     ...RADIO_NODES,
     ...WANDER_NODES,
     ...CULT_NODES,
-    ...ONE_OFF_NODES
+    ...ONE_OFF_NODES,
+    ...BUNKER_NODES
 };
 
 // 시작 가능한 메인 아크의 첫 번째 노드 ID 목록
@@ -31,6 +33,7 @@ export const STARTER_NODE_IDS = [
     'radio_0_start',
     'wander_0_start',
     'cult_0_start',
+    'bunker_0_signal', // New Bunker Story
     
     // One-offs (Expanded)
     'sunny_day',

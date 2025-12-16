@@ -10,8 +10,11 @@ interface Props {
   onNewGame: () => void;
   allowSameSex: boolean; 
   onToggleSameSex: () => void; 
-  developerMode: boolean; // New prop
-  onToggleDeveloperMode: () => void; // New prop
+  developerMode: boolean; 
+  onToggleDeveloperMode: () => void;
+  useMentalStates: boolean;
+  onToggleMentalStates: () => void;
+  onShowTutorial: () => void;
 }
 
 const SystemMenu: React.FC<Props> = ({ 
@@ -24,7 +27,10 @@ const SystemMenu: React.FC<Props> = ({
     allowSameSex,
     onToggleSameSex,
     developerMode,
-    onToggleDeveloperMode
+    onToggleDeveloperMode,
+    useMentalStates,
+    onToggleMentalStates,
+    onShowTutorial
 }) => {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fade-in">
@@ -52,6 +58,8 @@ const SystemMenu: React.FC<Props> = ({
              <h3 className="text-sm font-bold uppercase text-slate-600 dark:text-slate-400 tracking-wider">
                게임 설정 (Settings)
              </h3>
+             
+             {/* Same Sex Couples Toggle */}
              <div className="flex items-center justify-between bg-slate-50 dark:bg-slate-700/50 p-3 rounded-lg border border-slate-200 dark:border-slate-700">
                 <div>
                     <div className="font-bold text-slate-700 dark:text-slate-200">동성 커플 허용</div>
@@ -63,6 +71,22 @@ const SystemMenu: React.FC<Props> = ({
                 >
                     <span 
                         className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${allowSameSex ? 'translate-x-6' : 'translate-x-1'}`} 
+                    />
+                </button>
+             </div>
+
+             {/* Mental States Toggle */}
+             <div className="flex items-center justify-between bg-slate-50 dark:bg-slate-700/50 p-3 rounded-lg border border-slate-200 dark:border-slate-700">
+                <div>
+                    <div className="font-bold text-slate-700 dark:text-slate-200">정신 상태 시스템</div>
+                    <div className="text-xs text-slate-500 dark:text-slate-400">정신력 저하 시 불안정 상태(트라우마 등) 발생 및 특수 이벤트 활성화</div>
+                </div>
+                <button 
+                    onClick={onToggleMentalStates}
+                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 ${useMentalStates ? 'bg-purple-600' : 'bg-slate-300 dark:bg-slate-600'}`}
+                >
+                    <span 
+                        className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${useMentalStates ? 'translate-x-6' : 'translate-x-1'}`} 
                     />
                 </button>
              </div>
@@ -91,6 +115,21 @@ const SystemMenu: React.FC<Props> = ({
              <h3 className="text-sm font-bold uppercase text-slate-600 dark:text-slate-400 tracking-wider">
                정보 (Info)
              </h3>
+             <button
+                onClick={onShowTutorial}
+                className="w-full flex items-center justify-between bg-slate-50 dark:bg-slate-700/50 p-3 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-600 transition-colors group"
+             >
+                <div className="text-left">
+                    <div className="font-bold text-slate-700 dark:text-slate-200 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                        튜토리얼 / 도움말
+                    </div>
+                    <div className="text-xs text-slate-500 dark:text-slate-400">
+                        게임 방법과 팁을 다시 확인합니다.
+                    </div>
+                </div>
+                <span className="text-2xl">💡</span>
+             </button>
+
              <a 
                 href="https://posty.pe/w1g6pe" 
                 target="_blank" 

@@ -6,10 +6,32 @@ export const WANDER_NODES: Record<string, StoryNode> = {
         id: 'wander_0_start',
         text: "🏕️ 숲속 공터에서 다른 생존자 그룹의 캠프를 발견했습니다. 규모가 꽤 커 보입니다.",
         next: [
-            { id: 'wander_1_approach', weight: 0.6 },
-            { id: 'wander_1_steal', weight: 0.4 }
+            { id: 'wander_1_approach', weight: 0.5 },
+            { id: 'wander_1_trade', weight: 0.3 }, // 신규: 거래 시도
+            { id: 'wander_1_steal', weight: 0.2 }
         ]
     },
+    
+    // 신규 분기: 거래
+    'wander_1_trade': {
+        id: 'wander_1_trade',
+        text: "💰 무기를 내리고 물물교환을 제안합니다. 우리가 가진 잉여 물자와 그들의 물자를 교환할 수 있을까요?",
+        next: [
+            { id: 'wander_2_trade_good', weight: 0.6 },
+            { id: 'wander_2_trade_bad', weight: 0.4 }
+        ]
+    },
+    'wander_2_trade_good': {
+        id: 'wander_2_trade_good',
+        text: "🤝 거래 성사! 그들은 우리의 여분 장비를 받고 귀한 의약품을 내주었습니다. 서로 만족스러운 거래였습니다.",
+        effect: { target: 'ALL', loot: ['항생제', '붕대'], inventoryRemove: ['통조림'] } // 캔 주고 약 받음 (가정)
+    },
+    'wander_2_trade_bad': {
+        id: 'wander_2_trade_bad',
+        text: "💢 그들은 터무니없는 대가를 요구하다가 우리가 거절하자 위협을 가했습니다. 빈손으로 물러납니다.",
+        effect: { target: 'ALL', sanity: -5 }
+    },
+
     'wander_1_approach': {
         id: 'wander_1_approach',
         text: "👋 손을 들고 평화롭게 접근합니다. 그들은 경계하지만, 곧 모닥불 곁을 내어줍니다.",
@@ -38,7 +60,7 @@ export const WANDER_NODES: Record<string, StoryNode> = {
         id: 'wander_2_betrayal',
         text: "🍷 음식에 수면제가 들어있었습니다! 눈을 떠보니 우리는 묶여있고 짐은 사라졌습니다.",
         next: [{ id: 'wander_4_escape', weight: 1.0 }],
-        effect: { target: 'ALL', inventoryRemove: ['통조림'], sanity: -20 }
+        effect: { target: 'ALL', inventoryRemove: ['통조림', '붕대'], sanity: -20 }
     },
     'wander_3_success': {
         id: 'wander_3_success',

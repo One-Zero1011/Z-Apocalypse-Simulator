@@ -1,4 +1,8 @@
 
+
+
+
+
 export type Gender = 'Male' | 'Female' | 'Non-Binary';
 
 export type MBTI = 
@@ -13,11 +17,11 @@ export type RelationshipStatus =
   | 'Lover' | 'Spouse' // 부부 Added
   | 'Family' | 'Parent' | 'Child' | 'Sibling' // Granular Family Added
   | 'Ex' 
-  | 'BestFriend' | 'Colleague' | 'Rival' | 'Savior' | 'Enemy' 
+  | 'BestFriend' | 'Friend' | 'Colleague' | 'Rival' | 'Savior' | 'Enemy' 
   | 'None';
 
-// New: Mental States
-export type MentalState = 'Normal' | 'PTSD' | 'Depression' | 'Schizophrenia' | 'Paranoia' | 'DID';
+// New: Mental States (Renamed to Emotions)
+export type MentalState = 'Normal' | 'Trauma' | 'Despair' | 'Delusion' | 'Anxiety' | 'Madness';
 
 export interface Character {
   id: string;
@@ -93,6 +97,7 @@ export interface ActionEffect {
 export interface GameSettings {
     allowSameSexCouples: boolean;
     developerMode: boolean; // Added developerMode
+    useMentalStates: boolean; // Added useMentalStates
 }
 
 export interface GameState {
@@ -113,6 +118,7 @@ export interface StoryEffect {
     sanity?: number;
     fatigue?: number;
     infection?: number; // New
+    status?: Status; // Added for events that change status (e.g. death)
     loot?: string[]; // 획득 아이템
     inventoryRemove?: string[]; // 제거할 아이템
 }

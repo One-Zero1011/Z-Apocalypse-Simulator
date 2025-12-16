@@ -31,6 +31,7 @@ const DevEventLists: React.FC<Props> = ({ type, activeId, onSelectStory, onOpenM
                 case 'radio': groupName = 'RADIO (방송국)'; break;
                 case 'wander': groupName = 'WANDERER (조우)'; break;
                 case 'cult': groupName = 'CULT (광신도)'; break;
+                case 'bunker': groupName = 'BUNKER (지하 벙커)'; break;
             }
             if (!acc[groupName]) acc[groupName] = [];
             acc[groupName].push({ id, text: node.text });

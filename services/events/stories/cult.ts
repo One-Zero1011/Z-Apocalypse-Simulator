@@ -6,11 +6,35 @@ export const CULT_NODES: Record<string, StoryNode> = {
         id: 'cult_0_start',
         text: "🕯️ 숲속 깊은 곳에서 기괴한 촛불 의식이 거행되는 것을 목격했습니다. '정화'라는 단어가 반복해서 들립니다.",
         next: [
-            { id: 'cult_1_spy', weight: 0.6 },
-            { id: 'cult_1_run', weight: 0.4 }
+            { id: 'cult_1_spy', weight: 0.5 },
+            { id: 'cult_1_join', weight: 0.3 }, // 신규: 위장 잠입
+            { id: 'cult_1_run', weight: 0.2 }
         ],
         effect: { target: 'ALL', sanity: -5 }
     },
+    
+    // 신규 분기: 위장 잠입
+    'cult_1_join': {
+        id: 'cult_1_join',
+        text: "🎭 그들의 로브를 훔쳐 입고 광신도 무리에 섞여 들어갑니다. 들키면 끝장입니다.",
+        next: [
+            { id: 'cult_2_ritual_pass', weight: 0.5 },
+            { id: 'cult_2_ritual_fail', weight: 0.5 }
+        ]
+    },
+    'cult_2_ritual_pass': {
+        id: 'cult_2_ritual_pass',
+        text: "🛐 그들의 광기 어린 의식을 흉내 내며 의심을 피했습니다. 교주는 우리를 축복하며 식량을 나누어 주었습니다.",
+        next: [{ id: 'cult_5_loot', weight: 1.0 }],
+        effect: { target: 'ALL', sanity: -10, loot: ['통조림', '고기'] } // 정신적 충격
+    },
+    'cult_2_ritual_fail': {
+        id: 'cult_2_ritual_fail',
+        text: "👁️ 교주가 우리의 눈을 들여다보더니 소리칩니다. \"이단자다!\" 사방에서 신도들이 덮쳐옵니다!",
+        next: [{ id: 'cult_3_battle', weight: 1.0 }],
+        effect: { target: 'ALL', sanity: -10 }
+    },
+
     'cult_1_run': {
         id: 'cult_1_run',
         text: "🏃 불길한 예감이 들어 뒤도 돌아보지 않고 도망쳤습니다. 등 뒤로 기분 나쁜 노랫소리가 따라옵니다.",
@@ -66,6 +90,6 @@ export const CULT_NODES: Record<string, StoryNode> = {
     'cult_5_loot': {
         id: 'cult_5_loot',
         text: "📦 그들이 모아둔 물자 속에서 귀중한 의약품을 다수 확보했습니다. 희생된 이들을 위해 잠시 묵념합니다.",
-        effect: { target: 'ALL', loot: ['정신병약', '항생제', '통조림'] }
+        effect: { target: 'ALL', loot: ['안정제', '항생제', '통조림'] }
     }
 };

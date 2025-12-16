@@ -90,6 +90,17 @@ const DeveloperMenu: React.FC<Props> = ({ onClose, forcedEvents, setForcedEvents
   // Find active story id to highlight
   const activeStoryId = forcedEvents.find(e => e.type === 'STORY')?.key;
 
+  const getTabLabel = (tab: TabType) => {
+      switch(tab) {
+          case 'STORY': return '스토리';
+          case 'MBTI': return '성격(MBTI)';
+          case 'INTERACTION': return '상호작용';
+          case 'STATS': return '스탯';
+          case 'ITEMS': return '아이템';
+          default: return tab;
+      }
+  };
+
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/80 backdrop-blur-md p-4 animate-fade-in">
       <div className="bg-white dark:bg-slate-900 rounded-xl shadow-2xl max-w-5xl w-full h-[90vh] overflow-hidden border border-zombie-green dark:border-zombie-green/30 flex flex-col relative">
@@ -97,7 +108,7 @@ const DeveloperMenu: React.FC<Props> = ({ onClose, forcedEvents, setForcedEvents
         {/* Header */}
         <div className="bg-slate-900 p-4 border-b border-slate-700 flex justify-between items-center shrink-0">
             <h2 className="text-xl font-bold text-zombie-green flex items-center gap-2 font-mono">
-              🛠️ EVENT CONTROLLER
+              🛠️ 이벤트 제어 (Event Controller)
             </h2>
             <button onClick={onClose} className="text-slate-400 hover:text-white transition-colors bg-slate-800 p-2 rounded-lg">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-6 h-6">
@@ -110,11 +121,11 @@ const DeveloperMenu: React.FC<Props> = ({ onClose, forcedEvents, setForcedEvents
         <div className="bg-slate-100 dark:bg-slate-800 p-2 border-b border-slate-200 dark:border-slate-700 shrink-0">
             <div className="flex justify-between items-center mb-1 px-1">
                 <span className="text-xs font-bold uppercase text-slate-500 dark:text-slate-400">
-                    Next Turn Events Queue ({forcedEvents.length})
+                    다음 턴 강제 이벤트 대기열 ({forcedEvents.length})
                 </span>
                 {forcedEvents.length > 0 && (
                     <button onClick={() => setForcedEvents([])} className="text-[10px] text-red-500 hover:text-red-700 underline">
-                        Clear All
+                        전체 삭제
                     </button>
                 )}
             </div>
@@ -122,7 +133,7 @@ const DeveloperMenu: React.FC<Props> = ({ onClose, forcedEvents, setForcedEvents
             <div className="flex gap-2 overflow-x-auto pb-1 min-h-[40px] items-center">
                 {forcedEvents.length === 0 ? (
                     <span className="text-sm text-slate-400 dark:text-slate-600 px-2 italic">
-                        -- No overrides queued (Standard Simulation) --
+                        -- 강제 이벤트 없음 (기본 시뮬레이션 진행) --
                     </span>
                 ) : (
                     forcedEvents.map((ev, idx) => (
@@ -152,7 +163,7 @@ const DeveloperMenu: React.FC<Props> = ({ onClose, forcedEvents, setForcedEvents
                         : 'text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200'
                     }`}
                 >
-                    {tab}
+                    {getTabLabel(tab)}
                 </button>
             ))}
         </div>
@@ -196,7 +207,7 @@ const DeveloperMenu: React.FC<Props> = ({ onClose, forcedEvents, setForcedEvents
                                 return char ? <DevStats character={char} allCharacters={characters} onUpdate={handleStatUpdate} /> : null;
                             })()
                         ) : (
-                            <div className="text-center text-slate-400 mt-10">Select a character to edit</div>
+                            <div className="text-center text-slate-400 mt-10">편집할 캐릭터를 선택하세요</div>
                         )}
                         <div className="h-10"></div>
                     </div>
@@ -223,7 +234,7 @@ const DeveloperMenu: React.FC<Props> = ({ onClose, forcedEvents, setForcedEvents
                     </div>
                     <div className="space-y-4">
                         <div>
-                            <label className="block text-xs font-bold uppercase text-slate-500 mb-1">Actor (주체)</label>
+                            <label className="block text-xs font-bold uppercase text-slate-500 mb-1">주체 (Actor)</label>
                             <select 
                                 value={selectedActor} 
                                 onChange={(e) => setSelectedActor(e.target.value)}
@@ -239,7 +250,7 @@ const DeveloperMenu: React.FC<Props> = ({ onClose, forcedEvents, setForcedEvents
                         </div>
                         {selectionModal.type === 'INTERACTION' && (
                             <div>
-                                <label className="block text-xs font-bold uppercase text-slate-500 mb-1">Target (대상)</label>
+                                <label className="block text-xs font-bold uppercase text-slate-500 mb-1">대상 (Target)</label>
                                 <select 
                                     value={selectedTarget} 
                                     onChange={(e) => setSelectedTarget(e.target.value)}
@@ -255,7 +266,7 @@ const DeveloperMenu: React.FC<Props> = ({ onClose, forcedEvents, setForcedEvents
                     </div>
                     <div className="flex gap-3 mt-6 justify-end">
                         <button onClick={() => setSelectionModal(null)} className="px-4 py-2 text-slate-500 hover:text-slate-800 dark:text-slate-400">취소</button>
-                        <button onClick={confirmSelection} disabled={!selectedActor} className="px-4 py-2 bg-blue-600 text-white rounded font-bold hover:bg-blue-700 disabled:opacity-50">추가 (Add to Queue)</button>
+                        <button onClick={confirmSelection} disabled={!selectedActor} className="px-4 py-2 bg-blue-600 text-white rounded font-bold hover:bg-blue-700 disabled:opacity-50">대기열 추가</button>
                     </div>
                 </div>
             </div>

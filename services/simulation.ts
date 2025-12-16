@@ -1,12 +1,13 @@
 
-import { Character, SimulationResult, CharacterUpdate, MBTI, MentalState, ForcedEvent, ActionEffect } from "../types";
-import { FATIGUE_THRESHOLD, MAX_HUNGER, MAX_INFECTION } from "../constants";
+import { Character, SimulationResult, CharacterUpdate, MBTI, MentalState, ForcedEvent, ActionEffect, RelationshipStatus, GameSettings } from "../types";
+import { FATIGUE_THRESHOLD, MAX_HUNGER, MAX_INFECTION, DAILY_HUNGER_LOSS } from "../constants";
 
 // Import separated events
 import { getNextStoryNode } from "./events/globalEvents";
 import { STORY_NODES } from "./events/storyNodes"; 
 import { FATIGUE_EVENTS } from "./events/fatigueEvents";
 import { GHOST_EVENTS } from "./events/ghostEvents"; 
+import { REST_EVENTS } from "./events/restEvents"; // New Import
 import { MENTAL_ILLNESS_ACTIONS, MENTAL_INTERACTIONS, LOVER_MENTAL_EVENTS } from "./events/mentalEvents"; 
 import { 
     INTERACTION_POOL,
@@ -25,7 +26,8 @@ import {
     RIVAL_EVENTS,
     SAVIOR_EVENTS,
     ENEMY_EVENTS,
-    EX_LOVER_EVENTS
+    EX_LOVER_EVENTS,
+    ZOMBIE_HUMAN_INTERACTIONS
 } from "./events/interactionEvents";
 import { MBTI_SPECIFIC_ACTIONS, MBTI_EVENT_POOL, ANALYSTS, DIPLOMATS, SENTINELS, EXPLORERS } from "./events/mbtiEvents";
 
@@ -36,13 +38,14 @@ const LOOT_TABLE = [
     { name: '통조림', chance: 0.2 },
     { name: '초콜릿', chance: 0.15 },
     { name: '비타민', chance: 0.1 },
-    { name: '정신병약', chance: 0.1 },
+    { name: '안정제', chance: 0.1 },
     { name: '백신', chance: 0.05 }, 
     { name: '입마개', chance: 0.05 }, 
     { name: '고기', chance: 0.05 }
 ];
 
-const MENTAL_STATES_LIST: MentalState[] = ['PTSD', 'Depression', 'Schizophrenia', 'Paranoia', 'DID'];
+// Updated Mental States List
+const MENTAL_STATES_LIST: MentalState[] = ['Trauma', 'Despair', 'Delusion', 'Anxiety', 'Madness'];
 
 const formatStatChange = (hp?: number, sanity?: number, fatigue?: number, infection?: number) => {
     const parts = [];
@@ -80,10 +83,10 @@ const calculateVote = (voter: Character, target: Character): 'KEEP' | 'KILL' => 
     const isThinker = voter.mbti[2] === 'T';
     score += isThinker ? -20 : 20;
 
-    // Mental State
-    if (voter.mentalState === 'Paranoia') score -= 30; 
-    if (voter.mentalState === 'Schizophrenia') score -= 10; 
-    if (voter.mentalState === 'Depression') score += 10; 
+    // Mental State Influence (Updated Keys)
+    if (voter.mentalState === 'Anxiety') score -= 30; // Was Paranoia
+    if (voter.mentalState === 'Delusion') score -= 10; // Was Schizophrenia
+    if (voter.mentalState === 'Despair') score += 10; // Was Depression
 
     // Target Value (KillCount)
     if (target.killCount > 10 && isThinker) score += 10;
@@ -95,9 +98,10 @@ export const simulateDay = async (
   day: number,
   characters: Character[],
   currentStoryNodeId: string | null,
-  allowSameSexCouples: boolean = true,
-  forcedEvents: ForcedEvent[] = [] // Updated to accept array
+  settings: GameSettings,
+  forcedEvents: ForcedEvent[] = []
 ): Promise<SimulationResult> => {
+  const { allowSameSexCouples, useMentalStates } = settings;
   const livingCharacters = characters.filter(c => c.status === 'Alive' || c.status === 'Infected' || c.status === 'Zombie');
   const activeHumans = livingCharacters.filter(c => c.status !== 'Zombie');
   const deadCharacters = characters.filter(c => c.status === 'Dead'); 
@@ -215,6 +219,7 @@ export const simulateDay = async (
           if (effect.sanity) update.sanityChange = (update.sanityChange || 0) + effect.sanity;
           if (effect.fatigue) update.fatigueChange = (update.fatigueChange || 0) + effect.fatigue;
           if (effect.infection) update.infectionChange = (update.infectionChange || 0) + effect.infection;
+          if (effect.status) update.status = effect.status;
           
           if (effect.inventoryRemove) {
              update.inventoryRemove = [...(update.inventoryRemove || []), ...effect.inventoryRemove];
@@ -291,6 +296,10 @@ export const simulateDay = async (
                             affinityChange = result.affinity || 0;
                             if (result.targetFatigue) targetUpdate.fatigueChange = (targetUpdate.fatigueChange || 0) + result.targetFatigue;
                             if (result.actorFatigue) actorUpdate.fatigueChange = (actorUpdate.fatigueChange || 0) + result.actorFatigue;
+                            if (result.actorHp) actorUpdate.hpChange = (actorUpdate.hpChange || 0) + result.actorHp;
+                            if (result.targetHp) targetUpdate.hpChange = (targetUpdate.hpChange || 0) + result.targetHp;
+                            if (result.actorSanity) actorUpdate.sanityChange = (actorUpdate.sanityChange || 0) + result.actorSanity;
+                            if (result.targetSanity) targetUpdate.sanityChange = (targetUpdate.sanityChange || 0) + result.targetSanity;
                       }
                   }
 
@@ -343,8 +352,8 @@ export const simulateDay = async (
 
       // --- ZOMBIE LOGIC ---
       if (char.status === 'Zombie') {
-          // Hunger Decay
-          const hungerLoss = -20;
+          // Hunger Decay Reduced
+          const hungerLoss = -DAILY_HUNGER_LOSS;
           update.hungerChange = (update.hungerChange || 0) + hungerLoss;
           
           if ((char.hunger + (update.hungerChange || 0)) <= 0) {
@@ -376,13 +385,31 @@ export const simulateDay = async (
       }
 
       const currentMentalState = update.mentalState || char.mentalState;
-      if (char.mentalState === 'Normal' && char.sanity <= 10 && Math.random() < 0.1) {
-           const newState = MENTAL_STATES_LIST[Math.floor(Math.random() * MENTAL_STATES_LIST.length)];
-           update.mentalState = newState;
-           events.push(`🧠⚠️ ${char.name}은(는) 극심한 스트레스로 인해 [${newState}] 증세를 보이기 시작했습니다.`);
-      } else if (char.mentalState !== 'Normal' && char.sanity >= 90 && Math.random() < 0.1) {
-           update.mentalState = 'Normal';
-           events.push(`✨ ${char.name}은(는) 안정을 되찾고 정신적 고통에서 벗어났습니다.`);
+      
+      // Mental State Acquisition (Only if enabled)
+      if (useMentalStates) {
+          // Acquisition Logic
+          if (char.mentalState === 'Normal' && char.sanity <= 10 && Math.random() < 0.1) {
+               const newState = MENTAL_STATES_LIST[Math.floor(Math.random() * MENTAL_STATES_LIST.length)];
+               update.mentalState = newState;
+               
+               // Map state to Korean text for event log
+               let stateName = '';
+               switch(newState) {
+                   case 'Trauma': stateName = '트라우마'; break;
+                   case 'Despair': stateName = '절망'; break;
+                   case 'Delusion': stateName = '망상'; break;
+                   case 'Anxiety': stateName = '불안'; break;
+                   case 'Madness': stateName = '광기'; break;
+                   default: stateName = '혼란';
+               }
+               events.push(`🧠⚠️ ${char.name}은(는) 극심한 스트레스로 인해 [${stateName}] 증세를 보이기 시작했습니다.`);
+          } 
+          // Recovery Logic
+          else if (char.mentalState !== 'Normal' && char.sanity >= 90 && Math.random() < 0.1) {
+               update.mentalState = 'Normal';
+               events.push(`✨ ${char.name}은(는) 안정을 되찾고 정신적 평온을 얻었습니다.`);
+          }
       }
 
       if (char.fatigue >= FATIGUE_THRESHOLD && Math.random() < 0.6) {
@@ -408,7 +435,8 @@ export const simulateDay = async (
           return; 
       }
 
-      if (currentMentalState !== 'Normal' && Math.random() < 0.7) {
+      // Mental Illness Events (Only if enabled)
+      if (useMentalStates && currentMentalState !== 'Normal' && Math.random() < 0.7) {
            const illnessActionFunc = MENTAL_ILLNESS_ACTIONS[currentMentalState];
            if (illnessActionFunc) {
                const illnessAction = illnessActionFunc(char);
@@ -429,16 +457,16 @@ export const simulateDay = async (
            }
       }
 
+      // Rest / Recovery Event (New)
       if (Math.random() > 0.8) {
-           if (Math.random() > 0.5) {
-               update.hpChange = (update.hpChange || 0) + 5;
-               update.fatigueChange = (update.fatigueChange || 0) - 15;
-               events.push(`💤 ${char.name}은(는) 안전한 곳에서 쪽잠을 자며 체력을 회복했습니다.`);
-          } else {
-               update.fatigueChange = (update.fatigueChange || 0) - 10; 
-               events.push(`🛌 ${char.name}은(는) 잠시 휴식을 취했습니다.`);
-          }
-          return;
+           const restAction = REST_EVENTS[Math.floor(Math.random() * REST_EVENTS.length)](char.name);
+           update.hpChange = (update.hpChange || 0) + (restAction.hp || 0);
+           update.sanityChange = (update.sanityChange || 0) + (restAction.sanity || 0);
+           update.fatigueChange = (update.fatigueChange || 0) + (restAction.fatigue || 0);
+           
+           const statLog = formatStatChange(restAction.hp, restAction.sanity, restAction.fatigue);
+           events.push(`${restAction.text}${statLog}`);
+           return;
       }
 
       const action = MBTI_SPECIFIC_ACTIONS[char.mbti](char.name, char.gender);
@@ -467,7 +495,7 @@ export const simulateDay = async (
   });
 
   // 4. Ghost Events (Standard)
-  // Filter activeHumans to exclude busy ones for ghost targets
+  // Filter active humans to exclude busy ones for ghost targets
   const availableGhostTargets = activeHumans.filter(c => !busyCharacterIds.has(c.id));
   if (deadCharacters.length > 0 && availableGhostTargets.length > 0 && Math.random() < 0.3) {
       const ghost = deadCharacters[Math.floor(Math.random() * deadCharacters.length)];
@@ -481,149 +509,243 @@ export const simulateDay = async (
       events.push(`${ghostAction.text}`);
   }
 
-  // 5. Interactions (Random)
-  if (livingCharacters.length > 1) {
-      // Filter livingCharacters for interaction candidates (Exclude Busy)
-      const availableForInteraction = livingCharacters.filter(c => !busyCharacterIds.has(c.id));
+  // 5. Interactions (Random) - Scalable Logic
+  let interactionCandidates = livingCharacters.filter(c => !busyCharacterIds.has(c.id));
+  
+  // Shuffle for random pairing
+  interactionCandidates.sort(() => Math.random() - 0.5);
 
-      if (availableForInteraction.length > 1) {
-          // Random Selection from available
-          let actorIndex = Math.floor(Math.random() * availableForInteraction.length);
-          let targetIndex = Math.floor(Math.random() * availableForInteraction.length);
-          while (actorIndex === targetIndex) {
-              targetIndex = Math.floor(Math.random() * availableForInteraction.length);
+  while (interactionCandidates.length >= 2) {
+      const actor = interactionCandidates.pop()!;
+      const target = interactionCandidates.pop()!;
+
+      // 40% Chance for an interaction to actually occur between this pair
+      if (Math.random() > 0.4) continue;
+
+      // New Zombie-Human Interaction Logic
+      if (actor.status === 'Zombie' && target.status === 'Zombie') {
+           // Zombies generally ignore each other
+      } else if (actor.status === 'Zombie' || target.status === 'Zombie') {
+          // Mixed Interaction
+          const zombie = actor.status === 'Zombie' ? actor : target;
+          const human = actor.status === 'Zombie' ? target : actor;
+          
+          const eventFunc = ZOMBIE_HUMAN_INTERACTIONS[Math.floor(Math.random() * ZOMBIE_HUMAN_INTERACTIONS.length)];
+          const result = eventFunc(zombie.name, human.name);
+          
+          const text = typeof result === 'string' ? result : result.text;
+          
+          // Log formatting for Zombie interactions
+          let zLogParts = [];
+          if (typeof result !== 'string') {
+             // Apply stats to human
+             const hUpdate = getUpdate(human.id);
+             if (result.targetSanity) {
+                 hUpdate.sanityChange = (hUpdate.sanityChange || 0) + result.targetSanity;
+                 zLogParts.push(`정신 ${result.targetSanity > 0 ? '+' : ''}${result.targetSanity}`);
+             }
+             if (result.targetHp) {
+                 hUpdate.hpChange = (hUpdate.hpChange || 0) + result.targetHp;
+                 zLogParts.push(`체력 ${result.targetHp > 0 ? '+' : ''}${result.targetHp}`);
+             }
+          } else {
+             // Fallback
+             const u = getUpdate(human.id);
+             u.sanityChange = (u.sanityChange || 0) - 2;
+             zLogParts.push(`정신 -2`);
+          }
+          const zLogSuffix = zLogParts.length > 0 ? ` (${zLogParts.join(', ')})` : '';
+          events.push(`🧟 ${text}${zLogSuffix}`);
+
+      } else {
+          // Both Humans (Existing Logic)
+          const actorUpdate = getUpdate(actor.id);
+          const targetUpdate = getUpdate(target.id);
+          
+          const actorMental = actorUpdate.mentalState || actor.mentalState;
+          const status = actor.relationshipStatuses[target.id] || 'None';
+          const isLover = status === 'Lover' || status === 'Spouse'; // Spouse included
+          const isEx = status === 'Ex';
+          const affinity = actor.relationships[target.id] || 0;
+          const targetFatigue = target.fatigue + (targetUpdate.fatigueChange || 0);
+          
+          let triggeredEvent = '';
+          let affinityChange = 0;
+          let newStatus: any = undefined;
+          let resultObject: any = null; // Store the full result object if available
+
+          const isRomanceAllowed = allowSameSexCouples || 
+              (actor.gender === 'Male' && target.gender === 'Female') || 
+              (actor.gender === 'Female' && target.gender === 'Male');
+
+          // STANDARD RANDOM LOGIC
+          // Priority 1: Mental Illness (Only if enabled)
+          if (useMentalStates && actorMental !== 'Normal' && Math.random() < 0.5) {
+              if (isLover && Math.random() < 0.5) {
+                    const eventsPool = LOVER_MENTAL_EVENTS[actorMental] || LOVER_MENTAL_EVENTS['Normal'];
+                    if (eventsPool.length > 0) {
+                        const mentalEvent = eventsPool[Math.floor(Math.random() * eventsPool.length)](actor.name, target.name);
+                        resultObject = mentalEvent; // It returns object
+                        triggeredEvent = mentalEvent.text;
+                    }
+              } else {
+                    const mentalEventFunc = MENTAL_INTERACTIONS[Math.floor(Math.random() * MENTAL_INTERACTIONS.length)];
+                    const mentalEvent = mentalEventFunc(actor.name, target.name);
+                    resultObject = mentalEvent;
+                    triggeredEvent = mentalEvent.text;
+              }
+          } 
+          // Priority 2: Fatigue Relief
+          else if (targetFatigue >= 40 && affinity > 0 && status !== 'Enemy' && Math.random() < 0.4) {
+              const reliefEventFunc = FATIGUE_RELIEF_INTERACTIONS[Math.floor(Math.random() * FATIGUE_RELIEF_INTERACTIONS.length)];
+              const reliefEvent = reliefEventFunc(actor.name, target.name);
+              
+              if (typeof reliefEvent === 'string') {
+                  triggeredEvent = reliefEvent;
+                  affinityChange = 5;
+              } else {
+                  resultObject = reliefEvent;
+                  triggeredEvent = reliefEvent.text;
+              }
+          }
+          // Priority 3: Normal
+          else {
+              let eventPool: any[] = []; 
+
+              // Special Relationship Checks
+              if (isLover && (affinity < 40 || Math.random() < 0.05)) {
+                   eventPool = BREAKUP_EVENTS;
+                   newStatus = 'Ex';
+              }
+              else if (isEx && affinity >= 70 && isRomanceAllowed && Math.random() < 0.1) {
+                   eventPool = REUNION_EVENTS;
+                   newStatus = 'Lover';
+              }
+              else if (isRomanceAllowed && !isLover && !isEx && status !== 'Family' && status !== 'Sibling' && status !== 'Parent' && status !== 'Child' && status !== 'Enemy' && affinity >= 80 && Math.random() < 0.1) {
+                   if (Math.random() > 0.6) {
+                       eventPool = CONFESSION_EVENTS;
+                       newStatus = 'Lover';
+                   } else {
+                       events.push(`💬 ${actor.name}은(는) ${target.name}에게 고백하려 했지만, 타이밍을 놓쳐 어색해졌습니다. (호감도 -5)`);
+                       affinityChange = -5;
+                       // Skip main event processing for this specific failure case
+                       if (!actorUpdate.relationshipUpdates) actorUpdate.relationshipUpdates = [];
+                       actorUpdate.relationshipUpdates.push({ targetId: target.id, change: -5 });
+                       if (!targetUpdate.relationshipUpdates) targetUpdate.relationshipUpdates = [];
+                       targetUpdate.relationshipUpdates.push({ targetId: actor.id, change: -5 });
+                       continue; 
+                   }
+              }
+              else {
+                  if (status === 'Spouse') eventPool = SPOUSE_EVENTS;
+                  else if (isLover) eventPool = LOVER_EVENTS; 
+                  else if (status === 'Sibling') eventPool = SIBLING_EVENTS;
+                  else if (status === 'Parent' || status === 'Child') eventPool = PARENT_CHILD_EVENTS;
+                  else if (status === 'Family') eventPool = FAMILY_EVENTS; 
+                  else if (status === 'BestFriend') eventPool = BEST_FRIEND_EVENTS; 
+                  else if (status === 'Colleague') eventPool = COLLEAGUE_EVENTS; 
+                  else if (status === 'Rival') eventPool = RIVAL_EVENTS; 
+                  else if (status === 'Savior') eventPool = SAVIOR_EVENTS; 
+                  else if (status === 'Enemy') eventPool = ENEMY_EVENTS; 
+                  else if (status === 'Ex') eventPool = EX_LOVER_EVENTS;
+              }
+              
+              if (eventPool.length > 0 && !triggeredEvent && Math.random() < 0.7) { 
+                  const result = eventPool[Math.floor(Math.random() * eventPool.length)](actor.name, target.name);
+                  
+                  if (typeof result === 'string') {
+                      triggeredEvent = result;
+                      if (status === 'Spouse') affinityChange = 5;
+                      else if (status === 'Enemy') affinityChange = -10;
+                      else affinityChange = 5;
+                  } else {
+                      resultObject = result;
+                      triggeredEvent = result.text;
+                  }
+              } 
+              else if (!triggeredEvent) {
+                   const getGroup = (m: MBTI) => {
+                      if (ANALYSTS.includes(m)) return 'ANALYST';
+                      if (DIPLOMATS.includes(m)) return 'DIPLOMAT';
+                      if (SENTINELS.includes(m)) return 'SENTINEL';
+                      return 'EXPLORER';
+                   };
+                   const isCompatible = getGroup(actor.mbti) === getGroup(target.mbti);
+                   const isPositive = (affinity + (isCompatible ? 20 : -20) + (Math.random() * 100)) > 50;
+                   
+                   const templates = isPositive ? INTERACTION_TEMPLATES.POSITIVE : INTERACTION_TEMPLATES.NEGATIVE;
+                   const result = templates[Math.floor(Math.random() * templates.length)](actor.name, target.name);
+                   
+                   if (typeof result === 'string') {
+                       triggeredEvent = result;
+                       affinityChange = isPositive ? 10 : -10;
+                   } else {
+                       resultObject = result;
+                       triggeredEvent = result.text;
+                       if (result.affinity === undefined) affinityChange = (isPositive ? 10 : -10);
+                   }
+              }
           }
 
-          if (actorIndex !== -1 && targetIndex !== -1) {
-              const actor = availableForInteraction[actorIndex];
-              const target = availableForInteraction[targetIndex];
+          // Apply Stats from Object Result
+          if (resultObject) {
+              affinityChange = resultObject.affinity || resultObject.affinityChange || affinityChange;
+              if (resultObject.actorHp) actorUpdate.hpChange = (actorUpdate.hpChange || 0) + resultObject.actorHp;
+              if (resultObject.targetHp) targetUpdate.hpChange = (targetUpdate.hpChange || 0) + resultObject.targetHp;
+              if (resultObject.actorSanity) actorUpdate.sanityChange = (actorUpdate.sanityChange || 0) + resultObject.actorSanity;
+              if (resultObject.targetSanity) targetUpdate.sanityChange = (targetUpdate.sanityChange || 0) + resultObject.targetSanity;
+              if (resultObject.actorFatigue) actorUpdate.fatigueChange = (actorUpdate.fatigueChange || 0) + resultObject.actorFatigue;
+              if (resultObject.targetFatigue) targetUpdate.fatigueChange = (targetUpdate.fatigueChange || 0) + resultObject.targetFatigue;
+              if (resultObject.victimHpChange) targetUpdate.hpChange = (targetUpdate.hpChange || 0) + resultObject.victimHpChange;
+              if (resultObject.victimSanityChange) targetUpdate.sanityChange = (targetUpdate.sanityChange || 0) + resultObject.victimSanityChange;
+          }
+
+          // Build Log Message with Stats
+          if (triggeredEvent) {
+              // 1. Determine Icon
+              let icon = '💬';
+              if (status === 'Spouse') icon = '💍';
+              else if (isLover) icon = '💕';
+              else if (status === 'Sibling') icon = '👫';
+              else if (status === 'Parent' || status === 'Child') icon = '👪';
+              else if (status === 'Family') icon = '🏠';
+              else if (status === 'BestFriend') icon = '🤞';
+              else if (status === 'Enemy') icon = '⚔️';
               
-              // Zombie Interaction Check
-              if (actor.status === 'Zombie' || target.status === 'Zombie') {
-                 // Skip standard interactions for zombies
-              } else {
-                  const actorUpdate = getUpdate(actor.id);
-                  const targetUpdate = getUpdate(target.id);
+              if (newStatus === 'Ex') icon = '💔';
+              if (newStatus === 'Lover' && (triggeredEvent.includes('고백') || triggeredEvent.includes('사랑'))) icon = '💘';
+              if (newStatus === 'Lover' && triggeredEvent.includes('재결합')) icon = '💞';
+              if (!isLover && !newStatus && affinityChange > 0) icon = '🤝';
+              if (!isLover && !newStatus && affinityChange < 0) icon = '🗯️';
+
+              // 2. Build Stat String
+              const logParts = [];
+              if (resultObject) {
+                  if (resultObject.actorHp) logParts.push(`${actor.name} 체력 ${resultObject.actorHp > 0 ? '+' : ''}${resultObject.actorHp}`);
+                  if (resultObject.targetHp) logParts.push(`${target.name} 체력 ${resultObject.targetHp > 0 ? '+' : ''}${resultObject.targetHp}`);
+                  if (resultObject.victimHpChange) logParts.push(`${target.name} 체력 ${resultObject.victimHpChange > 0 ? '+' : ''}${resultObject.victimHpChange}`);
                   
-                  const actorMental = actorUpdate.mentalState || actor.mentalState;
-                  const status = actor.relationshipStatuses[target.id] || 'None';
-                  const isLover = status === 'Lover' || status === 'Spouse'; // Spouse included
-                  const isEx = status === 'Ex';
-                  const affinity = actor.relationships[target.id] || 0;
-                  const targetFatigue = target.fatigue + (targetUpdate.fatigueChange || 0);
-                  
-                  let triggeredEvent = '';
-                  let affinityChange = 0;
-                  let newStatus: any = undefined;
-                  const isRomanceAllowed = allowSameSexCouples || 
-                      (actor.gender === 'Male' && target.gender === 'Female') || 
-                      (actor.gender === 'Female' && target.gender === 'Male');
+                  if (resultObject.actorSanity) logParts.push(`${actor.name} 정신 ${resultObject.actorSanity > 0 ? '+' : ''}${resultObject.actorSanity}`);
+                  if (resultObject.targetSanity) logParts.push(`${target.name} 정신 ${resultObject.targetSanity > 0 ? '+' : ''}${resultObject.targetSanity}`);
+                  if (resultObject.victimSanityChange) logParts.push(`${target.name} 정신 ${resultObject.victimSanityChange > 0 ? '+' : ''}${resultObject.victimSanityChange}`);
 
-                  // STANDARD RANDOM LOGIC
-                  // Priority 1: Mental Illness
-                  if (actorMental !== 'Normal' && Math.random() < 0.5) {
-                      if (isLover && Math.random() < 0.5) {
-                            const eventsPool = LOVER_MENTAL_EVENTS[actorMental] || LOVER_MENTAL_EVENTS['Normal'];
-                            if (eventsPool.length > 0) {
-                                const mentalEvent = eventsPool[Math.floor(Math.random() * eventsPool.length)](actor.name, target.name);
-                                triggeredEvent = mentalEvent.text;
-                                affinityChange = mentalEvent.affinityChange;
-                                targetUpdate.sanityChange = (targetUpdate.sanityChange || 0) + (mentalEvent.victimSanityChange || 0);
-                                targetUpdate.hpChange = (targetUpdate.hpChange || 0) + (mentalEvent.victimHpChange || 0);
-                            }
-                      } else {
-                            const mentalEventFunc = MENTAL_INTERACTIONS[Math.floor(Math.random() * MENTAL_INTERACTIONS.length)];
-                            const mentalEvent = mentalEventFunc(actor.name, target.name);
-                            triggeredEvent = mentalEvent.text;
-                            affinityChange = mentalEvent.affinityChange;
-                            targetUpdate.sanityChange = (targetUpdate.sanityChange || 0) + (mentalEvent.victimSanityChange || 0);
-                            targetUpdate.hpChange = (targetUpdate.hpChange || 0) + (mentalEvent.victimHpChange || 0);
-                      }
-                      if (triggeredEvent) events.push(triggeredEvent);
-                  } 
-                  // Priority 2: Fatigue Relief
-                  else if (targetFatigue >= 40 && affinity > 0 && status !== 'Enemy' && Math.random() < 0.4) {
-                      const reliefEventFunc = FATIGUE_RELIEF_INTERACTIONS[Math.floor(Math.random() * FATIGUE_RELIEF_INTERACTIONS.length)];
-                      const reliefEvent = reliefEventFunc(actor.name, target.name);
-                      triggeredEvent = reliefEvent.text;
-                      affinityChange = reliefEvent.affinity;
-                      targetUpdate.fatigueChange = (targetUpdate.fatigueChange || 0) + reliefEvent.targetFatigue;
-                      actorUpdate.fatigueChange = (actorUpdate.fatigueChange || 0) + reliefEvent.actorFatigue;
-                      const statLog = ` (피로 ${reliefEvent.targetFatigue})`;
-                      events.push(`${triggeredEvent}${statLog}`);
-                  }
-                  // Priority 3: Normal
-                  else {
-                      if (isLover && (affinity < 40 || Math.random() < 0.05)) {
-                           triggeredEvent = BREAKUP_EVENTS[Math.floor(Math.random() * BREAKUP_EVENTS.length)](actor.name, target.name);
-                           affinityChange = -30; newStatus = 'Ex'; events.push(`💔 ${triggeredEvent}`);
-                      }
-                      else if (isEx && affinity >= 70 && isRomanceAllowed && Math.random() < 0.1) {
-                          triggeredEvent = REUNION_EVENTS[Math.floor(Math.random() * REUNION_EVENTS.length)](actor.name, target.name);
-                          affinityChange = 15; newStatus = 'Lover'; events.push(`💞 ${triggeredEvent}`);
-                      }
-                      else if (isRomanceAllowed && !isLover && !isEx && status !== 'Family' && status !== 'Sibling' && status !== 'Parent' && status !== 'Child' && status !== 'Enemy' && affinity >= 80 && Math.random() < 0.1) {
-                           if (Math.random() > 0.6) {
-                               triggeredEvent = CONFESSION_EVENTS[Math.floor(Math.random() * CONFESSION_EVENTS.length)](actor.name, target.name);
-                               affinityChange = 10; newStatus = 'Lover'; events.push(`💘 ${triggeredEvent}`);
-                           } else {
-                               events.push(`💬 ${actor.name}은(는) ${target.name}에게 고백하려 했지만, 타이밍을 놓쳐 어색해졌습니다.`);
-                               affinityChange = -5;
-                           }
-                      }
-                      else {
-                          let eventPool: ((a: string, b: string) => string)[] = [];
-                          if (status === 'Spouse') { eventPool = SPOUSE_EVENTS; affinityChange = 5; }
-                          else if (isLover) { eventPool = LOVER_EVENTS; affinityChange = 5; } 
-                          else if (status === 'Sibling') { eventPool = SIBLING_EVENTS; affinityChange = 5; }
-                          else if (status === 'Parent' || status === 'Child') { eventPool = PARENT_CHILD_EVENTS; affinityChange = 5; }
-                          else if (status === 'Family') { eventPool = FAMILY_EVENTS; affinityChange = 5; } 
-                          else if (status === 'BestFriend') { eventPool = BEST_FRIEND_EVENTS; affinityChange = 5; } 
-                          else if (status === 'Colleague') { eventPool = COLLEAGUE_EVENTS; affinityChange = 2; } 
-                          else if (status === 'Rival') { eventPool = RIVAL_EVENTS; affinityChange = 2; } 
-                          else if (status === 'Savior') { eventPool = SAVIOR_EVENTS; affinityChange = 5; } 
-                          else if (status === 'Enemy') { eventPool = ENEMY_EVENTS; affinityChange = -5; } 
-                          else if (status === 'Ex') { eventPool = EX_LOVER_EVENTS; affinityChange = -2; }
-                          
-                          if (eventPool.length > 0 && Math.random() < 0.7) { 
-                              triggeredEvent = eventPool[Math.floor(Math.random() * eventPool.length)](actor.name, target.name);
-                              // Set Icon
-                              let icon = '💬';
-                              if (status === 'Spouse') icon = '💍';
-                              else if (isLover) icon = '💕';
-                              else if (status === 'Sibling') icon = '👫';
-                              else if (status === 'Parent' || status === 'Child') icon = '👪';
-                              else if (status === 'Family') icon = '🏠';
-                              else if (status === 'BestFriend') icon = '🤞';
-                              else if (status === 'Enemy') icon = '⚔️';
-
-                              events.push(`${icon} ${triggeredEvent}`);
-                          } 
-                          else {
-                               const getGroup = (m: MBTI) => {
-                                  if (ANALYSTS.includes(m)) return 'ANALYST';
-                                  if (DIPLOMATS.includes(m)) return 'DIPLOMAT';
-                                  if (SENTINELS.includes(m)) return 'SENTINEL';
-                                  return 'EXPLORER';
-                               };
-                               const isCompatible = getGroup(actor.mbti) === getGroup(target.mbti);
-                               const isPositive = (affinity + (isCompatible ? 20 : -20) + (Math.random() * 100)) > 50;
-                               affinityChange = isPositive ? 10 : -10;
-                               const templates = isPositive ? INTERACTION_TEMPLATES.POSITIVE : INTERACTION_TEMPLATES.NEGATIVE;
-                               const interactionText = templates[Math.floor(Math.random() * templates.length)](actor.name, target.name);
-                               const icon = isPositive ? '🤝' : '🗯️';
-                               events.push(`${icon} ${interactionText}`);
-                          }
-                      }
-                  }
-
-                  if (triggeredEvent) {
-                      if (!actorUpdate.relationshipUpdates) actorUpdate.relationshipUpdates = [];
-                      actorUpdate.relationshipUpdates.push({ targetId: target.id, change: affinityChange, newStatus });
-                      if (!targetUpdate.relationshipUpdates) targetUpdate.relationshipUpdates = [];
-                      targetUpdate.relationshipUpdates.push({ targetId: actor.id, change: affinityChange, newStatus });
-                  }
+                  if (resultObject.actorFatigue) logParts.push(`${actor.name} 피로 ${resultObject.actorFatigue > 0 ? '+' : ''}${resultObject.actorFatigue}`);
+                  if (resultObject.targetFatigue) logParts.push(`${target.name} 피로 ${resultObject.targetFatigue > 0 ? '+' : ''}${resultObject.targetFatigue}`);
               }
+              
+              // Add Affinity to Log
+              if (affinityChange !== 0) {
+                  logParts.push(`호감도 ${affinityChange > 0 ? '+' : ''}${affinityChange}`);
+              }
+
+              const logSuffix = logParts.length > 0 ? ` (${logParts.join(', ')})` : '';
+              events.push(`${icon} ${triggeredEvent}${logSuffix}`);
+
+              // 3. Apply Relation Updates
+              if (!actorUpdate.relationshipUpdates) actorUpdate.relationshipUpdates = [];
+              actorUpdate.relationshipUpdates.push({ targetId: target.id, change: affinityChange, newStatus });
+              if (!targetUpdate.relationshipUpdates) targetUpdate.relationshipUpdates = [];
+              targetUpdate.relationshipUpdates.push({ targetId: actor.id, change: affinityChange, newStatus });
           }
       }
   }
@@ -632,6 +754,71 @@ export const simulateDay = async (
       loot.push('인육');
       events.push(`⚠️ ...우리는 끔찍한 것을 발견했습니다. 이것이 [인육]이라는 것을 직감적으로 알 수 있었습니다.`);
   }
+
+  // --- FINAL: Automatic Status Evolution based on Affinity Thresholds ---
+  // This logic runs after all events to ensure status reflects the final affinity of the day.
+  
+  activeHumans.forEach(char => {
+      const update = getUpdate(char.id);
+      
+      activeHumans.forEach(target => {
+          if (char.id === target.id) return;
+
+          // Calculate projected final affinity
+          const currentAffinity = char.relationships[target.id] || 0;
+          const delta = update.relationshipUpdates?.find(r => r.targetId === target.id)?.change || 0;
+          const finalAffinity = Math.max(-100, Math.min(100, currentAffinity + delta));
+          
+          // Check current Status (considering any pending status change from events)
+          const pendingStatus = update.relationshipUpdates?.find(r => r.targetId === target.id)?.newStatus;
+          const currentStatus = pendingStatus || char.relationshipStatuses[target.id] || 'None';
+
+          let autoNewStatus: RelationshipStatus | null = null;
+          let changeMsg = "";
+
+          // 1. Friend Evolution (None/Colleague -> Friend)
+          if ((currentStatus === 'None' || currentStatus === 'Colleague') && finalAffinity >= 40) {
+              autoNewStatus = 'Friend';
+              changeMsg = `🤝 ${char.name}와(과) ${target.name}은(는) 서로를 믿을 수 있는 [친구]가 되었습니다.`;
+          }
+          // 2. BestFriend Evolution (Friend -> BestFriend)
+          else if (currentStatus === 'Friend' && finalAffinity >= 80) {
+              autoNewStatus = 'BestFriend';
+              changeMsg = `🤞 ${char.name}와(과) ${target.name}은(는) 둘도 없는 [절친] 사이로 발전했습니다.`;
+          }
+          // 3. Rival Evolution (None/Friend -> Rival)
+          else if ((currentStatus === 'None' || currentStatus === 'Friend') && finalAffinity <= -20) {
+              autoNewStatus = 'Rival';
+              changeMsg = `⚡ ${char.name}와(과) ${target.name} 사이에 미묘한 [라이벌] 의식이 싹텄습니다.`;
+          }
+          // 4. Enemy Evolution (Rival/None -> Enemy)
+          else if ((currentStatus === 'Rival' || currentStatus === 'None') && finalAffinity <= -60) {
+              autoNewStatus = 'Enemy';
+              changeMsg = `⚔️ ${char.name}와(과) ${target.name}은(는) 이제 서로를 [원수]로 여깁니다.`;
+          }
+          // 5. Recover from Enemy (Enemy -> Rival)
+          else if (currentStatus === 'Enemy' && finalAffinity >= -20) {
+              autoNewStatus = 'Rival';
+              changeMsg = `🏳️ ${char.name}와(과) ${target.name}의 적대감이 조금 누그러져 [라이벌] 관계가 되었습니다.`;
+          }
+
+          if (autoNewStatus) {
+              if (!update.relationshipUpdates) update.relationshipUpdates = [];
+              // Check if we already have an update for this target, if so, override status
+              const existingRelUpdate = update.relationshipUpdates.find(r => r.targetId === target.id);
+              if (existingRelUpdate) {
+                  existingRelUpdate.newStatus = autoNewStatus;
+              } else {
+                  update.relationshipUpdates.push({ targetId: target.id, change: 0, newStatus: autoNewStatus });
+              }
+              
+              // Only push event log once per pair (check if char.id < target.id to avoid duplicate logs)
+              if (char.id < target.id) {
+                  events.push(changeMsg);
+              }
+          }
+      });
+  });
 
   await new Promise(resolve => setTimeout(resolve, 800));
 

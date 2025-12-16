@@ -36,12 +36,34 @@ export const RADIO_NODES: Record<string, StoryNode> = {
     },
     'radio_4_studio': {
         id: 'radio_4_studio',
-        text: "🎧 5층 스튜디오. 그곳엔 미쳐버린 DJ가 좀비들을 청중 삼아 혼자만의 방송을 하고 있었습니다.",
+        text: "🎧 5층 스튜디오. 그곳엔 미쳐버린 DJ가 좀비들을 청중 삼아 혼자만의 방송을 하고 있었습니다. 방송 장비는 살아있습니다.",
         next: [
-            { id: 'radio_5_fight', weight: 0.7 },
-            { id: 'radio_5_talk', weight: 0.3 }
+            { id: 'radio_5_fight', weight: 0.4 }, // 기존 전투
+            { id: 'radio_5_broadcast', weight: 0.3 }, // 신규: 방송 시도
+            { id: 'radio_5_talk', weight: 0.3 } // 기존 대화
         ]
     },
+    
+    // 신규 분기: 방송 시도
+    'radio_5_broadcast': {
+        id: 'radio_5_broadcast',
+        text: "🎙️ DJ가 방심한 틈을 타 마이크를 잡았습니다. 어떤 방송을 내보낼까요?",
+        next: [
+            { id: 'radio_6_help', weight: 0.5 },
+            { id: 'radio_6_music', weight: 0.5 }
+        ]
+    },
+    'radio_6_help': {
+        id: 'radio_6_help',
+        text: "🆘 \"여기에 생존자가 있다!\" 구조 요청을 반복 송출했습니다. 누군가 듣기를 바라며 희망을 가집니다.",
+        effect: { target: 'ALL', sanity: 20 }
+    },
+    'radio_6_music': {
+        id: 'radio_6_music',
+        text: "🎵 경쾌한 음악을 틀어 도시 전체에 울려 퍼지게 했습니다. 좀비들이 소리를 따라 방송국으로 몰려듭니다! 위험하지만 낭만적이군요.",
+        effect: { target: 'ALL', sanity: 10, fatigue: 20 } // Mental boost but danger increase
+    },
+
     'radio_5_fight': {
         id: 'radio_5_fight',
         text: "🔫 DJ는 우리를 보자마자 산탄총을 꺼내 들었습니다. 어쩔 수 없이 그를 제압했습니다.",

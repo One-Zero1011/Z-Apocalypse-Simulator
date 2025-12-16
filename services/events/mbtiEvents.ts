@@ -34,7 +34,10 @@ export const MBTI_EVENT_POOL: Record<MBTI, MBTIEventGenerator[]> = {
         (n, p) => ({ text: `${n}은(는) 남들이 보지 못한 탈출 루트를 발견하고 조용히 미소 지었습니다.`, sanity: 5, fatigue: 5 }),
         (n, p) => ({ text: `${n}은(는) 감정에 휩쓸리는 동료를 보며 고개를 저었습니다.`, fatigue: 2 }),
         (n, p) => ({ text: `${n}은(는) 좀비의 동선을 완벽히 예측하여 설치한 함정으로 깔끔하게 처리했습니다.`, kill: 1, sanity: 5, fatigue: 5 }),
-        (n, p) => ({ text: `${n}은(는) 은신처에서 완벽한 휴식 계획을 짜고 숙면을 취했습니다.`, hp: 10, sanity: 5, fatigue: -30 })
+        (n, p) => ({ text: `${n}은(는) 은신처에서 완벽한 휴식 계획을 짜고 숙면을 취했습니다.`, hp: 10, sanity: 5, fatigue: -30 }),
+        (n, p) => ({ text: `${n}은(는) 가지고 있던 책을 읽으며 지식을 재확인하고 안정을 찾았습니다.`, sanity: 10, fatigue: -5 }),
+        (n, p) => ({ text: `${n}은(는) 그룹의 자원 소모율을 계산하여 배급량을 조절해야 한다고 주장했습니다.`, fatigue: 5 }),
+        (n, p) => ({ text: `${n}은(는) "감정은 약점일 뿐이야"라고 되뇌며 냉정함을 유지하려 애썼습니다.`, sanity: -2, fatigue: 5 })
     ],
     INTP: [
         (n, p) => ({ text: `${n}은(는) 좀비 바이러스의 원인에 대해 깊게 고찰하다 불침번 시간을 놓쳤습니다.`, sanity: -5, fatigue: 5 }),
@@ -50,7 +53,9 @@ export const MBTI_EVENT_POOL: Record<MBTI, MBTIEventGenerator[]> = {
         (n, p) => ({ text: `${n}은(는) "이 상황이 논리적으로 말이 안 돼"라며 분석을 시작했습니다.`, sanity: -2, fatigue: 5 }),
         (n, p) => ({ text: `${n}은(는) 좀비의 약점을 파악하기 위해 위험한 실험을 감행했습니다.`, hp: -5, kill: 2, fatigue: 15 }),
         (n, p) => ({ text: `${n}은(는) 혼자만의 세계에 빠져 누가 불러도 듣지 못했습니다.`, sanity: 5, fatigue: -5 }),
-        (n, p) => ({ text: `${n}은(는) 화학 지식을 이용해 진통제를 합성했습니다.`, hp: 15, fatigue: -10 })
+        (n, p) => ({ text: `${n}은(는) 화학 지식을 이용해 진통제를 합성했습니다.`, hp: 15, fatigue: -10 }),
+        (n, p) => ({ text: `${n}은(는) 좀비가 된 사람들이 서로 소통하는지 관찰하며 노트를 적었습니다.`, sanity: 5, fatigue: 5 }),
+        (n, p) => ({ text: `${n}은(는) 쓸모없는 물건들을 조합해 의외로 강력한 무기를 발명했습니다.`, kill: 1, sanity: 5, fatigue: 10 })
     ],
     ENTJ: [
         (n, p) => ({ text: `${n}은(는) 생존자들을 효율적으로 지휘하여 완벽한 방어선을 구축했습니다.`, sanity: 5, fatigue: 15 }),
@@ -66,7 +71,9 @@ export const MBTI_EVENT_POOL: Record<MBTI, MBTIEventGenerator[]> = {
         (n, p) => ({ text: `${n}은(는) 비효율적인 행동을 하는 동료에게 업무를 재배당했습니다.`, sanity: 2, fatigue: 5 }),
         (n, p) => ({ text: `${n}은(는) 미래를 위해 인재 양성이 필요하다며 생존 기술을 가르쳤습니다.`, fatigue: 10 }),
         (n, p) => ({ text: `${n}은(는) 자신의 명령에 불복종하는 것을 용납하지 않았습니다.`, sanity: -5, fatigue: 5 }),
-        (n, p) => ({ text: `${n}은(는) 최상의 컨디션을 유지하기 위해 추가 배급을 챙겼습니다.`, hp: 10, fatigue: -15 })
+        (n, p) => ({ text: `${n}은(는) 최상의 컨디션을 유지하기 위해 추가 배급을 챙겼습니다.`, hp: 10, fatigue: -15 }),
+        (n, p) => ({ text: `${n}은(는) "약한 자는 도태될 뿐이다"라며 냉혹한 현실을 상기시켰습니다.`, sanity: 5, fatigue: 0 }),
+        (n, p) => ({ text: `${n}은(는) 위기 상황에서 더욱 빛나는 카리스마로 모두를 압도했습니다.`, sanity: 10, fatigue: 15 })
     ],
     ENTP: [
         (n, p) => ({ text: `${n}은(는) 좀비를 유인하는 위험하지만 기발한 방법을 시험했습니다.`, hp: -5, kill: 3, fatigue: 15 }),
@@ -82,7 +89,9 @@ export const MBTI_EVENT_POOL: Record<MBTI, MBTIEventGenerator[]> = {
         (n, p) => ({ text: `${n}은(는) 위기 상황을 게임처럼 즐기며 대담하게 행동했습니다.`, sanity: 5, fatigue: 10 }),
         (n, p) => ({ text: `${n}은(는) 아무도 생각하지 못한 기상천외한 탈출법을 생각해냈습니다.`, sanity: 5, fatigue: 15 }),
         (n, p) => ({ text: `${n}은(는) 지루하다며 일부러 위험한 내기를 제안했습니다.`, hp: -2, fatigue: 5 }),
-        (n, p) => ({ text: `${n}은(는) 수상한 약을 먹어봤는데 의외로 효과가 좋았습니다.`, hp: 10, sanity: 5, fatigue: -20 })
+        (n, p) => ({ text: `${n}은(는) 수상한 약을 먹어봤는데 의외로 효과가 좋았습니다.`, hp: 10, sanity: 5, fatigue: -20 }),
+        (n, p) => ({ text: `${n}은(는) 좀비들의 어그로를 끌고 유유히 빠져나오는 스릴을 즐겼습니다.`, sanity: 5, fatigue: 15 }),
+        (n, p) => ({ text: `${n}은(는) 심각한 상황에서 부적절한 농담을 했다가 눈총을 받았습니다.`, sanity: -2, fatigue: 0 })
     ],
 
     INFJ: [
@@ -100,7 +109,9 @@ export const MBTI_EVENT_POOL: Record<MBTI, MBTIEventGenerator[]> = {
         (n, p) => ({ text: `${n}은(는) 세상이 멸망해도 지켜야 할 가치가 있다고 믿었습니다.`, sanity: 5, fatigue: 0 }),
         (n, p) => ({ text: `${n}은(는) 혼란스러운 상황 속에서도 평정심을 유지하려 애썼습니다.`, sanity: -2, fatigue: 5 }),
         (n, p) => ({ text: `${n}은(는) "미안해..."라고 작게 속삭이며 달려드는 좀비의 숨통을 끊었습니다.`, kill: 1, sanity: -5, fatigue: 10 }),
-        (n, p) => ({ text: `${n}은(는) 명상을 통해 몸과 마음의 고통을 잊었습니다.`, hp: 5, sanity: 15, fatigue: -20 })
+        (n, p) => ({ text: `${n}은(는) 명상을 통해 몸과 마음의 고통을 잊었습니다.`, hp: 5, sanity: 15, fatigue: -20 }),
+        (n, p) => ({ text: `${n}은(는) 모두가 잠든 사이 홀로 인류의 미래에 대해 고뇌했습니다.`, sanity: -5, fatigue: 5 }),
+        (n, p) => ({ text: `${n}은(는) 겉으로는 웃고 있지만 속으로는 무너져 내리고 있습니다.`, sanity: -10, fatigue: 5 })
     ],
     INFP: [
         (n, p) => ({ text: `${n}은(는) 폐허 속에서도 피어난 꽃을 보고 희망을 찾았습니다.`, sanity: 10, fatigue: 0 }),
@@ -117,7 +128,9 @@ export const MBTI_EVENT_POOL: Record<MBTI, MBTIEventGenerator[]> = {
         (n, p) => ({ text: `${n}은(는) 아름다운 노을을 보며 잠시 모든 시름을 잊었습니다.`, sanity: 5, fatigue: -10 }),
         (n, p) => ({ text: `${n}은(는) 삭막한 세상에서도 자신만의 낭만을 찾으려 했습니다.`, sanity: 2, fatigue: 5 }),
         (n, p) => ({ text: `${n}은(는) 공포에 질려 눈을 감고 마구 휘두른 쇠지렛대에 좀비가 쓰러졌습니다.`, kill: 1, sanity: -5, fatigue: 20 }),
-        (n, p) => ({ text: `${n}은(는) 따뜻한 햇살 아래서 낮잠을 잤습니다.`, hp: 5, sanity: 10, fatigue: -30 })
+        (n, p) => ({ text: `${n}은(는) 따뜻한 햇살 아래서 낮잠을 잤습니다.`, hp: 5, sanity: 10, fatigue: -30 }),
+        (n, p) => ({ text: `${n}은(는) 좀비를 죽이는 것에 깊은 죄책감을 느꼈습니다.`, sanity: -10, fatigue: 5 }),
+        (n, p) => ({ text: `${n}은(는) 버려진 인형을 주워 이름을 붙여주었습니다.`, sanity: 5, fatigue: 0 })
     ],
     ENFJ: [
         (n, p) => ({ text: `${n}은(는) 모두의 사기를 북돋우기 위해 열정적인 연설을 했습니다.`, sanity: 10, fatigue: 15 }),
@@ -134,7 +147,9 @@ export const MBTI_EVENT_POOL: Record<MBTI, MBTIEventGenerator[]> = {
         (n, p) => ({ text: `${n}은(는) 자신의 안위보다 집단의 이익을 최우선으로 생각했습니다.`, fatigue: 15 }),
         (n, p) => ({ text: `${n}은(는) 따뜻한 말 한마디로 얼어붙은 분위기를 녹였습니다.`, sanity: 5, fatigue: 5 }),
         (n, p) => ({ text: `${n}은(는) 모두가 탈출할 시간을 벌기 위해 홀로 남아서 좀비 무리를 막아냈습니다.`, kill: 2, hp: -10, fatigue: 30 }),
-        (n, p) => ({ text: `${n}은(는) 서로의 어깨를 주물러주며 피로를 풀었습니다.`, hp: 5, sanity: 10, fatigue: -20 })
+        (n, p) => ({ text: `${n}은(는) 서로의 어깨를 주물러주며 피로를 풀었습니다.`, hp: 5, sanity: 10, fatigue: -20 }),
+        (n, p) => ({ text: `${n}은(는) 무리한 일정에도 불구하고 낙오자를 챙기러 돌아갔습니다.`, hp: -5, sanity: 5, fatigue: 20 }),
+        (n, p) => ({ text: `${n}은(는) 모두가 잠든 후에도 불침번을 자처했습니다.`, fatigue: 15 })
     ],
     ENFP: [
         (n, p) => ({ text: `${n}은(는) 버려진 악기를 발견하고 서툰 연주를 시작했습니다.`, sanity: 10, fatigue: 5 }),
@@ -151,7 +166,9 @@ export const MBTI_EVENT_POOL: Record<MBTI, MBTIEventGenerator[]> = {
         (n, p) => ({ text: `${n}은(는) 새로운 사람을 만나자마자 친구가 되었습니다.`, sanity: 5, fatigue: 5 }),
         (n, p) => ({ text: `${n}은(는) 쏟아지는 비를 맞으며 춤을 추었습니다.`, sanity: 5, fatigue: 10 }),
         (n, p) => ({ text: `${n}은(는) 무거운 간판을 실수로 떨어뜨렸는데, 그 아래 있던 좀비가 깔려버렸습니다!`, kill: 1, sanity: 5, fatigue: 5 }),
-        (n, p) => ({ text: `${n}은(는) 비타민을 발견하고 아이처럼 기뻐하며 먹었습니다.`, hp: 5, sanity: 10, fatigue: -10 })
+        (n, p) => ({ text: `${n}은(는) 비타민을 발견하고 아이처럼 기뻐하며 먹었습니다.`, hp: 5, sanity: 10, fatigue: -10 }),
+        (n, p) => ({ text: `${n}은(는) 마네킹에게 이름을 붙이고 대화를 나누었습니다.`, sanity: 5, fatigue: 0 }),
+        (n, p) => ({ text: `${n}은(는) 직감을 믿고 오른쪽 길을 택했고, 좀비 떼를 피했습니다.`, sanity: 5, fatigue: 5 })
     ],
 
     ISTJ: [
@@ -168,7 +185,9 @@ export const MBTI_EVENT_POOL: Record<MBTI, MBTIEventGenerator[]> = {
         (n, p) => ({ text: `${n}은(는) 유통기한이 지난 약품을 분류하여 폐기했습니다.`, sanity: 2, fatigue: 5 }),
         (n, p) => ({ text: `${n}은(는) 정해진 식사량을 정확하게 배분했습니다.`, fatigue: 5 }),
         (n, p) => ({ text: `${n}은(는) 흐트러진 짐을 다시 정리하며 마음의 안정을 찾았습니다.`, sanity: 5, fatigue: 5 }),
-        (n, p) => ({ text: `${n}은(는) 구급상자를 매뉴얼대로 사용하여 상처를 치료했습니다.`, hp: 15, fatigue: -10 })
+        (n, p) => ({ text: `${n}은(는) 구급상자를 매뉴얼대로 사용하여 상처를 치료했습니다.`, hp: 15, fatigue: -10 }),
+        (n, p) => ({ text: `${n}은(는) "규칙이 없으면 우리는 죽은 목숨이야"라고 강조했습니다.`, sanity: 5, fatigue: 0 }),
+        (n, p) => ({ text: `${n}은(는) 다른 사람의 실수를 조용히 수습했습니다.`, fatigue: 10 })
     ],
     ISFJ: [
         (n, p) => ({ text: `${n}은(는) 부상당한 동료들의 상처를 정성껏 소독하고 돌봤습니다.`, sanity: 5, fatigue: 10 }),
@@ -185,7 +204,9 @@ export const MBTI_EVENT_POOL: Record<MBTI, MBTIEventGenerator[]> = {
         (n, p) => ({ text: `${n}은(는) 자신의 식량을 몰래 배고픈 동료 가방에 넣어두었습니다.`, hp: -2, sanity: 5, fatigue: 5 }),
         (n, p) => ({ text: `${n}은(는) 누군가의 거친 말에 상처받았지만 내색하지 않았습니다.`, sanity: -5, fatigue: 5 }),
         (n, p) => ({ text: `${n}은(는) 떨리는 손으로 프라이팬을 휘둘러 소중한 사람에게 다가가는 좀비를 쓰러뜨렸습니다.`, kill: 1, fatigue: 15 }),
-        (n, p) => ({ text: `${n}은(는) 따뜻한 물수건으로 몸을 닦으며 기력을 회복했습니다.`, hp: 10, sanity: 5, fatigue: -20 })
+        (n, p) => ({ text: `${n}은(는) 따뜻한 물수건으로 몸을 닦으며 기력을 회복했습니다.`, hp: 10, sanity: 5, fatigue: -20 }),
+        (n, p) => ({ text: `${n}은(는) 묵묵히 궂은일을 도맡아 하여 그룹을 지탱했습니다.`, fatigue: 15 }),
+        (n, p) => ({ text: `${n}은(는) 옛 추억이 담긴 물건을 버리지 못해 가방이 무거워졌습니다.`, fatigue: 5 })
     ],
     ESTJ: [
         (n, p) => ({ text: `${n}은(는) 캠프의 보안 상태를 점검하고 즉각적인 보강 공사를 지시했습니다.`, sanity: 5, fatigue: 15 }),
@@ -201,7 +222,9 @@ export const MBTI_EVENT_POOL: Record<MBTI, MBTIEventGenerator[]> = {
         (n, p) => ({ text: `${n}은(는) 감염 예방 수칙을 어긴 사람을 격리 조치했습니다.`, sanity: -2, fatigue: 5 }),
         (n, p) => ({ text: `${n}은(는) 모든 결정에 책임을 지며 앞장섰습니다.`, fatigue: 15 }),
         (n, p) => ({ text: `${n}은(는) 혼란스러운 상황을 통제하며 질서를 부여했습니다.`, sanity: 5, fatigue: 15 }),
-        (n, p) => ({ text: `${n}은(는) 규칙적인 휴식으로 컨디션을 회복했습니다.`, hp: 10, fatigue: -25 })
+        (n, p) => ({ text: `${n}은(는) 규칙적인 휴식으로 컨디션을 회복했습니다.`, hp: 10, fatigue: -25 }),
+        (n, p) => ({ text: `${n}은(는) 감정에 치우친 판단을 하는 동료를 이해하지 못했습니다.`, sanity: -2, fatigue: 5 }),
+        (n, p) => ({ text: `${n}은(는) 솔선수범하여 가장 힘든 보초 근무를 섰습니다.`, sanity: 5, fatigue: 20 })
     ],
     ESFJ: [
         (n, p) => ({ text: `${n}은(는) 생존자들의 생일을 기억해내고 작게나마 축하해주었습니다.`, sanity: 10, fatigue: 10 }),
@@ -218,7 +241,9 @@ export const MBTI_EVENT_POOL: Record<MBTI, MBTIEventGenerator[]> = {
         (n, p) => ({ text: `${n}은(는) 그룹의 사기를 위해 재미있는 이야기를 주도했습니다.`, sanity: 5, fatigue: 10 }),
         (n, p) => ({ text: `${n}은(는) 누군가가 자신을 싫어할까 봐 전전긍긍했습니다.`, sanity: -2, fatigue: 5 }),
         (n, p) => ({ text: `${n}은(는) 식량 창고를 습격한 좀비를 국자로 쫓아내며 처치했습니다.`, kill: 1, fatigue: 10 }),
-        (n, p) => ({ text: `${n}은(는) 맛있는 요리를 만들어 배불리 먹었습니다.`, hp: 10, sanity: 5, fatigue: -15 })
+        (n, p) => ({ text: `${n}은(는) 맛있는 요리를 만들어 배불리 먹었습니다.`, hp: 10, sanity: 5, fatigue: -15 }),
+        (n, p) => ({ text: `${n}은(는) 분위기가 험악해지자 급히 화제를 돌렸습니다.`, fatigue: 5 }),
+        (n, p) => ({ text: `${n}은(는) 다 같이 부를 수 있는 노래를 가르쳐주었습니다.`, sanity: 5, fatigue: 5 })
     ],
 
     ISTP: [
@@ -235,7 +260,9 @@ export const MBTI_EVENT_POOL: Record<MBTI, MBTIEventGenerator[]> = {
         (n, p) => ({ text: `${n}은(는) 빈 병을 이용해 소음기를 만들었습니다.`, kill: 1, fatigue: 5 }),
         (n, p) => ({ text: `${n}은(는) 닫힌 금고를 옷핀 하나로 열어 사람들을 놀라게 했습니다.`, sanity: 5, fatigue: 10 }),
         (n, p) => ({ text: `${n}은(는) 맨손으로 물고기를 잡아와 저녁 거리를 마련했습니다.`, hp: 5, fatigue: 15 }),
-        (n, p) => ({ text: `${n}은(는) 붕대를 감고 빠르게 회복했습니다.`, hp: 10, fatigue: -10 })
+        (n, p) => ({ text: `${n}은(는) 붕대를 감고 빠르게 회복했습니다.`, hp: 10, fatigue: -10 }),
+        (n, p) => ({ text: `${n}은(는) 남들이 패닉에 빠진 사이 조용히 탈출구를 확보했습니다.`, sanity: 5, fatigue: 5 }),
+        (n, p) => ({ text: `${n}은(는) 무기를 손질하며 마음의 평화를 얻었습니다.`, sanity: 5, fatigue: 5 })
     ],
     ISFP: [
         (n, p) => ({ text: `${n}은(는) 벽에 그림을 그리며 삭막한 곳에서 마음의 평화를 찾았습니다.`, sanity: 10, fatigue: 5 }),
@@ -251,7 +278,9 @@ export const MBTI_EVENT_POOL: Record<MBTI, MBTIEventGenerator[]> = {
         (n, p) => ({ text: `${n}은(는) 동물의 뼈로 작은 장신구를 만들었습니다.`, sanity: 2, fatigue: 5 }),
         (n, p) => ({ text: `${n}은(는) 예기치 못한 순간에 용기를 발휘해 동료를 구했습니다.`, hp: -5, sanity: 5, fatigue: 15 }),
         (n, p) => ({ text: `${n}은(는) 조용히 콧노래를 흥얼거려 주변을 안심시켰습니다.`, fatigue: 0 }),
-        (n, p) => ({ text: `${n}은(는) 숲에서 약초를 찾아 상처에 발랐습니다.`, hp: 15, fatigue: -10 })
+        (n, p) => ({ text: `${n}은(는) 숲에서 약초를 찾아 상처에 발랐습니다.`, hp: 15, fatigue: -10 }),
+        (n, p) => ({ text: `${n}은(는) 낡은 기타를 주워 감미로운 연주를 들려주었습니다.`, sanity: 10, fatigue: 5 }),
+        (n, p) => ({ text: `${n}은(는) 자연의 소리에 귀 기울이며 좀비의 접근을 먼저 감지했습니다.`, sanity: 5, fatigue: 5 })
     ],
     ESTP: [
         (n, p) => ({ text: `${n}은(는) 위험한 상황을 즐기며 좀비와 추격전을 벌였습니다.`, hp: -10, kill: 2, fatigue: 25 }),
@@ -267,7 +296,9 @@ export const MBTI_EVENT_POOL: Record<MBTI, MBTIEventGenerator[]> = {
         (n, p) => ({ text: `${n}은(는) 버려진 스포츠카를 발견하고 환호성을 질렀습니다.`, sanity: 5, fatigue: 5 }),
         (n, p) => ({ text: `${n}은(는) 벌레를 잡아먹는 내기를 하여 사람들을 경악하게 했습니다.`, sanity: 2, fatigue: 5 }),
         (n, p) => ({ text: `${n}은(는) 위험한 구역에 가장 먼저 뛰어들었습니다.`, hp: -5, fatigue: 20 }),
-        (n, p) => ({ text: `${n}은(는) 고단백 통조림을 발견하고 혼자 다 먹었습니다.`, hp: 20, fatigue: -10 })
+        (n, p) => ({ text: `${n}은(는) 고단백 통조림을 발견하고 혼자 다 먹었습니다.`, hp: 20, fatigue: -10 }),
+        (n, p) => ({ text: `${n}은(는) "생각할 시간에 뛰라고!" 소리치며 앞장섰습니다.`, fatigue: 10 }),
+        (n, p) => ({ text: `${n}은(는) 위기 상황일수록 눈빛이 초롱초롱해졌습니다.`, sanity: 5, fatigue: 0 })
     ],
     ESFP: [
         (n, p) => ({ text: `${n}은(는) 춤과 노래로 칙칙한 캠프의 분위기를 반전시켰습니다.`, sanity: 10, fatigue: 15 }),
@@ -283,7 +314,9 @@ export const MBTI_EVENT_POOL: Record<MBTI, MBTIEventGenerator[]> = {
         (n, p) => ({ text: `${n}은(는) 그림자 놀이로 아이들을 즐겁게 해주었습니다.`, sanity: 5, fatigue: 5 }),
         (n, p) => ({ text: `${n}은(는) 거울이 없다며 불평했지만 금세 웃어넘겼습니다.`, sanity: 2, fatigue: 2 }),
         (n, p) => ({ text: `${n}은(는) 분위기 메이커 역할을 톡톡히 해냈습니다.`, fatigue: 10 }),
-        (n, p) => ({ text: `${n}은(는) 잘 먹고 잘 자는 것이 생존 비결이라며 푹 잤습니다.`, hp: 10, sanity: 10, fatigue: -30 })
+        (n, p) => ({ text: `${n}은(는) 잘 먹고 잘 자는 것이 생존 비결이라며 푹 잤습니다.`, hp: 10, sanity: 10, fatigue: -30 }),
+        (n, p) => ({ text: `${n}은(는) 모두를 위해 깜짝 쇼를 준비해 박수를 받았습니다.`, sanity: 10, fatigue: 10 }),
+        (n, p) => ({ text: `${n}은(는) 슬퍼하는 친구를 꼭 안아주며 같이 울어주었습니다.`, sanity: 5, fatigue: 5 })
     ]
 };
 

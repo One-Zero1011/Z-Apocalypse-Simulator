@@ -15,6 +15,7 @@ import RelationshipMap from './components/RelationshipMap';
 import SystemMenu from './components/SystemMenu'; 
 import DeveloperMenu from './components/DeveloperMenu'; 
 import ConfirmationModal from './components/ConfirmationModal'; 
+import TutorialModal from './components/TutorialModal'; // New Import
 
 // Define Item Effects
 const ITEM_EFFECTS: Record<string, { desc: string, hp?: number, sanity?: number, fatigue?: number, cureMental?: boolean, cureInfection?: number, muzzle?: boolean, feed?: number }> = {
@@ -23,7 +24,7 @@ const ITEM_EFFECTS: Record<string, { desc: string, hp?: number, sanity?: number,
     '통조림': { desc: '피로도 -20', fatigue: -20 },
     '초콜릿': { desc: '정신력 +15', sanity: 15 },
     '비타민': { desc: '피로도 -10, 정신력 +5', fatigue: -10, sanity: 5 },
-    '정신병약': { desc: '정신병 치료, 정신력 +25', sanity: 25, cureMental: true },
+    '안정제': { desc: '불안정한 정신 상태 회복, 정신력 +25', sanity: 25, cureMental: true },
     '백신': { desc: '감염도 치료 (-50)', cureInfection: 50 },
     '입마개': { desc: '좀비에게 착용 시 물기 방지', muzzle: true },
     '고기': { desc: '좀비 허기 회복 (+30)', feed: 30 },
@@ -58,6 +59,7 @@ const App: React.FC = () => {
   const [showRelationshipMap, setShowRelationshipMap] = useState(false);
   const [showSystemMenu, setShowSystemMenu] = useState(false);
   const [showDevMenu, setShowDevMenu] = useState(false);
+  const [showTutorial, setShowTutorial] = useState(false); // Tutorial State
   const [confirmState, setConfirmState] = useState<ConfirmState | null>(null);
   const [inventory, setInventory] = useState<string[]>([]);
   const [selectedItem, setSelectedItem] = useState<string | null>(null);
@@ -65,7 +67,8 @@ const App: React.FC = () => {
   const [forcedEvents, setForcedEvents] = useState<ForcedEvent[]>([]);
   const [gameSettings, setGameSettings] = useState<GameSettings>({
       allowSameSexCouples: true, // Default ON
-      developerMode: false // Default OFF
+      developerMode: false, // Default OFF
+      useMentalStates: true // Default ON
   });
 
   // File Input Refs
@@ -81,8 +84,32 @@ const App: React.FC = () => {
   }, [darkMode]);
 
   useEffect(() => {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    // 모바일 환경(768px 미만)에서는 스크롤 위치 유지, 데스크탑에서는 맨 위로 스크롤
+    if (window.innerWidth >= 768) {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
   }, [day]);
+
+  // Initial Tutorial Check
+  useEffect(() => {
+      const tutorialSeen = localStorage.getItem('z-sim-tutorial-complete');
+      if (tutorialSeen !== 'true') {
+          setShowTutorial(true);
+      }
+  }, []);
+
+  // --- Tutorial Handlers ---
+  const closeTutorial = (neverShowAgain: boolean) => {
+      setShowTutorial(false);
+      if (neverShowAgain) {
+          localStorage.setItem('z-sim-tutorial-complete', 'true');
+      }
+  };
+
+  const openTutorial = () => {
+      setShowSystemMenu(false);
+      setShowTutorial(true);
+  };
 
   // --- New Game System ---
   const handleNewGame = () => {
@@ -171,7 +198,12 @@ const App: React.FC = () => {
                       setLogs(parsed.logs || []);
                       setStoryNodeId(parsed.storyNodeId || null);
                       if (parsed.settings) {
-                          setGameSettings({ allowSameSexCouples: true, developerMode: false, ...parsed.settings });
+                          setGameSettings({ 
+                              allowSameSexCouples: true, 
+                              developerMode: false, 
+                              useMentalStates: true,
+                              ...parsed.settings 
+                          });
                       }
                       setError(null);
                       setConfirmState(null);
@@ -278,77 +310,61 @@ const App: React.FC = () => {
     };
 
     setCharacters(prev => {
-      const updatedPrev = prev.map(c => {
-        let affinity = DEFAULT_RELATIONSHIP_VALUE;
-        let status: RelationshipStatus = 'None';
-        const relation = initialRelations.find(r => r.targetId === c.id);
-        if (relation) {
-            switch (relation.type) {
-                case 'Spouse': affinity = 90; status = 'Spouse'; break;
-                case 'Child': affinity = 80; status = 'Child'; break;
-                case 'Parent': affinity = 80; status = 'Parent'; break;
-                case 'Sibling': affinity = 70; status = 'Sibling'; break;
-                case 'Lover': affinity = 80; status = 'Lover'; break;
-                case 'Family': affinity = 60; status = 'Family'; break;
-                case 'BestFriend': affinity = 60; status = 'BestFriend'; break;
-                case 'Savior': affinity = 50; status = 'Savior'; break;
-                case 'Friend': affinity = 30; break;
-                case 'Colleague': affinity = 15; status = 'Colleague'; break;
-                case 'Rival': affinity = -15; status = 'Rival'; break;
-                case 'Ex': affinity = -20; status = 'Ex'; break;
-                case 'Enemy': affinity = -50; status = 'Enemy'; break;
-            }
-        }
-        return {
-          ...c,
-          relationships: { ...c.relationships, [newChar.id]: affinity },
-          relationshipStatuses: { ...c.relationshipStatuses, [newChar.id]: status }
+        // Step 1: Update existing characters with relationship to the NEW character
+        // Step 2: Update NEW character with relationship to EXISTING characters
+        
+        const getReverseStatus = (status: string): RelationshipStatus => {
+            if (status === 'Parent') return 'Child';
+            if (status === 'Child') return 'Parent';
+            if (status === 'Spouse') return 'Spouse';
+            if (status === 'Lover') return 'Lover';
+            if (status === 'Sibling') return 'Sibling';
+            if (status === 'Rival') return 'Rival';
+            if (status === 'Enemy') return 'Enemy';
+            if (status === 'BestFriend') return 'BestFriend';
+            if (status === 'Family') return 'Family';
+            if (status === 'Colleague') return 'Colleague';
+            if (status === 'Ex') return 'Ex';
+            return 'None'; // Default or asymmetric (e.g. Savior)
         };
-      });
-      
-      updatedPrev.forEach(c => {
-        let affinity = DEFAULT_RELATIONSHIP_VALUE;
-        let status: RelationshipStatus = 'None';
-        const relation = initialRelations.find(r => r.targetId === c.id);
-        if (relation) {
-            switch (relation.type) {
-                case 'Spouse': affinity = 90; status = 'Spouse'; break;
-                case 'Child': affinity = 80; status = 'Child'; break;
-                case 'Parent': affinity = 80; status = 'Parent'; break;
-                case 'Sibling': affinity = 70; status = 'Sibling'; break;
-                case 'Lover': affinity = 80; status = 'Lover'; break;
-                case 'Family': affinity = 60; status = 'Family'; break;
-                case 'BestFriend': affinity = 60; status = 'BestFriend'; break;
-                case 'Savior': affinity = 50; status = 'Savior'; break;
-                case 'Friend': affinity = 30; break;
-                case 'Colleague': affinity = 15; status = 'Colleague'; break;
-                case 'Rival': affinity = -15; status = 'Rival'; break;
-                case 'Ex': affinity = -20; status = 'Ex'; break;
-                case 'Enemy': affinity = -50; status = 'Enemy'; break;
+
+        const updatedPrev = prev.map(existingChar => {
+            const relationDef = initialRelations.find(r => r.targetId === existingChar.id);
+            if (relationDef) {
+                // affinity calculation
+                let affinity = DEFAULT_RELATIONSHIP_VALUE;
+                switch (relationDef.type) {
+                    case 'Spouse': affinity = 90; break;
+                    case 'Child': affinity = 80; break;
+                    case 'Parent': affinity = 80; break;
+                    case 'Sibling': affinity = 70; break;
+                    case 'Lover': affinity = 80; break;
+                    case 'Family': affinity = 60; break;
+                    case 'BestFriend': affinity = 60; break;
+                    case 'Savior': affinity = 50; break;
+                    case 'Friend': affinity = 30; break;
+                    case 'Colleague': affinity = 15; break;
+                    case 'Rival': affinity = -15; break;
+                    case 'Ex': affinity = -20; break;
+                    case 'Enemy': affinity = -50; break;
+                }
+
+                const newToExistingStatus = relationDef.type as RelationshipStatus;
+                const existingToNewStatus = getReverseStatus(relationDef.type);
+
+                newChar.relationships[existingChar.id] = affinity;
+                newChar.relationshipStatuses[existingChar.id] = newToExistingStatus;
+
+                return {
+                    ...existingChar,
+                    relationships: { ...existingChar.relationships, [newChar.id]: affinity },
+                    relationshipStatuses: { ...existingChar.relationshipStatuses, [newChar.id]: existingToNewStatus }
+                };
             }
-        }
-        newChar.relationships[c.id] = affinity;
-        newChar.relationshipStatuses[c.id] = status;
-      });
+            return existingChar;
+        });
 
-      updatedPrev.forEach(c => {
-          const relationToNew = c.relationshipStatuses[newChar.id];
-          if (relationToNew === 'Child') newChar.relationshipStatuses[c.id] = 'Parent';
-          else if (relationToNew === 'Parent') newChar.relationshipStatuses[c.id] = 'Child';
-      });
-      
-      const finalPrev = updatedPrev.map(c => {
-          const relationFromNew = newChar.relationshipStatuses[c.id];
-          let myStatusToNew = c.relationshipStatuses[newChar.id];
-          if (relationFromNew === 'Child') myStatusToNew = 'Parent';
-          if (relationFromNew === 'Parent') myStatusToNew = 'Child';
-          return {
-              ...c,
-              relationshipStatuses: { ...c.relationshipStatuses, [newChar.id]: myStatusToNew }
-          }
-      });
-
-      return [...finalPrev, newChar];
+        return [...updatedPrev, newChar];
     });
   };
 
@@ -388,7 +404,7 @@ const App: React.FC = () => {
     
     try {
       const nextDay = day + 1;
-      const result = await simulateDay(nextDay, characters, storyNodeId, gameSettings.allowSameSexCouples, forcedEvents);
+      const result = await simulateDay(nextDay, characters, storyNodeId, gameSettings, forcedEvents);
       setForcedEvents([]);
 
       setCharacters(prev => {
@@ -481,7 +497,7 @@ const App: React.FC = () => {
   const uiSurvivors = characters.filter(c => c.status === 'Alive' || c.status === 'Infected' || c.status === 'Zombie');
 
   return (
-    <div className="min-h-screen p-4 md:p-8 max-w-7xl mx-auto transition-colors duration-300">
+    <div className="min-h-screen p-4 md:p-8 max-w-7xl mx-auto transition-colors duration-300 pb-20 md:pb-8">
       
       <GameHeader 
         day={day}
@@ -508,16 +524,11 @@ const App: React.FC = () => {
             )}
             <button onClick={() => setShowSystemMenu(true)} className="flex items-center gap-2 px-4 py-2 rounded font-bold text-sm transition-all border border-slate-300 hover:bg-slate-100 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5"><path strokeLinecap="round" strokeLinejoin="round" d="M10.5 6h9.75M10.5 6a1.5 1.5 0 11-3 0m3 0a1.5 1.5 0 10-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-9.75 0h9.75" /></svg>
-                시스템
+                시스템(저장/불러오기)
             </button>
             <button onClick={() => setShowRelationshipMap(true)} disabled={activeSurvivors < 2} className={`flex items-center gap-2 px-4 py-2 rounded font-bold text-sm transition-all border ${activeSurvivors < 2 ? 'border-slate-300 text-slate-400 cursor-not-allowed dark:border-slate-700 dark:text-slate-600' : 'border-blue-500 text-blue-600 hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-blue-900/20'}`}>
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5"><path strokeLinecap="round" strokeLinejoin="round" d="M7.217 10.907a2.25 2.25 0 1 0 0 2.186m0-2.186c.18.324.283.696.283 1.093s-.103.77-.283 1.093m0-2.186 9.566-5.314m-9.566 7.5 9.566 5.314m0 0a2.25 2.25 0 1 0 3.935 2.186 2.25 2.25 0 0 0-3.935-2.186Zm0-12.814a2.25 2.25 0 1 0 3.933-2.185 2.25 2.25 0 0 0-3.933 2.185Z" /></svg>
                 관계도
-            </button>
-            
-            {/* Mobile Next Day Button */}
-            <button onClick={handleNextDay} disabled={loading || characters.length === 0} className={`w-full md:hidden py-3 rounded font-bold uppercase tracking-wide transition-all shadow-md flex justify-center items-center gap-2 ${loading ? 'bg-slate-300 dark:bg-slate-700 text-slate-500' : characters.length === 0 ? 'bg-slate-300 dark:bg-slate-800 text-slate-500' : 'bg-red-600 hover:bg-red-700 text-white'}`}>
-                {loading ? '진행 중...' : <>다음 날 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5"><path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" /></svg></>}
             </button>
       </div>
 
@@ -533,14 +544,28 @@ const App: React.FC = () => {
         {/* Right Column: Game Interactive Area */}
         <div className="lg:col-span-8 order-1 lg:order-2 space-y-8">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-             <CharacterForm onAdd={addCharacter} disabled={loading} existingCharacters={characters} />
+             <CharacterForm 
+                onAdd={addCharacter} 
+                disabled={loading} 
+                existingCharacters={characters} 
+                useMentalStates={gameSettings.useMentalStates}
+             />
              <InventoryPanel inventory={inventory} onSelectItem={setSelectedItem} />
           </div>
           <SurvivorList characters={characters} onDelete={deleteCharacter} />
         </div>
       </main>
 
+      {/* Mobile Fixed Next Day Button */}
+      <div className="fixed bottom-4 left-4 right-4 z-40 md:hidden">
+        <button onClick={handleNextDay} disabled={loading || characters.length === 0} className={`w-full py-4 rounded-xl font-bold text-lg uppercase tracking-wide transition-all shadow-lg flex justify-center items-center gap-2 ${loading ? 'bg-slate-700 text-slate-400' : characters.length === 0 ? 'bg-slate-700 text-slate-500' : 'bg-red-600 hover:bg-red-700 text-white shadow-red-900/50'}`}>
+            {loading ? '진행 중...' : <>다음 날 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-6 h-6"><path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" /></svg></>}
+        </button>
+      </div>
+
       {/* --- Modals & Overlays --- */}
+      {showTutorial && <TutorialModal onClose={closeTutorial} />}
+      
       <ItemUseModal 
         selectedItem={selectedItem} 
         onClose={() => setSelectedItem(null)} 
@@ -551,7 +576,25 @@ const App: React.FC = () => {
 
       {confirmState && <ConfirmationModal title={confirmState.title} message={confirmState.message} onConfirm={confirmState.action} onCancel={() => setConfirmState(null)} isDangerous={confirmState.isDangerous} />}
       {showRelationshipMap && <RelationshipMap characters={characters} onClose={() => setShowRelationshipMap(false)} />}
-      {showSystemMenu && <SystemMenu onClose={() => setShowSystemMenu(false)} onNewGame={handleNewGame} onSaveRoster={handleSaveRoster} onLoadRoster={handleLoadRosterTrigger} onSaveGame={handleSaveGame} onLoadGame={handleLoadGameTrigger} allowSameSex={gameSettings.allowSameSexCouples} onToggleSameSex={() => setGameSettings(prev => ({...prev, allowSameSexCouples: !prev.allowSameSexCouples}))} developerMode={gameSettings.developerMode} onToggleDeveloperMode={() => setGameSettings(prev => ({...prev, developerMode: !prev.developerMode}))} />}
+      
+      {showSystemMenu && (
+        <SystemMenu 
+            onClose={() => setShowSystemMenu(false)} 
+            onNewGame={handleNewGame} 
+            onSaveRoster={handleSaveRoster} 
+            onLoadRoster={handleLoadRosterTrigger} 
+            onSaveGame={handleSaveGame} 
+            onLoadGame={handleLoadGameTrigger} 
+            allowSameSex={gameSettings.allowSameSexCouples} 
+            onToggleSameSex={() => setGameSettings(prev => ({...prev, allowSameSexCouples: !prev.allowSameSexCouples}))} 
+            developerMode={gameSettings.developerMode} 
+            onToggleDeveloperMode={() => setGameSettings(prev => ({...prev, developerMode: !prev.developerMode}))}
+            useMentalStates={gameSettings.useMentalStates}
+            onToggleMentalStates={() => setGameSettings(prev => ({...prev, useMentalStates: !prev.useMentalStates}))} 
+            onShowTutorial={openTutorial} 
+        />
+      )}
+      
       {showDevMenu && <DeveloperMenu onClose={() => setShowDevMenu(false)} forcedEvents={forcedEvents} setForcedEvents={setForcedEvents} characters={characters} onUpdateCharacter={handleUpdateCharacter} onAddInventory={handleDevAddInventory} availableItems={DEV_ITEM_LIST} />}
     </div>
   );
