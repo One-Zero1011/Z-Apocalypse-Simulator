@@ -1,24 +1,44 @@
 
 import React, { useState, useCallback, useEffect, useRef } from 'react';
-import { Character, Gender, MBTI, DayLog, CharacterUpdate, RelationshipUpdate, RelationshipStatus, GameState, MentalState } from './types';
-import { MAX_HP, MAX_SANITY, MAX_FATIGUE, INITIAL_INVENTORY, DEFAULT_RELATIONSHIP_VALUE } from './constants';
-import CharacterForm from './components/CharacterForm';
-import CharacterCard from './components/CharacterCard';
-import EventLog from './components/EventLog';
-import RelationshipMap from './components/RelationshipMap'; 
-import SystemMenu from './components/SystemMenu'; 
-import ConfirmationModal from './components/ConfirmationModal'; 
+import { Character, Gender, MBTI, DayLog, CharacterUpdate, RelationshipUpdate, RelationshipStatus, GameState, MentalState, GameSettings, ForcedEvent } from './types';
+import { MAX_HP, MAX_SANITY, MAX_FATIGUE, MAX_INFECTION, MAX_HUNGER, INITIAL_INVENTORY, DEFAULT_RELATIONSHIP_VALUE } from './constants';
 import { simulateDay } from './services/simulation';
 
+// Components
+import GameHeader from './components/GameHeader';
+import CharacterForm from './components/CharacterForm';
+import EventLog from './components/EventLog';
+import InventoryPanel from './components/InventoryPanel';
+import SurvivorList from './components/SurvivorList';
+import ItemUseModal from './components/ItemUseModal';
+import RelationshipMap from './components/RelationshipMap'; 
+import SystemMenu from './components/SystemMenu'; 
+import DeveloperMenu from './components/DeveloperMenu'; 
+import ConfirmationModal from './components/ConfirmationModal'; 
+
 // Define Item Effects
-const ITEM_EFFECTS: Record<string, { desc: string, hp?: number, sanity?: number, fatigue?: number, cureMental?: boolean }> = {
-    '붕대': { desc: '체력 +20', hp: 20 },
-    '항생제': { desc: '체력 +30', hp: 30 },
+const ITEM_EFFECTS: Record<string, { desc: string, hp?: number, sanity?: number, fatigue?: number, cureMental?: boolean, cureInfection?: number, muzzle?: boolean, feed?: number }> = {
+    '붕대': { desc: '체력 +15', hp: 15 },
+    '항생제': { desc: '체력 +25', hp: 25 },
     '통조림': { desc: '피로도 -20', fatigue: -20 },
     '초콜릿': { desc: '정신력 +15', sanity: 15 },
     '비타민': { desc: '피로도 -10, 정신력 +5', fatigue: -10, sanity: 5 },
-    '정신병약': { desc: '정신병 치료, 정신력 +30', sanity: 30, cureMental: true } // New Item Effect
+    '정신병약': { desc: '정신병 치료, 정신력 +25', sanity: 25, cureMental: true },
+    '백신': { desc: '감염도 치료 (-50)', cureInfection: 50 },
+    '입마개': { desc: '좀비에게 착용 시 물기 방지', muzzle: true },
+    '고기': { desc: '좀비 허기 회복 (+30)', feed: 30 },
+    '인육': { desc: '좀비 허기 완전 회복 (+100)', feed: 100 }
 };
+
+// Developer Item List (Effects + Starter Items)
+const DEV_ITEM_LIST = Array.from(new Set([
+    ...Object.keys(ITEM_EFFECTS),
+    '생수 500ml',
+    '맥가이버 칼',
+    '권총',
+    '지도',
+    '무전기'
+])).sort();
 
 // Confirmation State Type
 interface ConfirmState {
@@ -37,16 +57,16 @@ const App: React.FC = () => {
   const [darkMode, setDarkMode] = useState(false);
   const [showRelationshipMap, setShowRelationshipMap] = useState(false);
   const [showSystemMenu, setShowSystemMenu] = useState(false);
-  
-  // Custom Confirmation Modal State
+  const [showDevMenu, setShowDevMenu] = useState(false);
   const [confirmState, setConfirmState] = useState<ConfirmState | null>(null);
-  
-  // New Inventory State
   const [inventory, setInventory] = useState<string[]>([]);
   const [selectedItem, setSelectedItem] = useState<string | null>(null);
-
-  // Story Chain State
   const [storyNodeId, setStoryNodeId] = useState<string | null>(null);
+  const [forcedEvents, setForcedEvents] = useState<ForcedEvent[]>([]);
+  const [gameSettings, setGameSettings] = useState<GameSettings>({
+      allowSameSexCouples: true, // Default ON
+      developerMode: false // Default OFF
+  });
 
   // File Input Refs
   const rosterInputRef = useRef<HTMLInputElement>(null);
@@ -60,32 +80,30 @@ const App: React.FC = () => {
     }
   }, [darkMode]);
 
-  // Scroll to top whenever the day changes
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [day]);
 
   // --- New Game System ---
   const handleNewGame = () => {
-      // 1. Logic to execute
       const executeReset = () => {
           setDay(0);
           setCharacters([]);
           setLogs([]);
           setInventory([]);
           setSelectedItem(null);
-          setStoryNodeId(null); // Reset story chain
+          setStoryNodeId(null);
+          setForcedEvents([]);
           setError(null);
-          setConfirmState(null); // Close modal
+          setConfirmState(null);
           
           setTimeout(() => {
               alert("새 게임이 시작되었습니다. 생존자를 등록해주세요.");
           }, 100);
       };
 
-      setShowSystemMenu(false); // Close menu first
+      setShowSystemMenu(false);
 
-      // 2. Check conditions
       if (characters.length > 0 || day > 0) {
           setConfirmState({
               title: "새 게임 시작",
@@ -98,25 +116,18 @@ const App: React.FC = () => {
       }
   };
 
-  // --- Full Game Save/Load System ---
-
+  // --- Save/Load Logic ---
   const handleSaveGame = () => {
       if (characters.length === 0 && day === 0) {
           setError("저장할 데이터가 없습니다.");
           return;
       }
-
       const gameState: GameState = {
           type: 'FULL_SAVE',
           version: 1,
           timestamp: new Date().toISOString(),
-          day,
-          characters,
-          inventory,
-          logs,
-          storyNodeId // Save story state
+          day, characters, inventory, logs, storyNodeId, settings: gameSettings
       };
-
       const blob = new Blob([JSON.stringify(gameState, null, 2)], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -139,48 +150,44 @@ const App: React.FC = () => {
   const handleLoadGameFile = (event: React.ChangeEvent<HTMLInputElement>) => {
       const file = event.target.files?.[0];
       if (!file) return;
-
-      // Close system menu if open
       setShowSystemMenu(false);
-
       const reader = new FileReader();
       reader.onload = (e) => {
           try {
               const content = e.target?.result as string;
               const parsed = JSON.parse(content);
-              
               if (parsed.type === 'FULL_SAVE' && Array.isArray(parsed.characters)) {
-                  
                   const executeLoad = () => {
                       setDay(parsed.day || 0);
-                      // Fallback for mentalState for old save files
                       const loadedChars = parsed.characters.map((c: any) => ({
                           ...c,
-                          mentalState: c.mentalState || 'Normal'
+                          mentalState: c.mentalState || 'Normal',
+                          infection: c.infection || 0,
+                          hunger: c.hunger || 0,
+                          hasMuzzle: c.hasMuzzle || false
                       }));
                       setCharacters(loadedChars || []);
                       setInventory(parsed.inventory || []);
                       setLogs(parsed.logs || []);
-                      setStoryNodeId(parsed.storyNodeId || null); // Load story state
+                      setStoryNodeId(parsed.storyNodeId || null);
+                      if (parsed.settings) {
+                          setGameSettings({ allowSameSexCouples: true, developerMode: false, ...parsed.settings });
+                      }
                       setError(null);
                       setConfirmState(null);
-                      
-                      setTimeout(() => {
-                          alert(`${parsed.day}일차 게임 데이터를 성공적으로 불러왔습니다.`);
-                      }, 100);
+                      setForcedEvents([]);
+                      setTimeout(() => alert(`${parsed.day}일차 게임 데이터를 성공적으로 불러왔습니다.`), 100);
                   };
-
                   if (characters.length > 0 || day > 0) {
                       setConfirmState({
                           title: "게임 불러오기",
-                          message: "현재 진행 중인 게임을 중단하고 선택한 파일을 불러오시겠습니까?\n'확인'을 누르면 현재 데이터가 덮어씌워집니다.",
+                          message: "현재 데이터를 덮어쓰고 불러오시겠습니까?",
                           action: executeLoad,
                           isDangerous: true
                       });
                   } else {
                       executeLoad();
                   }
-
               } else {
                   setError("올바르지 않은 세이브 파일입니다.");
               }
@@ -192,31 +199,17 @@ const App: React.FC = () => {
       reader.readAsText(file);
   };
 
-
-  // --- Roster Save/Load System ---
-
   const handleSaveRoster = () => {
       if (characters.length === 0) {
           setError("저장할 생존자가 없습니다.");
           return;
       }
-
       const rosterData = characters.map(c => ({
-          id: c.id, 
-          name: c.name,
-          gender: c.gender,
-          mbti: c.mbti,
-          hp: MAX_HP,
-          sanity: MAX_SANITY,
-          fatigue: 0,
-          status: 'Alive',
-          mentalState: 'Normal', // Reset Mental
-          inventory: [...INITIAL_INVENTORY],
-          relationships: c.relationships,
-          relationshipStatuses: c.relationshipStatuses,
-          killCount: 0
+          id: c.id, name: c.name, gender: c.gender, mbti: c.mbti,
+          hp: MAX_HP, sanity: MAX_SANITY, fatigue: 0, infection: 0, hunger: 0, hasMuzzle: false,
+          status: 'Alive', mentalState: 'Normal', inventory: [...INITIAL_INVENTORY],
+          relationships: c.relationships, relationshipStatuses: c.relationshipStatuses, killCount: 0
       }));
-
       const blob = new Blob([JSON.stringify(rosterData, null, 2)], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -239,58 +232,35 @@ const App: React.FC = () => {
   const handleLoadRosterFile = (event: React.ChangeEvent<HTMLInputElement>) => {
       const file = event.target.files?.[0];
       if (!file) return;
-
       setShowSystemMenu(false);
-
       const reader = new FileReader();
       reader.onload = (e) => {
           try {
               const content = e.target?.result as string;
               const parsed = JSON.parse(content);
-              
-              if (Array.isArray(parsed) && parsed.length > 0 && parsed[0].name && parsed[0].mbti) {
-                  
+              if (Array.isArray(parsed) && parsed.length > 0) {
                   const executeLoadRoster = () => {
                       const initializedCharacters = parsed.map((c: any) => ({
-                          ...c,
-                          hp: MAX_HP,
-                          sanity: MAX_SANITY,
-                          fatigue: 0,
-                          status: 'Alive', 
-                          mentalState: 'Normal', // Initialize
-                          inventory: [...INITIAL_INVENTORY],
-                          killCount: 0,
-                          relationships: c.relationships || {},
-                          relationshipStatuses: c.relationshipStatuses || {}
+                          ...c, hp: MAX_HP, sanity: MAX_SANITY, fatigue: 0, infection: 0, hunger: 0, hasMuzzle: false,
+                          status: 'Alive', mentalState: 'Normal', inventory: [...INITIAL_INVENTORY], killCount: 0,
+                          relationships: c.relationships || {}, relationshipStatuses: c.relationshipStatuses || {}
                       })) as Character[];
-
                       setCharacters(initializedCharacters);
-                      setDay(0);
-                      setLogs([]);
-                      setInventory([]); 
-                      setSelectedItem(null);
-                      setStoryNodeId(null);
-                      setError(null);
-                      setConfirmState(null);
-                      
-                      setTimeout(() => {
-                          alert(`${parsed.length}명의 생존자 명단을 불러왔습니다. 모든 상태가 1일차로 초기화되었습니다.`);
-                      }, 100);
+                      setDay(0); setLogs([]); setInventory([]); setSelectedItem(null); setStoryNodeId(null); setForcedEvents([]); setError(null); setConfirmState(null);
+                      setTimeout(() => alert(`${parsed.length}명의 생존자 명단을 불러왔습니다.`), 100);
                   };
-
                   if (characters.length > 0 || day > 0) {
                        setConfirmState({
                           title: "명단 불러오기",
-                          message: "현재 진행 중인 게임을 중단하고 생존자 명단을 불러오시겠습니까?\n'확인'을 누르면 현재 게임이 초기화되고 새 게임이 시작됩니다.",
+                          message: "현재 진행 중인 게임이 초기화됩니다. 계속하시겠습니까?",
                           action: executeLoadRoster,
                           isDangerous: true
                       });
                   } else {
                       executeLoadRoster();
                   }
-
               } else {
-                  setError("올바르지 않은 생존자 명단 파일입니다.");
+                  setError("올바르지 않은 명단 파일입니다.");
               }
           } catch (err) {
               console.error(err);
@@ -300,143 +270,91 @@ const App: React.FC = () => {
       reader.readAsText(file);
   };
 
-  // ---------------------------
-
-  const addCharacter = (name: string, gender: Gender, mbti: MBTI, mentalState: MentalState, initialRelation?: { targetId: string, type: string }) => {
+  // --- Character Logic ---
+  const addCharacter = (name: string, gender: Gender, mbti: MBTI, mentalState: MentalState, initialRelations: { targetId: string, type: string }[] = []) => {
     const newChar: Character = {
-      id: crypto.randomUUID(),
-      name,
-      gender,
-      mbti,
-      hp: MAX_HP,
-      sanity: MAX_SANITY,
-      fatigue: 0, 
-      status: 'Alive',
-      mentalState: mentalState, // Apply selected mental state
-      inventory: [...INITIAL_INVENTORY],
-      relationships: {},
-      relationshipStatuses: {},
-      killCount: 0
+      id: crypto.randomUUID(), name, gender, mbti, hp: MAX_HP, sanity: MAX_SANITY, fatigue: 0, infection: 0, hunger: MAX_HUNGER, hasMuzzle: false,
+      status: 'Alive', mentalState: mentalState, inventory: [...INITIAL_INVENTORY], relationships: {}, relationshipStatuses: {}, killCount: 0
     };
 
-    // Initialize relationships with existing characters
     setCharacters(prev => {
       const updatedPrev = prev.map(c => {
         let affinity = DEFAULT_RELATIONSHIP_VALUE;
         let status: RelationshipStatus = 'None';
-
-        // Check if this existing character is the target of the initial relation
-        if (initialRelation && c.id === initialRelation.targetId) {
-            switch (initialRelation.type) {
-                case 'Lover':
-                    affinity = 80;
-                    status = 'Lover';
-                    break;
-                case 'Family':
-                    affinity = 60;
-                    status = 'Family';
-                    break;
-                case 'BestFriend':
-                    affinity = 60;
-                    status = 'BestFriend';
-                    break;
-                case 'Savior':
-                    affinity = 50;
-                    status = 'Savior';
-                    break;
-                case 'Friend':
-                    affinity = 30;
-                    // Friend is generic, keep status None or maybe treat as None for now to allow evolution
-                    break;
-                case 'Colleague':
-                    affinity = 15;
-                    status = 'Colleague';
-                    break;
-                case 'Rival':
-                    affinity = -15;
-                    status = 'Rival';
-                    break;
-                case 'Ex':
-                    affinity = -20;
-                    status = 'Ex';
-                    break;
-                case 'Enemy':
-                    affinity = -50;
-                    status = 'Enemy';
-                    break;
+        const relation = initialRelations.find(r => r.targetId === c.id);
+        if (relation) {
+            switch (relation.type) {
+                case 'Spouse': affinity = 90; status = 'Spouse'; break;
+                case 'Child': affinity = 80; status = 'Child'; break;
+                case 'Parent': affinity = 80; status = 'Parent'; break;
+                case 'Sibling': affinity = 70; status = 'Sibling'; break;
+                case 'Lover': affinity = 80; status = 'Lover'; break;
+                case 'Family': affinity = 60; status = 'Family'; break;
+                case 'BestFriend': affinity = 60; status = 'BestFriend'; break;
+                case 'Savior': affinity = 50; status = 'Savior'; break;
+                case 'Friend': affinity = 30; break;
+                case 'Colleague': affinity = 15; status = 'Colleague'; break;
+                case 'Rival': affinity = -15; status = 'Rival'; break;
+                case 'Ex': affinity = -20; status = 'Ex'; break;
+                case 'Enemy': affinity = -50; status = 'Enemy'; break;
             }
         }
-
         return {
           ...c,
-          relationships: {
-            ...c.relationships,
-            [newChar.id]: affinity // Symmetric initialization for simplicity
-          },
-          relationshipStatuses: {
-             ...c.relationshipStatuses,
-             [newChar.id]: status
-          }
+          relationships: { ...c.relationships, [newChar.id]: affinity },
+          relationshipStatuses: { ...c.relationshipStatuses, [newChar.id]: status }
         };
       });
       
-      // Initialize new char relationships from the other side
       updatedPrev.forEach(c => {
         let affinity = DEFAULT_RELATIONSHIP_VALUE;
         let status: RelationshipStatus = 'None';
-
-        if (initialRelation && c.id === initialRelation.targetId) {
-            switch (initialRelation.type) {
-                case 'Lover':
-                    affinity = 80;
-                    status = 'Lover';
-                    break;
-                case 'Family':
-                    affinity = 60;
-                    status = 'Family';
-                    break;
-                case 'BestFriend':
-                    affinity = 60;
-                    status = 'BestFriend';
-                    break;
-                case 'Savior':
-                    affinity = 50;
-                    status = 'Savior';
-                    break;
-                case 'Friend':
-                    affinity = 30;
-                    break;
-                case 'Colleague':
-                    affinity = 15;
-                    status = 'Colleague';
-                    break;
-                case 'Rival':
-                    affinity = -15;
-                    status = 'Rival';
-                    break;
-                case 'Ex':
-                    affinity = -20;
-                    status = 'Ex';
-                    break;
-                case 'Enemy':
-                    affinity = -50;
-                    status = 'Enemy';
-                    break;
+        const relation = initialRelations.find(r => r.targetId === c.id);
+        if (relation) {
+            switch (relation.type) {
+                case 'Spouse': affinity = 90; status = 'Spouse'; break;
+                case 'Child': affinity = 80; status = 'Child'; break;
+                case 'Parent': affinity = 80; status = 'Parent'; break;
+                case 'Sibling': affinity = 70; status = 'Sibling'; break;
+                case 'Lover': affinity = 80; status = 'Lover'; break;
+                case 'Family': affinity = 60; status = 'Family'; break;
+                case 'BestFriend': affinity = 60; status = 'BestFriend'; break;
+                case 'Savior': affinity = 50; status = 'Savior'; break;
+                case 'Friend': affinity = 30; break;
+                case 'Colleague': affinity = 15; status = 'Colleague'; break;
+                case 'Rival': affinity = -15; status = 'Rival'; break;
+                case 'Ex': affinity = -20; status = 'Ex'; break;
+                case 'Enemy': affinity = -50; status = 'Enemy'; break;
             }
         }
-        
         newChar.relationships[c.id] = affinity;
         newChar.relationshipStatuses[c.id] = status;
       });
 
-      return [...updatedPrev, newChar];
+      updatedPrev.forEach(c => {
+          const relationToNew = c.relationshipStatuses[newChar.id];
+          if (relationToNew === 'Child') newChar.relationshipStatuses[c.id] = 'Parent';
+          else if (relationToNew === 'Parent') newChar.relationshipStatuses[c.id] = 'Child';
+      });
+      
+      const finalPrev = updatedPrev.map(c => {
+          const relationFromNew = newChar.relationshipStatuses[c.id];
+          let myStatusToNew = c.relationshipStatuses[newChar.id];
+          if (relationFromNew === 'Child') myStatusToNew = 'Parent';
+          if (relationFromNew === 'Parent') myStatusToNew = 'Child';
+          return {
+              ...c,
+              relationshipStatuses: { ...c.relationshipStatuses, [newChar.id]: myStatusToNew }
+          }
+      });
+
+      return [...finalPrev, newChar];
     });
   };
 
   const deleteCharacter = (id: string) => {
     setCharacters(prev => {
       const remaining = prev.filter(c => c.id !== id);
-      // Clean up relationships in remaining characters
       return remaining.map(c => {
         const newRels = { ...c.relationships };
         const newStatuses = { ...c.relationshipStatuses };
@@ -447,10 +365,21 @@ const App: React.FC = () => {
     });
   };
 
+  const handleUpdateCharacter = (updatedChar: Character) => {
+      setCharacters(prev => prev.map(c => c.id === updatedChar.id ? updatedChar : c));
+  };
+
+  const handleDevAddInventory = (item: string, count: number) => {
+      if (count <= 0) return;
+      setInventory(prev => [...prev, ...Array(count).fill(item)]);
+  };
+
+  // --- Simulation Logic ---
   const handleNextDay = useCallback(async () => {
     if (loading) return;
-    if (characters.filter(c => c.status === 'Alive').length === 0) {
-        setError("더 이상 생존자가 없습니다.");
+    const living = characters.filter(c => c.status === 'Alive' || c.status === 'Infected' || c.status === 'Zombie');
+    if (living.length === 0) {
+        setError("더 이상 활동 가능한 생존자가 없습니다.");
         return;
     }
 
@@ -459,74 +388,49 @@ const App: React.FC = () => {
     
     try {
       const nextDay = day + 1;
-      // Pass storyNodeId to simulateDay
-      const result = await simulateDay(nextDay, characters, storyNodeId);
+      const result = await simulateDay(nextDay, characters, storyNodeId, gameSettings.allowSameSexCouples, forcedEvents);
+      setForcedEvents([]);
 
-      // Apply Updates
       setCharacters(prev => {
         const nextChars = [...prev];
-        
         result.updates.forEach((update: CharacterUpdate) => {
           const index = nextChars.findIndex(c => c.id === update.id);
           if (index === -1) return;
-
           const char = { ...nextChars[index] };
           
-          // Apply basic stats
           if (update.hpChange) char.hp = Math.max(0, Math.min(MAX_HP, char.hp + update.hpChange));
           if (update.sanityChange) char.sanity = Math.max(0, Math.min(MAX_SANITY, char.sanity + update.sanityChange));
-          if (update.fatigueChange) char.fatigue = Math.max(0, Math.min(MAX_FATIGUE, char.fatigue + update.fatigueChange)); // Fatigue
-          
+          if (update.fatigueChange) char.fatigue = Math.max(0, Math.min(MAX_FATIGUE, char.fatigue + update.fatigueChange));
+          if (update.infectionChange) char.infection = Math.max(0, Math.min(MAX_INFECTION, char.infection + update.infectionChange));
+          if (update.hungerChange) char.hunger = Math.max(0, Math.min(MAX_HUNGER, char.hunger + update.hungerChange));
+          if (update.hasMuzzle !== undefined) char.hasMuzzle = update.hasMuzzle;
           if (update.status) char.status = update.status;
-          if (update.mentalState) char.mentalState = update.mentalState; // Update Mental State
-
+          if (update.mentalState) char.mentalState = update.mentalState; 
           if (update.killCountChange) char.killCount += update.killCountChange;
-
-          // Apply Inventory (Character private inventory logic preserved but not main focus)
+          if (update.status === 'Zombie' && nextChars[index].status !== 'Zombie') char.hunger = MAX_HUNGER;
           if (update.inventoryAdd) char.inventory = [...char.inventory, ...update.inventoryAdd];
-          if (update.inventoryRemove) {
-             char.inventory = char.inventory.filter(item => !update.inventoryRemove?.includes(item));
-          }
+          if (update.inventoryRemove) char.inventory = char.inventory.filter(item => !update.inventoryRemove?.includes(item));
 
-          // Apply Relationships & Statuses
           if (update.relationshipUpdates) {
              const newRels = { ...char.relationships };
              const newStatuses = { ...char.relationshipStatuses };
-             
              update.relationshipUpdates.forEach((rel: RelationshipUpdate) => {
-                 // Update Score
                  const currentVal = newRels[rel.targetId] || 0;
                  newRels[rel.targetId] = Math.max(-100, Math.min(100, currentVal + rel.change));
-                 
-                 // Update Status (Lover/Ex)
-                 if (rel.newStatus) {
-                     newStatuses[rel.targetId] = rel.newStatus;
-                 }
+                 if (rel.newStatus) newStatuses[rel.targetId] = rel.newStatus;
              });
              char.relationships = newRels;
              char.relationshipStatuses = newStatuses;
           }
-
           nextChars[index] = char;
         });
-
         return nextChars;
       });
 
-      // Update Global Inventory with loot
-      if (result.loot && result.loot.length > 0) {
-          setInventory(prev => [...prev, ...result.loot]);
-      }
-
-      // Add Log
-      setLogs(prev => [...prev, {
-        day: nextDay,
-        narrative: result.narrative,
-        events: result.events
-      }]);
-
+      if (result.loot && result.loot.length > 0) setInventory(prev => [...prev, ...result.loot]);
+      setLogs(prev => [...prev, { day: nextDay, narrative: result.narrative, events: result.events }]);
       setDay(nextDay);
-      setStoryNodeId(result.nextStoryNodeId); // Update story chain
+      setStoryNodeId(result.nextStoryNodeId); 
 
     } catch (err) {
       console.error(err);
@@ -534,334 +438,121 @@ const App: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [day, characters, loading, storyNodeId]); // Add storyNodeId to dependency
+  }, [day, characters, loading, storyNodeId, gameSettings, forcedEvents]);
 
   const handleUseItem = (targetId: string) => {
       if (!selectedItem) return;
-
       const effect = ITEM_EFFECTS[selectedItem];
       if (!effect) return;
 
       setCharacters(prev => prev.map(char => {
           if (char.id === targetId) {
               const updatedChar = { ...char };
+              const isZombie = char.status === 'Zombie';
+              if (isZombie) {
+                   if (effect.feed) updatedChar.hunger = Math.min(MAX_HUNGER, updatedChar.hunger + effect.feed);
+                   else if (effect.muzzle) updatedChar.hasMuzzle = true;
+                   else { if (effect.hp) updatedChar.hp = Math.min(MAX_HP, updatedChar.hp + effect.hp); }
+                   return updatedChar;
+              }
               if (effect.hp) updatedChar.hp = Math.min(MAX_HP, updatedChar.hp + effect.hp);
               if (effect.sanity) updatedChar.sanity = Math.min(MAX_SANITY, updatedChar.sanity + effect.sanity);
               if (effect.fatigue) updatedChar.fatigue = Math.max(0, updatedChar.fatigue + effect.fatigue);
-              
-              // Mental Illness Cure Logic
-              if (effect.cureMental && updatedChar.mentalState !== 'Normal') {
-                  updatedChar.mentalState = 'Normal';
+              if (effect.cureInfection && updatedChar.infection > 0) {
+                  updatedChar.infection = Math.max(0, updatedChar.infection - effect.cureInfection);
+                  if (updatedChar.status === 'Infected' && updatedChar.infection === 0) updatedChar.status = 'Alive';
               }
-
+              if (effect.cureMental && updatedChar.mentalState !== 'Normal') updatedChar.mentalState = 'Normal';
               return updatedChar;
           }
           return char;
       }));
 
-      // Remove item from inventory
       const idx = inventory.indexOf(selectedItem);
       if (idx > -1) {
           const newInv = [...inventory];
           newInv.splice(idx, 1);
           setInventory(newInv);
       }
-
       setSelectedItem(null);
   };
 
   const activeSurvivors = characters.filter(c => c.status !== 'Dead' && c.status !== 'Missing').length;
-  const livingCharacters = characters.filter(c => c.status !== 'Dead' && c.status !== 'Missing');
+  const uiSurvivors = characters.filter(c => c.status === 'Alive' || c.status === 'Infected' || c.status === 'Zombie');
 
   return (
     <div className="min-h-screen p-4 md:p-8 max-w-7xl mx-auto transition-colors duration-300">
-      <header className="mb-8 flex flex-col md:flex-row justify-between items-center gap-4 border-b border-slate-300 dark:border-slate-700 pb-6">
-        <div className="flex items-center gap-4">
-          <div>
-            <h1 className="text-4xl font-bold tracking-tighter text-slate-800 dark:text-slate-100">
-              <span className="text-red-600">Z</span>-SIMULATOR
-            </h1>
-            <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">MBTI 성격 기반 생존 시뮬레이터</p>
-          </div>
-          <button 
-            onClick={() => setDarkMode(!darkMode)}
-            className="p-2 rounded-full bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-300 dark:hover:bg-slate-700 transition-colors"
-            title="다크 모드 전환"
-          >
-            {darkMode ? (
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M12 3v2.25m6.364.386-1.591 1.591M21 12h-2.25m-.386 6.364-1.591-1.591M12 18.75V21m-4.773-4.227-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0Z" />
-              </svg>
-            ) : (
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M21.752 15.002A9.72 9.72 0 0 1 18 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 0 0 3 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 0 0 9.002-5.998Z" />
-              </svg>
-            )}
-          </button>
-        </div>
-        
-        {/* Hidden File Inputs */}
-        <input 
-            type="file" 
-            ref={rosterInputRef} 
-            style={{ display: 'none' }} 
-            accept=".json" 
-            onChange={handleLoadRosterFile} 
-        />
-        <input 
-            type="file" 
-            ref={gameSaveInputRef} 
-            style={{ display: 'none' }} 
-            accept=".json" 
-            onChange={handleLoadGameFile} 
-        />
-
-        <div className="flex flex-wrap justify-end items-center gap-4">
-            {/* System Menu Button */}
-            <button
-                onClick={() => setShowSystemMenu(true)}
-                className="flex items-center gap-2 px-4 py-2 rounded font-bold text-sm transition-all border border-slate-300 hover:bg-slate-100 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
-            >
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 6h9.75M10.5 6a1.5 1.5 0 11-3 0m3 0a1.5 1.5 0 10-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-9.75 0h9.75" />
-                </svg>
-                시스템 (저장/불러오기)
-            </button>
-
-            <button
-                onClick={() => setShowRelationshipMap(true)}
-                disabled={activeSurvivors < 2}
-                className={`flex items-center gap-2 px-4 py-2 rounded font-bold text-sm transition-all border
-                    ${activeSurvivors < 2 
-                        ? 'border-slate-300 text-slate-400 cursor-not-allowed dark:border-slate-700 dark:text-slate-600'
-                        : 'border-blue-500 text-blue-600 hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-blue-900/20'
-                    }
-                `}
-            >
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M7.217 10.907a2.25 2.25 0 1 0 0 2.186m0-2.186c.18.324.283.696.283 1.093s-.103.77-.283 1.093m0-2.186 9.566-5.314m-9.566 7.5 9.566 5.314m0 0a2.25 2.25 0 1 0 3.935 2.186 2.25 2.25 0 0 0-3.935-2.186Zm0-12.814a2.25 2.25 0 1 0 3.933-2.185 2.25 2.25 0 0 0-3.933 2.185Z" />
-                </svg>
-                관계도 (Map)
-            </button>
-
-          <div className="text-right pl-4 border-l border-slate-300 dark:border-slate-700 hidden sm:block">
-            <div className="text-xs text-slate-500 dark:text-slate-400 uppercase tracking-widest">생존 일수</div>
-            <div className="text-3xl font-mono font-bold text-zombie-green">{day}</div>
-          </div>
-          <div className="text-right pl-4 border-l border-slate-300 dark:border-slate-700 hidden sm:block">
-             <div className="text-xs text-slate-500 dark:text-slate-400 uppercase tracking-widest">생존자</div>
-             <div className="text-3xl font-mono font-bold text-slate-800 dark:text-white">{activeSurvivors}/{characters.length}</div>
-          </div>
-          <button
-            onClick={handleNextDay}
-            disabled={loading || characters.length === 0}
-            className={`
-              ml-2 px-6 py-3 rounded font-bold text-lg uppercase tracking-wide transition-all shadow-md items-center gap-2 hidden md:flex
-              ${loading 
-                ? 'bg-slate-300 dark:bg-slate-700 text-slate-500 dark:text-slate-400 cursor-wait' 
-                : characters.length === 0 
-                  ? 'bg-slate-300 dark:bg-slate-800 text-slate-500 dark:text-slate-600 cursor-not-allowed'
-                  : 'bg-red-600 hover:bg-red-700 text-white shadow-red-900/20'
-              }
-            `}
-          >
-            {loading ? '진행 중...' : (
-                <>
-                다음 날
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" />
-                </svg>
-                </>
-            )}
-          </button>
-        </div>
-      </header>
-
-      {error && (
-        <div className="mb-6 p-4 bg-red-100 dark:bg-red-900/30 border border-red-300 dark:border-red-800 text-red-800 dark:text-red-200 rounded">
-          {error}
-        </div>
-      )}
-
-      {/* Item Use Modal */}
-      {selectedItem && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-fade-in">
-              <div className="bg-white dark:bg-slate-800 p-6 rounded-lg max-w-sm w-full shadow-2xl border border-slate-200 dark:border-slate-600">
-                  <h3 className="text-xl font-bold mb-2 dark:text-white">{selectedItem} 사용</h3>
-                  <p className="text-sm text-slate-500 dark:text-slate-400 mb-4">
-                      {ITEM_EFFECTS[selectedItem]?.desc || '효과 없음'}
-                  </p>
-                  
-                  <div className="space-y-2 mb-4 max-h-60 overflow-y-auto">
-                      <p className="text-xs font-bold uppercase text-slate-400 mb-1">대상 선택</p>
-                      {livingCharacters.length > 0 ? livingCharacters.map(char => (
-                          <button
-                              key={char.id}
-                              onClick={() => handleUseItem(char.id)}
-                              className="w-full text-left p-3 rounded bg-slate-100 dark:bg-slate-700 hover:bg-blue-50 dark:hover:bg-blue-900/30 border border-transparent hover:border-blue-300 transition-colors flex justify-between items-center"
-                          >
-                              <div className="flex flex-col">
-                                <span className="font-bold text-slate-700 dark:text-slate-200 flex items-center gap-1">
-                                    {char.name}
-                                    {char.mentalState !== 'Normal' && <span className="text-[10px] bg-red-100 text-red-800 px-1 rounded">{char.mentalState}</span>}
-                                </span>
-                              </div>
-                              <div className="text-xs text-slate-500 space-x-2">
-                                  <span>HP: {char.hp}</span>
-                                  <span className={char.sanity <= 10 ? 'text-red-500 font-bold' : ''}>멘탈: {char.sanity}</span>
-                              </div>
-                          </button>
-                      )) : (
-                          <p className="text-center text-slate-500 py-4">사용할 수 있는 생존자가 없습니다.</p>
-                      )}
-                  </div>
-                  
-                  <button 
-                      onClick={() => setSelectedItem(null)}
-                      className="w-full py-2 bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 rounded font-bold hover:bg-slate-300 dark:hover:bg-slate-600 transition-colors"
-                  >
-                      취소
-                  </button>
-              </div>
-          </div>
-      )}
-
-      {/* Confirmation Modal (New) */}
-      {confirmState && (
-          <ConfirmationModal
-            title={confirmState.title}
-            message={confirmState.message}
-            onConfirm={confirmState.action}
-            onCancel={() => setConfirmState(null)}
-            isDangerous={confirmState.isDangerous}
-          />
-      )}
-
-      {/* Relationship Map Modal */}
-      {showRelationshipMap && (
-          <RelationshipMap 
-            characters={characters} 
-            onClose={() => setShowRelationshipMap(false)} 
-          />
-      )}
       
-      {/* System Menu Modal */}
-      {showSystemMenu && (
-        <SystemMenu 
-            onClose={() => setShowSystemMenu(false)}
-            onNewGame={handleNewGame} // Pass function
-            onSaveRoster={handleSaveRoster}
-            onLoadRoster={handleLoadRosterTrigger}
-            onSaveGame={handleSaveGame}
-            onLoadGame={handleLoadGameTrigger}
-        />
-      )}
+      <GameHeader 
+        day={day}
+        survivorsCount={activeSurvivors}
+        totalCount={characters.length}
+        darkMode={darkMode}
+        setDarkMode={setDarkMode}
+        loading={loading}
+        onNextDay={handleNextDay}
+        developerMode={gameSettings.developerMode}
+      />
+        
+      {/* Invisible inputs for file operations */}
+      <input type="file" ref={rosterInputRef} style={{ display: 'none' }} accept=".json" onChange={handleLoadRosterFile} />
+      <input type="file" ref={gameSaveInputRef} style={{ display: 'none' }} accept=".json" onChange={handleLoadGameFile} />
+
+      {/* Control Buttons */}
+      <div className="flex flex-wrap justify-end items-center gap-4 mb-4">
+            {gameSettings.developerMode && (
+                <button onClick={() => setShowDevMenu(true)} className="flex items-center gap-2 px-3 py-2 rounded font-bold text-sm transition-all border border-zombie-green text-zombie-green hover:bg-zombie-green hover:text-white">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5"><path strokeLinecap="round" strokeLinejoin="round" d="M17.25 6.75 22.5 12l-5.25 5.25m-10.5 0L1.5 12l5.25-5.25m7.5-3-4.5 16.5" /></svg>
+                    디버그 {forcedEvents.length > 0 && <span className="bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-[10px]">{forcedEvents.length}</span>}
+                </button>
+            )}
+            <button onClick={() => setShowSystemMenu(true)} className="flex items-center gap-2 px-4 py-2 rounded font-bold text-sm transition-all border border-slate-300 hover:bg-slate-100 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5"><path strokeLinecap="round" strokeLinejoin="round" d="M10.5 6h9.75M10.5 6a1.5 1.5 0 11-3 0m3 0a1.5 1.5 0 10-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-9.75 0h9.75" /></svg>
+                시스템
+            </button>
+            <button onClick={() => setShowRelationshipMap(true)} disabled={activeSurvivors < 2} className={`flex items-center gap-2 px-4 py-2 rounded font-bold text-sm transition-all border ${activeSurvivors < 2 ? 'border-slate-300 text-slate-400 cursor-not-allowed dark:border-slate-700 dark:text-slate-600' : 'border-blue-500 text-blue-600 hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-blue-900/20'}`}>
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5"><path strokeLinecap="round" strokeLinejoin="round" d="M7.217 10.907a2.25 2.25 0 1 0 0 2.186m0-2.186c.18.324.283.696.283 1.093s-.103.77-.283 1.093m0-2.186 9.566-5.314m-9.566 7.5 9.566 5.314m0 0a2.25 2.25 0 1 0 3.935 2.186 2.25 2.25 0 0 0-3.935-2.186Zm0-12.814a2.25 2.25 0 1 0 3.933-2.185 2.25 2.25 0 0 0-3.933 2.185Z" /></svg>
+                관계도
+            </button>
+            
+            {/* Mobile Next Day Button */}
+            <button onClick={handleNextDay} disabled={loading || characters.length === 0} className={`w-full md:hidden py-3 rounded font-bold uppercase tracking-wide transition-all shadow-md flex justify-center items-center gap-2 ${loading ? 'bg-slate-300 dark:bg-slate-700 text-slate-500' : characters.length === 0 ? 'bg-slate-300 dark:bg-slate-800 text-slate-500' : 'bg-red-600 hover:bg-red-700 text-white'}`}>
+                {loading ? '진행 중...' : <>다음 날 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5"><path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" /></svg></>}
+            </button>
+      </div>
+
+      {/* Global Error Display */}
+      {error && <div className="mb-6 p-4 bg-red-100 dark:bg-red-900/30 border border-red-300 dark:border-red-800 text-red-800 dark:text-red-200 rounded">{error}</div>}
 
       <main className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-        {/* Left Column: Log */}
+        {/* Left Column: Logs */}
         <div className="lg:col-span-4 order-2 lg:order-1">
           <EventLog logs={logs} />
-          
-          <button
-            onClick={handleNextDay}
-            disabled={loading || characters.length === 0}
-            className={`
-              mt-6 w-full py-4 rounded-xl font-bold text-xl uppercase tracking-wide transition-all shadow-lg flex justify-center items-center gap-2 md:hidden
-              ${loading 
-                ? 'bg-slate-300 dark:bg-slate-700 text-slate-500 dark:text-slate-400 cursor-wait' 
-                : characters.length === 0 
-                  ? 'bg-slate-300 dark:bg-slate-800 text-slate-500 dark:text-slate-600 cursor-not-allowed'
-                  : 'bg-red-600 hover:bg-red-700 text-white shadow-red-900/20'
-              }
-            `}
-          >
-            {loading ? '진행 중...' : (
-                <>
-                다음 날
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-6 h-6">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" />
-                </svg>
-                </>
-            )}
-          </button>
         </div>
 
-        {/* Right Column: Game State */}
+        {/* Right Column: Game Interactive Area */}
         <div className="lg:col-span-8 order-1 lg:order-2 space-y-8">
-          
-          {/* Add Character Section */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-             <CharacterForm 
-                onAdd={addCharacter} 
-                disabled={loading} 
-                existingCharacters={characters} // Passed existing characters
-             />
-             
-             {/* Shared Inventory Panel (Replaced Status Panel) */}
-             <div className="bg-white dark:bg-slate-800/50 p-4 rounded-lg border border-slate-200 dark:border-slate-700 flex flex-col shadow-sm h-full">
-                <div className="flex justify-between items-center mb-3 border-b border-slate-100 dark:border-slate-700 pb-2">
-                    <h3 className="text-lg font-bold text-slate-700 dark:text-slate-300 flex items-center gap-2">
-                        📦 캠프 인벤토리 
-                        <span className="text-xs bg-slate-200 dark:bg-slate-700 px-2 py-0.5 rounded-full text-slate-600 dark:text-slate-400">{inventory.length}</span>
-                    </h3>
-                </div>
-                
-                <div className="flex-1 overflow-y-auto min-h-[120px]">
-                    {inventory.length === 0 ? (
-                        <div className="h-full flex flex-col items-center justify-center text-slate-400 text-sm italic p-4 border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-lg">
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-8 h-8 mb-2 opacity-50">
-                                <path strokeLinecap="round" strokeLinejoin="round" d="m20.25 7.5-.625 10.632a2.25 2.25 0 0 1-2.247 2.118H6.622a2.25 2.25 0 0 1-2.247-2.118L3.75 7.5m8.25 3v6.75m0 0-3-3m3 3 3-3M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125Z" />
-                            </svg>
-                            <p>보관된 아이템이 없습니다.</p>
-                            <p className="text-xs mt-1">시뮬레이션을 진행하여 물자를 확보하세요.</p>
-                            <p className="text-xs mt-1"> 아이템은 터치해 사용이 가능합니다.</p>
-                        </div>
-                    ) : (
-                        <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
-                            {inventory.map((item, idx) => (
-                                <button
-                                    key={`${item}-${idx}`}
-                                    onClick={() => setSelectedItem(item)}
-                                    className="bg-slate-100 dark:bg-slate-700 p-2 rounded border border-slate-200 dark:border-slate-600 text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-blue-100 dark:hover:bg-blue-900 hover:border-blue-300 transition-all flex flex-col items-center justify-center gap-1 group relative"
-                                    title="클릭하여 사용"
-                                >
-                                    {/* Simple Icon Mapping */}
-                                    <span className="text-lg">
-                                        {item === '붕대' ? '🩹' : 
-                                         item === '통조림' ? '🥫' : 
-                                         item === '항생제' ? '💊' : 
-                                         item === '초콜릿' ? '🍫' : 
-                                         item === '비타민' ? '🍋' : 
-                                         item === '정신병약' ? '💊' : '📦'}
-                                    </span>
-                                    <span>{item}</span>
-                                    <span className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"></span>
-                                </button>
-                            ))}
-                        </div>
-                    )}
-                </div>
-             </div>
+             <CharacterForm onAdd={addCharacter} disabled={loading} existingCharacters={characters} />
+             <InventoryPanel inventory={inventory} onSelectItem={setSelectedItem} />
           </div>
-
-          {/* Survivors Grid */}
-          <div>
-            <h2 className="text-2xl font-bold mb-4 text-slate-800 dark:text-slate-200 flex items-center gap-2">
-              생존자 목록 <span className="text-xs bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 px-2 py-0.5 rounded-full">{characters.length}</span>
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-              {characters.map(char => (
-                <CharacterCard 
-                  key={char.id} 
-                  character={char} 
-                  allCharacters={characters}
-                  onDelete={deleteCharacter}
-                />
-              ))}
-            </div>
-          </div>
+          <SurvivorList characters={characters} onDelete={deleteCharacter} />
         </div>
       </main>
+
+      {/* --- Modals & Overlays --- */}
+      <ItemUseModal 
+        selectedItem={selectedItem} 
+        onClose={() => setSelectedItem(null)} 
+        onUseItem={handleUseItem}
+        survivors={uiSurvivors}
+        itemEffects={ITEM_EFFECTS}
+      />
+
+      {confirmState && <ConfirmationModal title={confirmState.title} message={confirmState.message} onConfirm={confirmState.action} onCancel={() => setConfirmState(null)} isDangerous={confirmState.isDangerous} />}
+      {showRelationshipMap && <RelationshipMap characters={characters} onClose={() => setShowRelationshipMap(false)} />}
+      {showSystemMenu && <SystemMenu onClose={() => setShowSystemMenu(false)} onNewGame={handleNewGame} onSaveRoster={handleSaveRoster} onLoadRoster={handleLoadRosterTrigger} onSaveGame={handleSaveGame} onLoadGame={handleLoadGameTrigger} allowSameSex={gameSettings.allowSameSexCouples} onToggleSameSex={() => setGameSettings(prev => ({...prev, allowSameSexCouples: !prev.allowSameSexCouples}))} developerMode={gameSettings.developerMode} onToggleDeveloperMode={() => setGameSettings(prev => ({...prev, developerMode: !prev.developerMode}))} />}
+      {showDevMenu && <DeveloperMenu onClose={() => setShowDevMenu(false)} forcedEvents={forcedEvents} setForcedEvents={setForcedEvents} characters={characters} onUpdateCharacter={handleUpdateCharacter} onAddInventory={handleDevAddInventory} availableItems={DEV_ITEM_LIST} />}
     </div>
   );
 };
