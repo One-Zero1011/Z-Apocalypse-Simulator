@@ -2,7 +2,7 @@
 import React, { useMemo, useState } from 'react';
 import { STORY_NODES } from '../services/events/storyNodes';
 import { MBTI_EVENT_POOL, ANALYSTS, DIPLOMATS, SENTINELS, EXPLORERS } from '../services/events/mbtiEvents';
-import { INTERACTION_POOL } from '../services/events/interactionEvents';
+import { INTERACTION_POOL } from '../services/events/interaction/index';
 
 type EventType = 'STORY' | 'MBTI' | 'INTERACTION';
 

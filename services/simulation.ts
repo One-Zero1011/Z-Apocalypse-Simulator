@@ -1,5 +1,5 @@
 
-import { Character, SimulationResult, CharacterUpdate, GameSettings, ForcedEvent, RelationshipUpdate, StoryNode, ActionEffect, Status, MentalState } from '../types';
+import { Character, SimulationResult, CharacterUpdate, GameSettings, ForcedEvent, RelationshipUpdate, StoryNode, ActionEffect, Status, MentalState, RelationshipStatus } from '../types';
 import { MAX_HP, MAX_SANITY, MAX_FATIGUE, MAX_INFECTION, MAX_HUNGER, FATIGUE_THRESHOLD, DAILY_HUNGER_LOSS } from '../constants';
 import { getNextStoryNode } from './events/globalEvents';
 import { STORY_NODES } from './events/storyNodes';
@@ -8,7 +8,7 @@ import { MBTI_SPECIFIC_ACTIONS } from './events/mbtiEvents';
 import { FATIGUE_EVENTS } from './events/fatigueEvents';
 import { GHOST_EVENTS } from './events/ghostEvents';
 import { MENTAL_ILLNESS_ACTIONS, MENTAL_INTERACTIONS, LOVER_MENTAL_EVENTS } from './events/mentalEvents';
-import { INTERACTION_POOL, ZOMBIE_HUMAN_INTERACTIONS, InteractionResult } from './events/interactionEvents';
+import { INTERACTION_POOL, ZOMBIE_HUMAN_INTERACTIONS, InteractionResult } from './events/interaction/index';
 import { getJobMbtiEvent } from './events/jobEvents/index';
 
 // Updated helper to include Affinity
@@ -171,10 +171,16 @@ export const simulateDay = async (
             const target = potentialTargets[0];
             const targetUpdate: CharacterUpdate = { id: target.id };
             let interactionResult: any; 
+            let relationshipChangeType: RelationshipStatus | undefined = undefined;
 
-            // Check Mental Interaction First
+            const affinity = char.relationships[target.id] || 0;
+            const relStatus = char.relationshipStatuses[target.id] || 'None';
+
+            // --- Interaction Priority System ---
+
+            // 1. Mental Illness Interaction (Highest Priority)
             if (settings.useMentalStates && char.mentalState !== 'Normal' && Math.random() < 0.5) {
-                 if (['Lover', 'Spouse'].includes(char.relationshipStatuses[target.id])) {
+                 if (['Lover', 'Spouse'].includes(relStatus)) {
                      const pool = LOVER_MENTAL_EVENTS[char.mentalState];
                      if (pool && pool.length > 0) {
                          interactionResult = pool[Math.floor(Math.random() * pool.length)](char.name, target.name);
@@ -184,29 +190,60 @@ export const simulateDay = async (
                      interactionResult = MENTAL_INTERACTIONS[Math.floor(Math.random() * MENTAL_INTERACTIONS.length)](char.name, target.name);
                  }
             } 
+            // 2. Zombie Human Interaction
             else if (target.status === 'Zombie') {
                  interactionResult = ZOMBIE_HUMAN_INTERACTIONS[Math.floor(Math.random() * ZOMBIE_HUMAN_INTERACTIONS.length)](target.name, char.name);
             }
+            // 3. Dynamic Relationship Events (Logic Triggers)
             else {
-                // Standard Interaction
-                const affinity = char.relationships[target.id] || 0;
-                let poolKey = 'POSITIVE';
-                if (affinity < -20) poolKey = 'NEGATIVE';
-                
-                const relStatus = char.relationshipStatuses[target.id];
-                if (relStatus && INTERACTION_POOL[relStatus.toUpperCase()]) {
-                     let key = relStatus.toUpperCase();
-                     if (relStatus === 'BestFriend') key = 'BEST_FRIEND';
-                     if (relStatus === 'Ex') key = 'EX_LOVER';
-                     
-                     if (INTERACTION_POOL[key]) poolKey = key;
+                // A. Confession (고백): Not related, High Affinity (>60), Chance
+                if (!['Lover', 'Spouse', 'Ex', 'Parent', 'Child', 'Sibling'].includes(relStatus) && affinity > 60 && Math.random() < 0.15) {
+                    // Check Same Sex Setting
+                    const isSameSex = char.gender === target.gender;
+                    if (settings.allowSameSexCouples || !isSameSex) {
+                        const pool = INTERACTION_POOL['CONFESSION'];
+                        interactionResult = pool[Math.floor(Math.random() * pool.length)](char.name, target.name);
+                        relationshipChangeType = 'Lover';
+                    }
                 }
-
-                let pool = INTERACTION_POOL[poolKey];
-                if (!pool) pool = INTERACTION_POOL['POSITIVE'];
-
-                const actionFunc = pool[Math.floor(Math.random() * pool.length)];
-                interactionResult = actionFunc(char.name, target.name);
+                // B. Breakup (이별): Lover/Spouse, Low Affinity (<-10), Chance
+                else if (['Lover', 'Spouse'].includes(relStatus) && affinity < -10 && Math.random() < 0.2) {
+                    const pool = INTERACTION_POOL['BREAKUP'];
+                    interactionResult = pool[Math.floor(Math.random() * pool.length)](char.name, target.name);
+                    relationshipChangeType = 'Ex';
+                }
+                // C. Reunion (재결합): Ex, High Affinity (>50), Chance
+                else if (relStatus === 'Ex' && affinity > 50 && Math.random() < 0.15) {
+                    const pool = INTERACTION_POOL['REUNION'];
+                    interactionResult = pool[Math.floor(Math.random() * pool.length)](char.name, target.name);
+                    relationshipChangeType = 'Lover';
+                }
+                // D. Fatigue Relief (피로 회복): One is tired (>40), Not enemies, Chance
+                else if ((char.fatigue > 40 || target.fatigue > 40) && affinity > 0 && Math.random() < 0.3) {
+                    const pool = INTERACTION_POOL['FATIGUE_RELIEF'];
+                    interactionResult = pool[Math.floor(Math.random() * pool.length)](char.name, target.name);
+                }
+                // E. Standard Role/Affinity Based
+                else {
+                    let poolKey = 'POSITIVE';
+                    if (affinity < -20) poolKey = 'NEGATIVE';
+                    
+                    if (relStatus && relStatus !== 'None') {
+                         let key = relStatus.toUpperCase();
+                         // Specific mapping adjustments for cases where Enum doesn't match Pool Key
+                         if (relStatus === 'BestFriend') key = 'BEST_FRIEND';
+                         if (relStatus === 'Ex') key = 'EX_LOVER';
+                         if (relStatus === 'Parent' || relStatus === 'Child') key = 'PARENT_CHILD';
+                         
+                         if (INTERACTION_POOL[key]) poolKey = key;
+                    }
+    
+                    let pool = INTERACTION_POOL[poolKey];
+                    if (!pool) pool = INTERACTION_POOL['POSITIVE'];
+    
+                    const actionFunc = pool[Math.floor(Math.random() * pool.length)];
+                    interactionResult = actionFunc(char.name, target.name);
+                }
             }
 
             if (interactionResult) {
@@ -214,11 +251,22 @@ export const simulateDay = async (
                 let log = resText;
                 
                 if (typeof interactionResult !== 'string') {
-                    if (interactionResult.affinity) {
+                    // Relationship Status Update (if triggered)
+                    if (relationshipChangeType) {
+                        update.relationshipUpdates = [{ targetId: target.id, change: interactionResult.affinity || 0, newStatus: relationshipChangeType }];
+                        targetUpdate.relationshipUpdates = [{ targetId: char.id, change: interactionResult.affinity || 0, newStatus: relationshipChangeType === 'Lover' ? 'Lover' : relationshipChangeType === 'Ex' ? 'Ex' : undefined }];
+                        
+                        // Add status emoji to log
+                        if (relationshipChangeType === 'Lover') log = `💕 [커플 탄생] ` + log;
+                        if (relationshipChangeType === 'Ex') log = `💔 [이별] ` + log;
+                    } 
+                    // Standard Affinity Update
+                    else if (interactionResult.affinity) {
                         const change = interactionResult.affinity;
                         update.relationshipUpdates = [{ targetId: target.id, change }];
                         targetUpdate.relationshipUpdates = [{ targetId: char.id, change }];
                     }
+
                     if (interactionResult.actorHp) update.hpChange = (update.hpChange || 0) + interactionResult.actorHp;
                     if (interactionResult.actorSanity) update.sanityChange = (update.sanityChange || 0) + interactionResult.actorSanity;
                     if (interactionResult.actorFatigue) update.fatigueChange = (update.fatigueChange || 0) + interactionResult.actorFatigue;

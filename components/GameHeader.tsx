@@ -7,8 +7,6 @@ interface Props {
     totalCount: number;
     darkMode: boolean;
     setDarkMode: (value: boolean) => void;
-    loading: boolean;
-    onNextDay: () => void;
     developerMode: boolean;
 }
 
@@ -18,8 +16,6 @@ const GameHeader: React.FC<Props> = ({
     totalCount, 
     darkMode, 
     setDarkMode, 
-    loading, 
-    onNextDay,
     developerMode
 }) => {
     return (
@@ -63,28 +59,6 @@ const GameHeader: React.FC<Props> = ({
                     <div className="text-xs text-slate-500 dark:text-slate-400 uppercase tracking-widest">생존자</div>
                     <div className="text-3xl font-mono font-bold text-slate-800 dark:text-white">{survivorsCount}/{totalCount}</div>
                 </div>
-                <button
-                    onClick={onNextDay}
-                    disabled={loading || totalCount === 0}
-                    className={`
-                        ml-2 px-6 py-3 rounded font-bold text-lg uppercase tracking-wide transition-all shadow-md items-center gap-2 hidden md:flex
-                        ${loading 
-                            ? 'bg-slate-300 dark:bg-slate-700 text-slate-500 dark:text-slate-400 cursor-wait' 
-                            : totalCount === 0 
-                            ? 'bg-slate-300 dark:bg-slate-800 text-slate-500 dark:text-slate-600 cursor-not-allowed'
-                            : 'bg-red-600 hover:bg-red-700 text-white shadow-red-900/20'
-                        }
-                    `}
-                >
-                    {loading ? '진행 중...' : (
-                        <>
-                            다음 날
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5">
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" />
-                            </svg>
-                        </>
-                    )}
-                </button>
             </div>
         </header>
     );

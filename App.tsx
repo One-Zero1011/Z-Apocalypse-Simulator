@@ -49,6 +49,9 @@ interface ConfirmState {
     isDangerous?: boolean;
 }
 
+// Mobile Tab Type
+type MobileTab = 'logs' | 'survivors' | 'manage';
+
 const App: React.FC = () => {
   const [day, setDay] = useState(0);
   const [characters, setCharacters] = useState<Character[]>([]);
@@ -71,6 +74,9 @@ const App: React.FC = () => {
       useMentalStates: true // Default ON
   });
 
+  // Mobile Tab State
+  const [activeMobileTab, setActiveMobileTab] = useState<MobileTab>('logs');
+
   // File Input Refs
   const rosterInputRef = useRef<HTMLInputElement>(null);
   const gameSaveInputRef = useRef<HTMLInputElement>(null);
@@ -84,7 +90,7 @@ const App: React.FC = () => {
   }, [darkMode]);
 
   useEffect(() => {
-    // 모바일 환경(768px 미만)에서는 스크롤 위치 유지, 데스크탑에서는 맨 위로 스크롤
+    // 모바일 환경(768px 미만)에서는 스크롤 위치 유지, 데스크탑/태블릿에서는 맨 위로 스크롤
     if (window.innerWidth >= 768) {
         window.scrollTo({ top: 0, behavior: 'smooth' });
     }
@@ -312,9 +318,6 @@ const App: React.FC = () => {
     };
 
     setCharacters(prev => {
-        // Step 1: Update existing characters with relationship to the NEW character
-        // Step 2: Update NEW character with relationship to EXISTING characters
-        
         const getReverseStatus = (status: string): RelationshipStatus => {
             if (status === 'Parent') return 'Child';
             if (status === 'Child') return 'Parent';
@@ -403,6 +406,7 @@ const App: React.FC = () => {
 
     setLoading(true);
     setError(null);
+    setActiveMobileTab('logs'); // Switch to Logs tab to see result on mobile
     
     try {
       const nextDay = day + 1;
@@ -517,10 +521,30 @@ const App: React.FC = () => {
         totalCount={characters.length}
         darkMode={darkMode}
         setDarkMode={setDarkMode}
-        loading={loading}
-        onNextDay={handleNextDay}
         developerMode={gameSettings.developerMode}
       />
+      
+      {/* Mobile Tab Navigation (Sticky below header) */}
+      <div className="md:hidden sticky top-0 z-30 bg-white/95 dark:bg-dark-slate/95 backdrop-blur-sm border-b border-slate-200 dark:border-slate-700 -mx-4 px-4 mb-6 flex justify-between shadow-sm">
+          <button 
+            onClick={() => setActiveMobileTab('logs')} 
+            className={`flex-1 py-3 text-sm font-bold border-b-2 transition-colors ${activeMobileTab === 'logs' ? 'border-zombie-green text-zombie-green' : 'border-transparent text-slate-500 dark:text-slate-400'}`}
+          >
+            📜 생존 일지
+          </button>
+          <button 
+            onClick={() => setActiveMobileTab('survivors')} 
+            className={`flex-1 py-3 text-sm font-bold border-b-2 transition-colors ${activeMobileTab === 'survivors' ? 'border-blue-500 text-blue-500' : 'border-transparent text-slate-500 dark:text-slate-400'}`}
+          >
+            👥 생존자 목록
+          </button>
+          <button 
+            onClick={() => setActiveMobileTab('manage')} 
+            className={`flex-1 py-3 text-sm font-bold border-b-2 transition-colors ${activeMobileTab === 'manage' ? 'border-purple-500 text-purple-500' : 'border-transparent text-slate-500 dark:text-slate-400'}`}
+          >
+            🎒 정비/영입
+          </button>
+      </div>
         
       {/* Invisible inputs for file operations */}
       <input type="file" ref={rosterInputRef} style={{ display: 'none' }} accept=".json" onChange={handleLoadRosterFile} />
@@ -547,15 +571,17 @@ const App: React.FC = () => {
       {/* Global Error Display */}
       {error && <div className="mb-6 p-4 bg-red-100 dark:bg-red-900/30 border border-red-300 dark:border-red-800 text-red-800 dark:text-red-200 rounded">{error}</div>}
 
-      <main className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-        {/* Left Column: Logs */}
-        <div className="lg:col-span-4 order-2 lg:order-1">
+      {/* Main Grid Layout - Optimized for Tablet (MD) and Desktop (LG), and Mobile Tabs */}
+      <main className="grid grid-cols-1 md:grid-cols-12 gap-8">
+        {/* Left Column: Logs (Sticky on Tablet/Desktop, Tabbed on Mobile) */}
+        <div className={`md:col-span-5 lg:col-span-4 order-2 md:order-1 ${activeMobileTab === 'logs' ? 'block' : 'hidden'} md:block`}>
           <EventLog logs={logs} />
         </div>
 
-        {/* Right Column: Game Interactive Area */}
-        <div className="lg:col-span-8 order-1 lg:order-2 space-y-8">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        {/* Right Column: Game Interactive Area (Tabbed on Mobile) */}
+        <div className={`md:col-span-7 lg:col-span-8 order-1 md:order-2 space-y-8 ${activeMobileTab !== 'logs' ? 'block' : 'hidden'} md:block`}>
+          {/* Tablet(MD): Stacked, Large Desktop(XL): Side-by-Side */}
+          <div className={`gap-8 ${activeMobileTab === 'manage' ? 'flex flex-col' : 'hidden'} md:grid md:grid-cols-1 xl:grid-cols-2`}>
              <CharacterForm 
                 onAdd={addCharacter} 
                 disabled={loading} 
@@ -564,14 +590,24 @@ const App: React.FC = () => {
              />
              <InventoryPanel inventory={inventory} onSelectItem={setSelectedItem} />
           </div>
-          <SurvivorList characters={characters} onDelete={deleteCharacter} />
+          
+          <div className={`${activeMobileTab === 'survivors' ? 'block' : 'hidden'} md:block`}>
+            <SurvivorList characters={characters} onDelete={deleteCharacter} />
+          </div>
         </div>
       </main>
 
-      {/* Mobile Fixed Next Day Button */}
+      {/* Mobile Fixed Next Day Button (Hidden on md+) */}
       <div className="fixed bottom-4 left-4 right-4 z-40 md:hidden">
         <button onClick={handleNextDay} disabled={loading || characters.length === 0} className={`w-full py-4 rounded-xl font-bold text-lg uppercase tracking-wide transition-all shadow-lg flex justify-center items-center gap-2 ${loading ? 'bg-slate-700 text-slate-400' : characters.length === 0 ? 'bg-slate-700 text-slate-500' : 'bg-red-600 hover:bg-red-700 text-white shadow-red-900/50'}`}>
             {loading ? '진행 중...' : <>다음 날 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-6 h-6"><path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" /></svg></>}
+        </button>
+      </div>
+
+      {/* Desktop/Tablet Fixed Next Day Button (Visible on md+) */}
+      <div className="fixed bottom-10 right-10 z-40 hidden md:block">
+        <button onClick={handleNextDay} disabled={loading || characters.length === 0} className={`px-8 py-4 rounded-full font-bold text-xl uppercase tracking-wide transition-all shadow-xl hover:shadow-2xl flex justify-center items-center gap-3 transform hover:-translate-y-1 ${loading ? 'bg-slate-600 text-slate-400 cursor-wait' : characters.length === 0 ? 'bg-slate-600 text-slate-500 cursor-not-allowed' : 'bg-red-600 hover:bg-red-500 text-white shadow-red-900/40'}`}>
+            {loading ? '진행 중...' : <>다음 날 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-6 h-6"><path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" /></svg></>}
         </button>
       </div>
 

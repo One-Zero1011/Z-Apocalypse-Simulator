@@ -1,3 +1,4 @@
+
 import React, { useEffect, useRef } from 'react';
 import { DayLog } from '../types';
 
@@ -13,7 +14,7 @@ const EventLog: React.FC<Props> = ({ logs }) => {
   }, [logs]);
 
   return (
-    <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg h-[500px] overflow-y-auto flex flex-col font-mono text-sm relative shadow-sm">
+    <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg h-[calc(100vh-280px)] min-h-[400px] md:h-[80vh] md:sticky md:top-6 overflow-y-auto flex flex-col font-mono text-sm relative shadow-sm transition-all">
       <div className="sticky top-0 bg-gray-100 dark:bg-slate-800 p-2 border-b border-slate-200 dark:border-slate-700 font-bold z-10 flex items-center gap-2 text-slate-700 dark:text-slate-200">
         <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span>
         생존 일지 (Mission Log)
