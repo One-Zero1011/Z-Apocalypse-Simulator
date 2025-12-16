@@ -4,12 +4,15 @@ import { MAX_HP, MAX_SANITY, MAX_FATIGUE, MAX_INFECTION, MAX_HUNGER, FATIGUE_THR
 import { getNextStoryNode } from './events/globalEvents';
 import { STORY_NODES } from './events/storyNodes';
 import { REST_EVENTS } from './events/restEvents';
-import { MBTI_SPECIFIC_ACTIONS } from './events/mbtiEvents';
+import { MBTI_SPECIFIC_ACTIONS, MBTI_EVENT_POOL } from './events/mbtiEvents';
 import { FATIGUE_EVENTS } from './events/fatigueEvents';
 import { GHOST_EVENTS } from './events/ghostEvents';
 import { MENTAL_ILLNESS_ACTIONS, MENTAL_INTERACTIONS, LOVER_MENTAL_EVENTS } from './events/mentalEvents';
 import { INTERACTION_POOL, ZOMBIE_HUMAN_INTERACTIONS, InteractionResult } from './events/interaction/index';
 import { getJobMbtiEvent } from './events/jobEvents/index';
+
+// Helper for Pronoun (Replicated from mbtiEvents to avoid circular or extra exports issues)
+const getPronoun = (gender: string) => gender === 'Male' ? '그' : gender === 'Female' ? '그녀' : '그들';
 
 // Updated helper to include Affinity
 const formatStatChange = (hp?: number, sanity?: number, fatigue?: number, infection?: number, hunger?: number, affinity?: number) => {
@@ -93,6 +96,7 @@ export const simulateDay = async (
 
     // 3. Process Characters
     const livingCharacters = characters.filter(c => c.status !== 'Dead' && c.status !== 'Missing');
+    const deadCharacters = characters.filter(c => c.status === 'Dead' || c.status === 'Missing'); // For Ghost Events
     const processedIds = new Set<string>();
 
     // Shuffle to random order
@@ -137,6 +141,77 @@ export const simulateDay = async (
              }
         }
 
+        // --- FORCED EVENTS CHECK (Developer Mode) ---
+        const forcedEvent = forcedEvents.find(e => e.actorId === char.id && (e.type === 'MBTI' || e.type === 'INTERACTION'));
+        if (forcedEvent) {
+            if (forcedEvent.type === 'MBTI') {
+                const pool = MBTI_EVENT_POOL[forcedEvent.key as import('../types').MBTI];
+                if (pool && typeof forcedEvent.index === 'number' && pool[forcedEvent.index]) {
+                     const action = pool[forcedEvent.index](char.name, getPronoun(char.gender));
+                     
+                     update.hpChange = (update.hpChange || 0) + (action.hp || 0);
+                     update.sanityChange = (update.sanityChange || 0) + (action.sanity || 0);
+                     update.fatigueChange = (update.fatigueChange || 0) + (action.fatigue || 0);
+                     update.killCountChange = (update.killCountChange || 0) + (action.kill || 0);
+                     if (action.infection) update.infectionChange = (update.infectionChange || 0) + action.infection;
+                     
+                     const statLog = formatStatChange(action.hp, action.sanity, action.fatigue, action.infection);
+                     events.push(`🛠️ [강제/MBTI] ${action.text}${statLog}`);
+                     updates.push(update);
+                     processedIds.add(char.id);
+                     continue;
+                }
+            } else if (forcedEvent.type === 'INTERACTION' && forcedEvent.targetId) {
+                const target = characters.find(c => c.id === forcedEvent.targetId);
+                if (target && !processedIds.has(target.id)) {
+                     const pool = INTERACTION_POOL[forcedEvent.key];
+                     if (pool && typeof forcedEvent.index === 'number' && pool[forcedEvent.index]) {
+                         const interactionFunc = pool[forcedEvent.index];
+                         const interactionResult = interactionFunc(char.name, target.name);
+                         
+                         const targetUpdate: CharacterUpdate = { id: target.id };
+                         
+                         // Determine Forced Status Change
+                         let relationshipChangeType: RelationshipStatus | undefined;
+                         if (['CONFESSION', 'REUNION'].includes(forcedEvent.key)) relationshipChangeType = 'Lover';
+                         else if (['BREAKUP'].includes(forcedEvent.key)) relationshipChangeType = 'Ex';
+
+                         const resText = typeof interactionResult === 'string' ? interactionResult : interactionResult.text;
+                         let log = `🛠️ [강제/상호작용] ` + resText;
+
+                         if (typeof interactionResult !== 'string') {
+                            if (relationshipChangeType) {
+                                update.relationshipUpdates = [{ targetId: target.id, change: interactionResult.affinity || 0, newStatus: relationshipChangeType }];
+                                targetUpdate.relationshipUpdates = [{ targetId: char.id, change: interactionResult.affinity || 0, newStatus: relationshipChangeType === 'Lover' ? 'Lover' : relationshipChangeType === 'Ex' ? 'Ex' : undefined }];
+                                if (relationshipChangeType === 'Lover') log = `🛠️ 💕 [커플 탄생] ` + resText;
+                                if (relationshipChangeType === 'Ex') log = `🛠️ 💔 [이별] ` + resText;
+                            } else if (interactionResult.affinity) {
+                                const change = interactionResult.affinity;
+                                update.relationshipUpdates = [{ targetId: target.id, change }];
+                                targetUpdate.relationshipUpdates = [{ targetId: char.id, change }];
+                            }
+
+                            if (interactionResult.actorHp) update.hpChange = (update.hpChange || 0) + interactionResult.actorHp;
+                            if (interactionResult.actorSanity) update.sanityChange = (update.sanityChange || 0) + interactionResult.actorSanity;
+                            if (interactionResult.actorFatigue) update.fatigueChange = (update.fatigueChange || 0) + interactionResult.actorFatigue;
+                            
+                            if (interactionResult.targetHp) targetUpdate.hpChange = (targetUpdate.hpChange || 0) + interactionResult.targetHp;
+                            if (interactionResult.targetSanity) targetUpdate.sanityChange = (targetUpdate.sanityChange || 0) + interactionResult.targetSanity;
+                            if (interactionResult.targetFatigue) targetUpdate.fatigueChange = (targetUpdate.fatigueChange || 0) + interactionResult.targetFatigue;
+                            
+                            log += formatStatChange(interactionResult.actorHp, interactionResult.actorSanity, interactionResult.actorFatigue);
+                         }
+                         events.push(log);
+                         updates.push(update);
+                         updates.push(targetUpdate);
+                         processedIds.add(char.id);
+                         processedIds.add(target.id);
+                         continue;
+                     }
+                }
+            }
+        }
+
         // FATIGUE CHECK
         if (char.fatigue >= FATIGUE_THRESHOLD) {
             const fatigueAction = FATIGUE_EVENTS[Math.floor(Math.random() * FATIGUE_EVENTS.length)](char.name);
@@ -163,6 +238,25 @@ export const simulateDay = async (
                     continue;
                  }
              }
+        }
+
+        // GHOST EVENTS (New)
+        // Trigger: At least 1 dead character AND (Sanity < 60 OR Rare Chance)
+        if (deadCharacters.length > 0) {
+            const isHaunted = (char.sanity < 60 && Math.random() < 0.15) || (Math.random() < 0.02);
+            if (isHaunted) {
+                const ghost = deadCharacters[Math.floor(Math.random() * deadCharacters.length)];
+                const ghostAction = GHOST_EVENTS[Math.floor(Math.random() * GHOST_EVENTS.length)](ghost.name, char.name);
+                
+                update.hpChange = (update.hpChange || 0) + (ghostAction.hp || 0);
+                update.sanityChange = (update.sanityChange || 0) + (ghostAction.sanity || 0);
+                update.fatigueChange = (update.fatigueChange || 0) + (ghostAction.fatigue || 0);
+                
+                events.push(`${ghostAction.text}${formatStatChange(ghostAction.hp, ghostAction.sanity, ghostAction.fatigue)}`);
+                updates.push(update);
+                processedIds.add(char.id);
+                continue;
+            }
         }
 
         // INTERACTION (Pair Event)

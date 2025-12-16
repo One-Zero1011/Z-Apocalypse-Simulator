@@ -326,7 +326,12 @@ export const MBTI_SPECIFIC_ACTIONS: Record<MBTI, (name: string, gender: Gender) 
     acc[mbti] = (name: string, gender: Gender) => {
         const pool = MBTI_EVENT_POOL[mbti];
         const generator = pool[Math.floor(Math.random() * pool.length)];
-        return generator(name, getPronoun(gender));
+        const action = generator(name, getPronoun(gender));
+        // Add MBTI Tag to the text for visibility
+        return {
+            ...action,
+            text: `🧩 [${mbti}] ${action.text}`
+        };
     };
     return acc;
 }, {} as Record<MBTI, (name: string, gender: Gender) => ActionEffect>);
