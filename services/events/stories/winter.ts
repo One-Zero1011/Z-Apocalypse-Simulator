@@ -4,7 +4,7 @@ import { StoryNode } from "../../../types";
 export const WINTER_NODES: Record<string, StoryNode> = {
     'winter_0_start': {
         id: 'winter_0_start',
-        text: "❄️ 갑작스러운 기이상후로 기온이 급강하합니다. 입김이 얼어붙고 하늘에서 잿빛 눈이 내리기 시작합니다.",
+        text: "❄️ 갑작스러운 이상기후로 기온이 급강하합니다. 입김이 얼어붙고 하늘에서 잿빛 눈이 내리기 시작합니다.",
         next: [{ id: 'winter_1_blizzard', weight: 1.0 }],
         effect: { target: 'ALL', fatigue: 5 }
     },
