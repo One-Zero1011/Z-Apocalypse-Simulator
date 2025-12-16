@@ -11,13 +11,15 @@ import { MENTAL_ILLNESS_ACTIONS, MENTAL_INTERACTIONS, LOVER_MENTAL_EVENTS } from
 import { INTERACTION_POOL, ZOMBIE_HUMAN_INTERACTIONS, InteractionResult } from './events/interactionEvents';
 import { getJobMbtiEvent } from './events/jobEvents/index';
 
-const formatStatChange = (hp?: number, sanity?: number, fatigue?: number, infection?: number, hunger?: number) => {
+// Updated helper to include Affinity
+const formatStatChange = (hp?: number, sanity?: number, fatigue?: number, infection?: number, hunger?: number, affinity?: number) => {
     const parts = [];
     if (hp) parts.push(`체력 ${hp > 0 ? '+' : ''}${hp}`);
     if (sanity) parts.push(`정신 ${sanity > 0 ? '+' : ''}${sanity}`);
     if (fatigue) parts.push(`피로 ${fatigue > 0 ? '+' : ''}${fatigue}`);
     if (infection) parts.push(`감염 ${infection > 0 ? '+' : ''}${infection}`);
     if (hunger) parts.push(`허기 ${hunger > 0 ? '+' : ''}${hunger}`);
+    if (affinity) parts.push(`호감 ${affinity > 0 ? '+' : ''}${affinity}`);
     return parts.length > 0 ? ` (${parts.join(', ')})` : '';
 };
 
@@ -41,6 +43,8 @@ export const simulateDay = async (
         storyNode = getNextStoryNode(lastStoryNodeId);
     }
 
+    let narrativeText = storyNode.text;
+
     // 2. Apply Story Effect
     if (storyNode.effect) {
         const effect = storyNode.effect;
@@ -63,10 +67,28 @@ export const simulateDay = async (
             if (effect.kill) update.killCountChange = effect.kill;
             if (effect.status) update.status = effect.status;
             if (effect.inventoryRemove) update.inventoryRemove = effect.inventoryRemove;
+            
+            // Apply Global Affinity Change
+            if (effect.affinity) {
+                const relUpdates: RelationshipUpdate[] = [];
+                living.forEach(other => {
+                    if (other.id !== target.id) {
+                        relUpdates.push({ targetId: other.id, change: effect.affinity! });
+                    }
+                });
+                if (relUpdates.length > 0) {
+                    update.relationshipUpdates = relUpdates;
+                }
+            }
+
             updates.push(update);
         });
 
         if (effect.loot) loot.push(...effect.loot);
+
+        // Append stat changes to the narrative text
+        const statLog = formatStatChange(effect.hp, effect.sanity, effect.fatigue, effect.infection, undefined, effect.affinity);
+        narrativeText += statLog;
     }
 
     // 3. Process Characters
@@ -83,10 +105,17 @@ export const simulateDay = async (
         
         // ZOMBIE LOGIC
         if (char.status === 'Zombie') {
-            update.hungerChange = -DAILY_HUNGER_LOSS;
-            if (Math.random() < 0.3) {
-                events.push(`🧟 ${char.name}은(는) 먹이를 찾아 어슬렁거렸습니다.`);
+            const hungerLoss = DAILY_HUNGER_LOSS;
+            update.hungerChange = -hungerLoss;
+            
+            // Check for Starvation Death
+            if (char.hunger - hungerLoss <= 0) {
+                update.status = 'Dead';
+                events.push(`💀 굶주린 좀비 ${char.name}은(는) 에너지가 고갈되어 완전히 활동을 정지했습니다. (아사)`);
+            } else if (Math.random() < 0.3) {
+                events.push(`🧟 ${char.name}은(는) 신선한 고기를 찾아 거리를 배회했습니다.`);
             }
+            
             updates.push(update);
             processedIds.add(char.id);
             continue;
@@ -104,7 +133,7 @@ export const simulateDay = async (
                  processedIds.add(char.id);
                  continue;
              } else {
-                 update.infectionChange = (Math.random() * 5) + 2; 
+                 update.infectionChange = Math.floor((Math.random() * 5) + 2); 
              }
         }
 
@@ -263,7 +292,7 @@ export const simulateDay = async (
     }
 
     return {
-        narrative: storyNode.text,
+        narrative: narrativeText,
         events,
         updates,
         loot,

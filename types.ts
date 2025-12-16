@@ -120,6 +120,7 @@ export interface StoryEffect {
     status?: Status; // Added for events that change status (e.g. death)
     loot?: string[]; // 획득 아이템
     inventoryRemove?: string[]; // 제거할 아이템
+    affinity?: number; // New: Global affinity change
 }
 
 export interface StoryNode {

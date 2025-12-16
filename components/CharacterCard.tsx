@@ -159,7 +159,7 @@ const CharacterCard: React.FC<Props> = ({ character, allCharacters, onDelete }) 
                 <div className="w-full">
                     <div className="flex justify-between mb-0.5 text-zombie-green">
                         <span className="font-bold">감염도 (위험!)</span>
-                        <span>{character.infection}%</span>
+                        <span>{Math.round(character.infection)}%</span>
                     </div>
                     <div className="h-2 w-full bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
                         <div 

@@ -416,11 +416,11 @@ const App: React.FC = () => {
           if (index === -1) return;
           const char = { ...nextChars[index] };
           
-          if (update.hpChange) char.hp = Math.max(0, Math.min(MAX_HP, char.hp + update.hpChange));
-          if (update.sanityChange) char.sanity = Math.max(0, Math.min(MAX_SANITY, char.sanity + update.sanityChange));
-          if (update.fatigueChange) char.fatigue = Math.max(0, Math.min(MAX_FATIGUE, char.fatigue + update.fatigueChange));
-          if (update.infectionChange) char.infection = Math.max(0, Math.min(MAX_INFECTION, char.infection + update.infectionChange));
-          if (update.hungerChange) char.hunger = Math.max(0, Math.min(MAX_HUNGER, char.hunger + update.hungerChange));
+          if (update.hpChange) char.hp = Math.max(0, Math.min(MAX_HP, Math.round(char.hp + update.hpChange)));
+          if (update.sanityChange) char.sanity = Math.max(0, Math.min(MAX_SANITY, Math.round(char.sanity + update.sanityChange)));
+          if (update.fatigueChange) char.fatigue = Math.max(0, Math.min(MAX_FATIGUE, Math.round(char.fatigue + update.fatigueChange)));
+          if (update.infectionChange) char.infection = Math.max(0, Math.min(MAX_INFECTION, Math.round(char.infection + update.infectionChange)));
+          if (update.hungerChange) char.hunger = Math.max(0, Math.min(MAX_HUNGER, Math.round(char.hunger + update.hungerChange)));
           if (update.hasMuzzle !== undefined) char.hasMuzzle = update.hasMuzzle;
           if (update.status) char.status = update.status;
           if (update.mentalState) char.mentalState = update.mentalState; 
@@ -428,6 +428,16 @@ const App: React.FC = () => {
           if (update.status === 'Zombie' && nextChars[index].status !== 'Zombie') char.hunger = MAX_HUNGER;
           if (update.inventoryAdd) char.inventory = [...char.inventory, ...update.inventoryAdd];
           if (update.inventoryRemove) char.inventory = char.inventory.filter(item => !update.inventoryRemove?.includes(item));
+
+          // Death check: If HP <= 0 and not already Dead/Missing, they die.
+          if (char.hp <= 0 && char.status !== 'Dead' && char.status !== 'Missing') {
+              char.status = 'Dead';
+          }
+          
+          // Zombie Starvation Check: If Zombie and Hunger <= 0, they die.
+          if (char.status === 'Zombie' && char.hunger <= 0) {
+              char.status = 'Dead';
+          }
 
           if (update.relationshipUpdates) {
              const newRels = { ...char.relationships };
