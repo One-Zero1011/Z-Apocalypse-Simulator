@@ -1,8 +1,4 @@
 
-
-
-
-
 export type Gender = 'Male' | 'Female' | 'Non-Binary';
 
 export type MBTI = 
@@ -28,6 +24,7 @@ export interface Character {
   name: string;
   gender: Gender;
   mbti: MBTI;
+  job?: string; // New: Occupation (Optional)
   hp: number; // 0-100
   sanity: number; // 0-100
   fatigue: number; // 0-100
@@ -92,6 +89,7 @@ export interface ActionEffect {
     targetFatigue?: number; // For Interactions
     actorFatigue?: number; // For Interactions
     affinity?: number; // For Interactions
+    loot?: string[]; // Added for Job Events and others
 }
 
 export interface GameSettings {
@@ -118,6 +116,7 @@ export interface StoryEffect {
     sanity?: number;
     fatigue?: number;
     infection?: number; // New
+    kill?: number; // New: Kill count change
     status?: Status; // Added for events that change status (e.g. death)
     loot?: string[]; // 획득 아이템
     inventoryRemove?: string[]; // 제거할 아이템

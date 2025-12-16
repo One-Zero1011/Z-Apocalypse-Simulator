@@ -54,7 +54,7 @@ const InventoryPanel: React.FC<Props> = ({ inventory, onSelectItem }) => {
                                 </span>
                                 <div className="text-center leading-none">
                                     <span className="block">{item}</span>
-                                    {count > 1 && <span className="text-[10px] text-slate-500 dark:text-slate-400 font-normal mt-0.5">({count}개)</span>}
+                                    {(count as number) > 1 && <span className="text-[10px] text-slate-500 dark:text-slate-400 font-normal mt-0.5">({count as number}개)</span>}
                                 </div>
                                 <span className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"></span>
                             </button>

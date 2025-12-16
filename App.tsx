@@ -191,7 +191,8 @@ const App: React.FC = () => {
                           mentalState: c.mentalState || 'Normal',
                           infection: c.infection || 0,
                           hunger: c.hunger || 0,
-                          hasMuzzle: c.hasMuzzle || false
+                          hasMuzzle: c.hasMuzzle || false,
+                          job: c.job || ''
                       }));
                       setCharacters(loadedChars || []);
                       setInventory(parsed.inventory || []);
@@ -237,7 +238,7 @@ const App: React.FC = () => {
           return;
       }
       const rosterData = characters.map(c => ({
-          id: c.id, name: c.name, gender: c.gender, mbti: c.mbti,
+          id: c.id, name: c.name, gender: c.gender, mbti: c.mbti, job: c.job,
           hp: MAX_HP, sanity: MAX_SANITY, fatigue: 0, infection: 0, hunger: 0, hasMuzzle: false,
           status: 'Alive', mentalState: 'Normal', inventory: [...INITIAL_INVENTORY],
           relationships: c.relationships, relationshipStatuses: c.relationshipStatuses, killCount: 0
@@ -275,7 +276,8 @@ const App: React.FC = () => {
                       const initializedCharacters = parsed.map((c: any) => ({
                           ...c, hp: MAX_HP, sanity: MAX_SANITY, fatigue: 0, infection: 0, hunger: 0, hasMuzzle: false,
                           status: 'Alive', mentalState: 'Normal', inventory: [...INITIAL_INVENTORY], killCount: 0,
-                          relationships: c.relationships || {}, relationshipStatuses: c.relationshipStatuses || {}
+                          relationships: c.relationships || {}, relationshipStatuses: c.relationshipStatuses || {},
+                          job: c.job || ''
                       })) as Character[];
                       setCharacters(initializedCharacters);
                       setDay(0); setLogs([]); setInventory([]); setSelectedItem(null); setStoryNodeId(null); setForcedEvents([]); setError(null); setConfirmState(null);
@@ -303,9 +305,9 @@ const App: React.FC = () => {
   };
 
   // --- Character Logic ---
-  const addCharacter = (name: string, gender: Gender, mbti: MBTI, mentalState: MentalState, initialRelations: { targetId: string, type: string }[] = []) => {
+  const addCharacter = (name: string, gender: Gender, mbti: MBTI, job: string, mentalState: MentalState, initialRelations: { targetId: string, type: string }[] = []) => {
     const newChar: Character = {
-      id: crypto.randomUUID(), name, gender, mbti, hp: MAX_HP, sanity: MAX_SANITY, fatigue: 0, infection: 0, hunger: MAX_HUNGER, hasMuzzle: false,
+      id: crypto.randomUUID(), name, gender, mbti, job, hp: MAX_HP, sanity: MAX_SANITY, fatigue: 0, infection: 0, hunger: MAX_HUNGER, hasMuzzle: false,
       status: 'Alive', mentalState: mentalState, inventory: [...INITIAL_INVENTORY], relationships: {}, relationshipStatuses: {}, killCount: 0
     };
 

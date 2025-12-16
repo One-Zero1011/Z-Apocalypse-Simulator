@@ -1,19 +1,25 @@
 
 import React, { useState } from 'react';
 import { MBTI, Gender, Character, MentalState } from '../types';
-import { MBTI_TYPES } from '../constants';
+import { MBTI_TYPES, JOB_CATEGORIES } from '../constants';
 
 interface Props {
-  onAdd: (name: string, gender: Gender, mbti: MBTI, mentalState: MentalState, initialRelations?: { targetId: string, type: string }[]) => void;
+  onAdd: (name: string, gender: Gender, mbti: MBTI, job: string, mentalState: MentalState, initialRelations?: { targetId: string, type: string }[]) => void;
   disabled?: boolean;
   existingCharacters?: Character[];
   useMentalStates?: boolean;
 }
 
+// Random Generation Data
+const SURNAMES = ['김', '이', '박', '최', '정', '강', '조', '윤', '장', '임', '한', '오', '서', '신', '권', '황', '안', '송', '전', '홍'];
+const MALE_NAMES = ['민준', '서준', '도윤', '예준', '시우', '하준', '지호', '지후', '준우', '현우', '도현', '지훈', '건우', '우진', '선우', '서진', '민재', '연우', '유준', '정우'];
+const FEMALE_NAMES = ['서연', '서윤', '지우', '서현', '하은', '민서', '지유', '윤서', '채원', '지아', '지민', '서아', '다은', '예은', '수아', '지안', '소율', '예린', '하윤', '지원'];
+
 const CharacterForm: React.FC<Props> = ({ onAdd, disabled, existingCharacters = [], useMentalStates = true }) => {
   const [name, setName] = useState('');
   const [gender, setGender] = useState<Gender>('Male');
   const [mbti, setMbti] = useState<MBTI>('ISTJ');
+  const [job, setJob] = useState<string>('');
   const [mentalState, setMentalState] = useState<MentalState>('Normal');
   
   // Relationship State
@@ -24,15 +30,38 @@ const CharacterForm: React.FC<Props> = ({ onAdd, disabled, existingCharacters = 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (name.trim()) {
-      onAdd(name, gender, mbti, mentalState, pendingRelations);
+      onAdd(name, gender, mbti, job, mentalState, pendingRelations);
       
       setName('');
+      setJob('');
       setMentalState('Normal');
       // Reset relation
       setPendingRelations([]);
       setTempTargetId('');
       setTempRelationType('Friend');
     }
+  };
+
+  const handleRandomAdd = () => {
+      // 1. Gender
+      const rGender: Gender = Math.random() > 0.5 ? 'Male' : 'Female';
+      
+      // 2. Name
+      const surname = SURNAMES[Math.floor(Math.random() * SURNAMES.length)];
+      const givenName = rGender === 'Male' 
+          ? MALE_NAMES[Math.floor(Math.random() * MALE_NAMES.length)]
+          : FEMALE_NAMES[Math.floor(Math.random() * FEMALE_NAMES.length)];
+      const rName = `${surname}${givenName}`;
+      
+      // 3. MBTI
+      const rMbti = MBTI_TYPES[Math.floor(Math.random() * MBTI_TYPES.length)];
+      
+      // 4. Job
+      const allJobs = Object.values(JOB_CATEGORIES).flat();
+      const rJob = allJobs[Math.floor(Math.random() * allJobs.length)];
+
+      // 5. Add Immediately
+      onAdd(rName, rGender, rMbti, rJob, 'Normal', []);
   };
 
   const handleAddRelation = () => {
@@ -71,20 +100,52 @@ const CharacterForm: React.FC<Props> = ({ onAdd, disabled, existingCharacters = 
 
   return (
     <form onSubmit={handleSubmit} className="bg-white dark:bg-slate-800 p-4 rounded-lg border border-slate-200 dark:border-slate-700 shadow-md">
-      <h3 className="text-lg font-bold mb-4 text-zombie-green">새로운 생존자</h3>
-      <div className="space-y-4">
-        <div>
-          <label className="block text-sm text-slate-600 dark:text-slate-400 mb-1">이름</label>
-          <input
-            type="text"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            className="w-full bg-gray-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded p-2 text-slate-900 dark:text-slate-100 focus:border-zombie-green dark:focus:border-zombie-green focus:outline-none"
-            placeholder="생존자 이름"
-            maxLength={20}
-            required
+      <div className="flex justify-between items-center mb-4">
+          <h3 className="text-lg font-bold text-zombie-green">새로운 생존자</h3>
+          <button
+            type="button"
+            onClick={handleRandomAdd}
             disabled={disabled}
-          />
+            className="text-xs bg-purple-100 hover:bg-purple-200 dark:bg-purple-900/40 dark:hover:bg-purple-900/60 text-purple-700 dark:text-purple-300 px-3 py-1.5 rounded-full font-bold transition-colors flex items-center gap-1"
+            title="랜덤한 이름, 직업, MBTI를 가진 생존자를 즉시 추가합니다."
+          >
+            <span>🎲</span> 랜덤 생존자 추가
+          </button>
+      </div>
+      
+      <div className="space-y-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+            <label className="block text-sm text-slate-600 dark:text-slate-400 mb-1">이름</label>
+            <input
+                type="text"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                className="w-full bg-gray-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded p-2 text-slate-900 dark:text-slate-100 focus:border-zombie-green dark:focus:border-zombie-green focus:outline-none"
+                placeholder="생존자 이름"
+                maxLength={20}
+                required
+                disabled={disabled}
+            />
+            </div>
+            <div>
+                <label className="block text-sm text-slate-600 dark:text-slate-400 mb-1">직업 (선택)</label>
+                <select
+                    value={job}
+                    onChange={(e) => setJob(e.target.value)}
+                    className="w-full bg-gray-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded p-2 text-slate-900 dark:text-slate-100 focus:border-zombie-green dark:focus:border-zombie-green focus:outline-none"
+                    disabled={disabled}
+                >
+                    <option value="">(직업 없음/모름)</option>
+                    {Object.entries(JOB_CATEGORIES).map(([category, jobs]) => (
+                        <optgroup key={category} label={category}>
+                            {jobs.map(j => (
+                                <option key={j} value={j}>{j}</option>
+                            ))}
+                        </optgroup>
+                    ))}
+                </select>
+            </div>
         </div>
         
         <div className={`grid grid-cols-1 ${useMentalStates ? 'md:grid-cols-3' : 'md:grid-cols-2'} gap-4`}>
@@ -217,7 +278,7 @@ const CharacterForm: React.FC<Props> = ({ onAdd, disabled, existingCharacters = 
         <button
           type="submit"
           disabled={!name.trim() || disabled}
-          className="w-full bg-zombie-green hover:bg-lime-600 text-white dark:text-slate-900 font-bold py-2 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
+          className="w-full mt-4 bg-zombie-green hover:bg-lime-600 text-white dark:text-slate-900 font-bold py-2 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
         >
           그룹에 추가
         </button>

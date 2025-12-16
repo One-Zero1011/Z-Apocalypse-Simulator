@@ -18,12 +18,12 @@ const DevStats: React.FC<Props> = ({ character, allCharacters, onUpdate }) => {
                 </div>
                 <div>
                     <h3 className="text-xl font-bold dark:text-white">{character.name}</h3>
-                    <p className="text-sm text-slate-500 dark:text-slate-400">{character.gender} | {character.mbti}</p>
+                    <p className="text-sm text-slate-500 dark:text-slate-400">{character.gender} | {character.mbti} | {character.job || '직업 없음'}</p>
                 </div>
             </div>
 
-            {/* Status & Mental */}
-            <div className="grid grid-cols-2 gap-4">
+            {/* Status & Mental & Job */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="bg-white dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700">
                     <label className="block text-xs font-bold uppercase text-slate-500 mb-2">상태 (Status)</label>
                     <select 
@@ -52,6 +52,16 @@ const DevStats: React.FC<Props> = ({ character, allCharacters, onUpdate }) => {
                         <option value="Anxiety">불안 (Anxiety)</option>
                         <option value="Madness">광기 (Madness)</option>
                     </select>
+                </div>
+                <div className="bg-white dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700 sm:col-span-2">
+                    <label className="block text-xs font-bold uppercase text-slate-500 mb-2">직업 (Job - 직접 입력)</label>
+                    <input 
+                        type="text"
+                        value={character.job || ''} 
+                        onChange={(e) => onUpdate(character, 'job', e.target.value)}
+                        className="w-full p-2 rounded border bg-slate-50 dark:bg-slate-900 dark:border-slate-600 dark:text-white"
+                        placeholder="직업 입력"
+                    />
                 </div>
             </div>
 

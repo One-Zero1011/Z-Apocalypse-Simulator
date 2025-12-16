@@ -63,9 +63,14 @@ const CharacterCard: React.FC<Props> = ({ character, allCharacters, onDelete }) 
               {!isZombie && isExhausted && !isDead && <span title="탈진 상태" className="text-sm animate-pulse">💤</span>}
               {!isZombie && hasMentalIllness && !isDead && <span title="정신 이상" className="text-sm animate-pulse">🧠</span>}
           </h3>
-          <div className="flex items-center gap-2 text-xs uppercase tracking-wide opacity-80 mt-1">
+          <div className="flex items-center gap-2 text-xs uppercase tracking-wide opacity-80 mt-1 flex-wrap">
             <span className="bg-slate-200 dark:bg-slate-700 px-1 rounded text-slate-700 dark:text-slate-300">{character.mbti}</span>
             <span className="text-slate-600 dark:text-slate-400">{character.gender === 'Male' ? '남성' : character.gender === 'Female' ? '여성' : '논바이너리'}</span>
+            {character.job && (
+                <span className="bg-blue-100 text-blue-800 dark:bg-blue-900/50 dark:text-blue-200 px-1.5 rounded font-bold" title="직업">
+                    {character.job}
+                </span>
+            )}
             {!isZombie && hasMentalIllness && (
                 <span className="bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-300 px-1.5 rounded font-bold">{mentalState}</span>
             )}
