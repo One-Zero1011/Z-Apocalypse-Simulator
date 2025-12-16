@@ -1,3 +1,4 @@
+
 import React, { useMemo, useState, useEffect } from 'react';
 import { Character, RelationshipStatus } from '../types';
 
@@ -88,8 +89,13 @@ const RelationshipMap: React.FC<Props> = ({ characters, onClose }) => {
 
   const getLineStyle = (affinity: number, status: RelationshipStatus) => {
     // 1. Check Status First (Distinct Styles)
-    if (status === 'Lover') return { stroke: '#ec4899', width: isMobile ? 4 : 6, label: '연인', opacity: 1 }; // Pink
-    if (status === 'Family') return { stroke: '#eab308', width: isMobile ? 4 : 6, label: '가족', opacity: 1 }; // Yellow
+    if (status === 'Spouse') return { stroke: '#be185d', width: isMobile ? 4 : 6, label: '부부', opacity: 1 }; // Dark Pink
+    if (status === 'Lover') return { stroke: '#ec4899', width: isMobile ? 4 : 5, label: '연인', opacity: 1 }; // Pink
+    
+    if (status === 'Parent' || status === 'Child') return { stroke: '#f59e0b', width: isMobile ? 4 : 5, label: '가족(부모자식)', opacity: 1 }; // Amber
+    if (status === 'Sibling') return { stroke: '#10b981', width: isMobile ? 4 : 5, label: '남매/형제', opacity: 1 }; // Emerald
+    if (status === 'Family') return { stroke: '#eab308', width: isMobile ? 3 : 4, label: '친척', opacity: 1 }; // Yellow
+    
     if (status === 'BestFriend') return { stroke: '#3b82f6', width: isMobile ? 3 : 5, label: '절친', opacity: 1 }; // Blue
     if (status === 'Savior') return { stroke: '#8b5cf6', width: isMobile ? 2 : 4, label: '은인', opacity: 0.9, dash: '10,5' }; // Purple Dashed
     if (status === 'Colleague') return { stroke: '#64748b', width: isMobile ? 2 : 3, label: '동료', opacity: 0.8, dash: '2,2' }; // Slate Dashed
@@ -121,10 +127,21 @@ const RelationshipMap: React.FC<Props> = ({ characters, onClose }) => {
 
       // Translation for display
       const map: Record<string, string> = {
-          'Lover': '연인 ❤️', 'Family': '가족 🏠', 'BestFriend': '절친 🤞',
-          'Savior': '은인 🦸', 'Colleague': '동료 💼', 'Rival': '라이벌 ⚔️',
-          'Enemy': '원수 👿', 'Ex': '전 애인 💔', 'Friend': '친구 🤝',
-          'Dislike': '싫어함 😠', 'Neutral': '서먹함 😐'
+          'Spouse': '부부 💍',
+          'Lover': '연인 ❤️', 
+          'Parent': '부모 👪',
+          'Child': '자식 🐣',
+          'Sibling': '형제/자매 👫',
+          'Family': '가족 🏠', 
+          'BestFriend': '절친 🤞',
+          'Savior': '은인 🦸', 
+          'Colleague': '동료 💼', 
+          'Rival': '라이벌 ⚔️',
+          'Enemy': '원수 👿', 
+          'Ex': '전 애인 💔', 
+          'Friend': '친구 🤝',
+          'Dislike': '싫어함 😠', 
+          'Neutral': '서먹함 😐'
       };
 
       return {
@@ -320,14 +337,14 @@ const RelationshipMap: React.FC<Props> = ({ characters, onClose }) => {
                 <div className="p-4">
                     <h3 className="text-xs font-bold text-slate-500 uppercase mb-3">범례 (Legend)</h3>
                     <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 text-xs">
+                        <div className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-pink-700"></span>부부</div>
                         <div className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-pink-500"></span>연인</div>
-                        <div className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-yellow-500"></span>가족</div>
+                        <div className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-amber-500"></span>부모자식</div>
+                        <div className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>남매/형제</div>
+                        <div className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-yellow-500"></span>친척</div>
                         <div className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-blue-500"></span>절친</div>
-                        <div className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-purple-500"></span>은인</div>
                         <div className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-orange-500"></span>라이벌</div>
-                        <div className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-slate-500"></span>동료</div>
                         <div className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-red-500"></span>원수</div>
-                        <div className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-rose-900 border border-rose-500"></span>전애인</div>
                     </div>
                 </div>
             )}

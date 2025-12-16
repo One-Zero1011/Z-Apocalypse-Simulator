@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
-import { Character } from '../types';
-import { MAX_HP, MAX_SANITY, MAX_FATIGUE, FATIGUE_THRESHOLD } from '../constants';
+import { Character, Status } from '../types';
+import { MAX_HP, MAX_SANITY, MAX_FATIGUE, MAX_INFECTION, MAX_HUNGER, FATIGUE_THRESHOLD } from '../constants';
 
 interface Props {
   character: Character;
@@ -13,7 +13,8 @@ const CharacterCard: React.FC<Props> = ({ character, allCharacters, onDelete }) 
   const [isExpanded, setIsExpanded] = useState(false);
   
   const isDead = character.status === 'Dead' || character.status === 'Missing';
-  const isInfected = character.status === 'Infected';
+  const isZombie = character.status === 'Zombie';
+  const isInfected = character.status === 'Infected' || (character.infection > 0 && !isZombie);
   const isExhausted = character.fatigue >= FATIGUE_THRESHOLD;
   // Fallback for mentalState if not present (backward compatibility)
   const mentalState = character.mentalState || 'Normal';
@@ -21,9 +22,10 @@ const CharacterCard: React.FC<Props> = ({ character, allCharacters, onDelete }) 
   
   const getStatusColor = () => {
     if (character.status === 'Dead') return 'text-gray-500 bg-gray-100 border-gray-300 dark:text-gray-600 dark:bg-gray-900 dark:border-gray-700 opacity-60';
-    if (character.status === 'Infected') return 'text-zombie-green border-zombie-green bg-green-50 dark:bg-green-900/20';
+    if (character.status === 'Zombie') return 'text-zombie-green border-zombie-green bg-green-50 dark:bg-green-900/30 dark:text-green-400';
+    if (character.infection >= 80) return 'border-orange-400 bg-orange-50 dark:bg-orange-900/20';
     if (character.status === 'Missing') return 'text-yellow-600 dark:text-yellow-500 border-yellow-500 bg-yellow-50 dark:bg-yellow-900/10';
-    if (hasMentalIllness) return 'border-red-400 bg-red-50 dark:bg-red-900/10 dark:border-red-800'; // Mental illness warning color
+    if (hasMentalIllness) return 'border-red-400 bg-red-50 dark:bg-red-900/10 dark:border-red-800'; 
     if (isExhausted) return 'text-purple-900 border-purple-300 bg-purple-50 dark:bg-purple-900/20 dark:text-purple-200 dark:border-purple-700';
     return 'text-slate-800 dark:text-slate-200 border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800';
   };
@@ -54,15 +56,21 @@ const CharacterCard: React.FC<Props> = ({ character, allCharacters, onDelete }) 
         <div>
           <h3 className="font-bold text-xl flex items-center gap-2">
               {character.name}
-              {hasStatus('Lover') && <span title="연인 있음" className="text-sm cursor-help">❤️</span>}
-              {isExhausted && !isDead && <span title="탈진 상태" className="text-sm animate-pulse">💤</span>}
-              {hasMentalIllness && !isDead && <span title="정신 이상" className="text-sm animate-pulse">🧠</span>}
+              {isZombie && <span title="좀비" className="text-xl">🧟</span>}
+              {character.hasMuzzle && <span title="입마개 착용" className="text-sm">😷</span>}
+              {!isZombie && (hasStatus('Lover') || hasStatus('Spouse')) && <span title="연인/배우자 있음" className="text-sm cursor-help">❤️</span>}
+              {!isZombie && (hasStatus('Child') || hasStatus('Parent')) && <span title="가족 있음" className="text-sm cursor-help">👪</span>}
+              {!isZombie && isExhausted && !isDead && <span title="탈진 상태" className="text-sm animate-pulse">💤</span>}
+              {!isZombie && hasMentalIllness && !isDead && <span title="정신 이상" className="text-sm animate-pulse">🧠</span>}
           </h3>
           <div className="flex items-center gap-2 text-xs uppercase tracking-wide opacity-80 mt-1">
             <span className="bg-slate-200 dark:bg-slate-700 px-1 rounded text-slate-700 dark:text-slate-300">{character.mbti}</span>
             <span className="text-slate-600 dark:text-slate-400">{character.gender === 'Male' ? '남성' : character.gender === 'Female' ? '여성' : '논바이너리'}</span>
-            {hasMentalIllness && (
+            {!isZombie && hasMentalIllness && (
                 <span className="bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-300 px-1.5 rounded font-bold">{mentalState}</span>
+            )}
+            {isZombie && (
+                 <span className="bg-green-100 text-green-700 dark:bg-green-900/50 dark:text-green-300 px-1.5 rounded font-bold">ZOMBIE</span>
             )}
           </div>
         </div>
@@ -80,7 +88,9 @@ const CharacterCard: React.FC<Props> = ({ character, allCharacters, onDelete }) 
                 </svg>
             </button>
             <div className="font-mono text-slate-600 dark:text-slate-400">처치: {character.killCount}</div>
-            <div className={`font-bold ${isInfected ? 'text-green-600 dark:text-green-400 animate-pulse' : ''}`}>{character.status}</div>
+            <div className={`font-bold ${isZombie ? 'text-green-600 dark:text-green-400' : isInfected ? 'text-orange-500 animate-pulse' : ''}`}>
+                {character.status === 'Infected' ? '감염됨' : character.status}
+            </div>
         </div>
       </div>
 
@@ -99,35 +109,65 @@ const CharacterCard: React.FC<Props> = ({ character, allCharacters, onDelete }) 
           </div>
         </div>
 
-        {/* Sanity Bar */}
+        {/* Zombie: Hunger Bar, Human: Sanity Bar */}
         <div className="w-full">
           <div className="flex justify-between mb-0.5">
-            <span className={character.sanity <= 10 ? 'text-red-500 font-bold animate-pulse' : ''}>
-                {hasMentalIllness ? '정신력 (불안정)' : '정신력'}
+            {isZombie ? (
+                <span className="text-red-700 dark:text-red-400 font-bold">허기 (Hunger)</span>
+            ) : (
+                <span className={character.sanity <= 10 ? 'text-red-500 font-bold animate-pulse' : ''}>
+                    {hasMentalIllness ? '정신력 (불안정)' : '정신력'}
+                </span>
+            )}
+            <span>
+                {isZombie ? `${character.hunger}/${MAX_HUNGER}` : `${character.sanity}/${MAX_SANITY}`}
             </span>
-            <span>{character.sanity}/{MAX_SANITY}</span>
           </div>
           <div className="h-2 w-full bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
             <div 
-              className={`h-full transition-all duration-500 ${hasMentalIllness ? 'bg-purple-600' : 'bg-blue-500'}`} 
-              style={{ width: `${(character.sanity / MAX_SANITY) * 100}%` }}
+              className={`h-full transition-all duration-500 ${
+                  isZombie ? 'bg-red-800' : hasMentalIllness ? 'bg-purple-600' : 'bg-blue-500'
+              }`} 
+              style={{ width: `${isZombie ? (character.hunger / MAX_HUNGER) * 100 : (character.sanity / MAX_SANITY) * 100}%` }}
             ></div>
           </div>
         </div>
 
-        {/* Fatigue Bar */}
-        <div className="w-full">
-          <div className="flex justify-between mb-0.5">
-            <span className={isExhausted ? "text-purple-600 font-bold" : ""}>피로도</span>
-            <span>{character.fatigue}/{MAX_FATIGUE}</span>
-          </div>
-          <div className="h-2 w-full bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
-            <div 
-              className={`h-full transition-all duration-500 ${isExhausted ? 'bg-purple-600 animate-pulse' : 'bg-slate-500 dark:bg-slate-400'}`}
-              style={{ width: `${(character.fatigue / MAX_FATIGUE) * 100}%` }}
-            ></div>
-          </div>
-        </div>
+        {/* Human: Fatigue & Infection, Zombie: Just Infection (always 100) */}
+        {!isZombie && (
+        <>
+            <div className="w-full">
+            <div className="flex justify-between mb-0.5">
+                <span className={isExhausted ? "text-purple-600 font-bold" : ""}>피로도</span>
+                <span>{character.fatigue}/{MAX_FATIGUE}</span>
+            </div>
+            <div className="h-2 w-full bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
+                <div 
+                className={`h-full transition-all duration-500 ${isExhausted ? 'bg-purple-600 animate-pulse' : 'bg-slate-500 dark:bg-slate-400'}`}
+                style={{ width: `${(character.fatigue / MAX_FATIGUE) * 100}%` }}
+                ></div>
+            </div>
+            </div>
+
+            {/* Infection Bar (Only visible if > 0) */}
+            {(character.infection > 0) && (
+                <div className="w-full">
+                    <div className="flex justify-between mb-0.5 text-zombie-green">
+                        <span className="font-bold">감염도 (위험!)</span>
+                        <span>{character.infection}%</span>
+                    </div>
+                    <div className="h-2 w-full bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
+                        <div 
+                        className="h-full bg-lime-500 transition-all duration-500 relative"
+                        style={{ width: `${(character.infection / MAX_INFECTION) * 100}%` }}
+                        >
+                            <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNCIgaGVpZ2h0PSI0IiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxjaXJjbGUgY3g9IjIiIGN5PSIyIiByPSIxIiBmaWxsPSJyZ2JhKDAsMCwwLDAuMikiLz48L3N2Zz4=')] opacity-30"></div>
+                        </div>
+                    </div>
+                </div>
+            )}
+        </>
+        )}
       </div>
 
       <div className="mt-4 pt-3 border-t border-slate-200 dark:border-white/10">
@@ -144,8 +184,12 @@ const CharacterCard: React.FC<Props> = ({ character, allCharacters, onDelete }) 
                     <span className="text-slate-700 dark:text-slate-300 flex items-center gap-1">
                         {getRelationshipName(id)}
                         {status === 'Lover' && '❤️'}
+                        {status === 'Spouse' && '💍'}
                         {status === 'Ex' && '💔'}
                         {status === 'Family' && '🏠'}
+                        {status === 'Parent' && '👪'}
+                        {status === 'Child' && '🐣'}
+                        {status === 'Sibling' && '👫'}
                         {status === 'BestFriend' && '🤝'}
                         {status === 'Colleague' && '💼'}
                         {status === 'Rival' && '⚔️'}

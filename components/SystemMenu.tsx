@@ -1,3 +1,4 @@
+
 import React from 'react';
 
 interface Props {
@@ -6,10 +7,25 @@ interface Props {
   onLoadRoster: () => void;
   onSaveGame: () => void;
   onLoadGame: () => void;
-  onNewGame: () => void; // New prop
+  onNewGame: () => void;
+  allowSameSex: boolean; 
+  onToggleSameSex: () => void; 
+  developerMode: boolean; // New prop
+  onToggleDeveloperMode: () => void; // New prop
 }
 
-const SystemMenu: React.FC<Props> = ({ onClose, onSaveRoster, onLoadRoster, onSaveGame, onLoadGame, onNewGame }) => {
+const SystemMenu: React.FC<Props> = ({ 
+    onClose, 
+    onSaveRoster, 
+    onLoadRoster, 
+    onSaveGame, 
+    onLoadGame, 
+    onNewGame,
+    allowSameSex,
+    onToggleSameSex,
+    developerMode,
+    onToggleDeveloperMode
+}) => {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fade-in">
       <div className="bg-white dark:bg-slate-800 rounded-xl shadow-2xl max-w-lg w-full overflow-hidden border border-slate-200 dark:border-slate-700">
@@ -29,7 +45,73 @@ const SystemMenu: React.FC<Props> = ({ onClose, onSaveRoster, onLoadRoster, onSa
           </button>
         </div>
 
-        <div className="p-6 space-y-6">
+        <div className="p-6 space-y-6 max-h-[70vh] overflow-y-auto">
+          
+          {/* Option: Settings */}
+          <div className="space-y-3">
+             <h3 className="text-sm font-bold uppercase text-slate-600 dark:text-slate-400 tracking-wider">
+               게임 설정 (Settings)
+             </h3>
+             <div className="flex items-center justify-between bg-slate-50 dark:bg-slate-700/50 p-3 rounded-lg border border-slate-200 dark:border-slate-700">
+                <div>
+                    <div className="font-bold text-slate-700 dark:text-slate-200">동성 커플 허용</div>
+                    <div className="text-xs text-slate-500 dark:text-slate-400">활성화 시 성별에 관계없이 연인이 될 수 있습니다.</div>
+                </div>
+                <button 
+                    onClick={onToggleSameSex}
+                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${allowSameSex ? 'bg-blue-600' : 'bg-slate-300 dark:bg-slate-600'}`}
+                >
+                    <span 
+                        className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${allowSameSex ? 'translate-x-6' : 'translate-x-1'}`} 
+                    />
+                </button>
+             </div>
+
+             {/* Developer Mode Toggle */}
+             <div className="flex items-center justify-between bg-slate-50 dark:bg-slate-700/50 p-3 rounded-lg border border-slate-200 dark:border-slate-700">
+                <div>
+                    <div className="font-bold text-slate-700 dark:text-slate-200">개발자 모드</div>
+                    <div className="text-xs text-slate-500 dark:text-slate-400">디버그 정보 표시 및 테스트 기능 활성화</div>
+                </div>
+                <button 
+                    onClick={onToggleDeveloperMode}
+                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-zombie-green focus:ring-offset-2 ${developerMode ? 'bg-zombie-green' : 'bg-slate-300 dark:bg-slate-600'}`}
+                >
+                    <span 
+                        className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${developerMode ? 'translate-x-6' : 'translate-x-1'}`} 
+                    />
+                </button>
+             </div>
+          </div>
+
+          <hr className="border-slate-200 dark:border-slate-700" />
+
+          {/* Option: Info & Support */}
+          <div className="space-y-3">
+             <h3 className="text-sm font-bold uppercase text-slate-600 dark:text-slate-400 tracking-wider">
+               정보 (Info)
+             </h3>
+             <a 
+                href="https://posty.pe/w1g6pe" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="flex items-center justify-between bg-slate-50 dark:bg-slate-700/50 p-3 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-600 transition-colors group"
+             >
+                <div>
+                    <div className="font-bold text-slate-700 dark:text-slate-200 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                        개발자 공지 & 후원
+                    </div>
+                    <div className="text-xs text-slate-500 dark:text-slate-400">
+                        업데이트 내역 확인 및 제작자 후원하기 (Postype)
+                    </div>
+                </div>
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5 text-slate-400 group-hover:text-blue-500">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
+                </svg>
+             </a>
+          </div>
+
+          <hr className="border-slate-200 dark:border-slate-700" />
 
           {/* Option 0: New Game */}
           <div className="space-y-3">
