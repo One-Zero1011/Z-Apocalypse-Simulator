@@ -14,7 +14,7 @@ export type MentalState = 'Normal' | 'Trauma' | 'Despair' | 'Delusion' | 'Anxiet
 export type RelationshipStatus = 
     'Lover' | 'Spouse' | 'Parent' | 'Child' | 'Sibling' | 
     'Rival' | 'Enemy' | 'BestFriend' | 'Family' | 
-    'Colleague' | 'Ex' | 'Friend' | 'Savior' | 'None';
+    'Colleague' | 'Ex' | 'Friend' | 'Savior' | 'Guardian' | 'Ward' | 'None';
 
 export interface Character {
   id: string;
@@ -35,6 +35,7 @@ export interface Character {
   relationshipStatuses: Record<string, RelationshipStatus>;
   relationshipDurations: Record<string, number>; // key: characterId, value: duration days
   killCount: number;
+  plannedAction?: string | null; // New: 유저가 지정한 행동
 }
 
 export interface RelationshipUpdate {
@@ -57,6 +58,7 @@ export interface CharacterUpdate {
   inventoryRemove?: string[];
   hasMuzzle?: boolean;
   relationshipUpdates?: RelationshipUpdate[];
+  plannedAction?: string | null; // New: 행동 완료 후 초기화용
 }
 
 export interface BabyEventData {
@@ -78,6 +80,7 @@ export interface SimulationResult {
   inventoryRemove?: string[]; // New: Items to remove from global inventory
   nextStoryNodeId: string | null;
   babyEvent?: BabyEventData | null; // New
+  tarotEvent?: boolean; // New: 타로 이벤트 활성화 여부
 }
 
 export interface ActionEffect {
@@ -109,6 +112,8 @@ export interface GameSettings {
     allowIncest: boolean; // Added: 근친 허용
     pureLoveMode: boolean; // Added: 순애 모드 (일부일처제)
     restrictStudentDating: boolean; // Added: 학생끼리만 연애 허용
+    friendshipMode: boolean; // Added: 우정 모드 (연애 비활성화)
+    restrictMinorAdultActions: boolean; // Added: 미성년자 음주/흡연 제한
     developerMode: boolean; // Added developerMode
     useMentalStates: boolean; // Added useMentalStates
     enableInteractions: boolean; // Added: 플레이어(생존자) 상호작용 옵션
@@ -168,10 +173,10 @@ export interface StoryNode {
 
 // Developer Debug Type
 export interface ForcedEvent {
-    type: 'STORY' | 'MBTI' | 'INTERACTION';
-    key: string; // storyId OR Category Key (e.g. 'INTJ', 'LOVER')
-    index?: number; // Array index for MBTI/Interaction
+    type: 'STORY' | 'MBTI' | 'INTERACTION' | 'JOB' | 'SYSTEM'; // 확장됨
+    key: string; // storyId OR Category Key (e.g. 'INTJ', 'LOVER', '의사', 'REST')
+    index?: number; // Array index
     actorId?: string; // Who triggers it
-    targetId?: string; // Who is the target (for interaction)
+    targetId?: string; // Who is the target (for interaction/ghost)
     previewText?: string; // For UI display
 }

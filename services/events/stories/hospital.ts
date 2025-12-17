@@ -26,7 +26,6 @@ export const HOSPITAL_NODES: Record<string, StoryNode> = {
         ],
         effect: { target: 'ALL', sanity: -5 }
     },
-    // 신규 분기: 영안실
     'hospital_2c_morgue': {
         id: 'hospital_2c_morgue',
         text: "⚰️ 지하 영안실로 내려갑니다. 냉동고는 꺼져있고 시체들이 부패하고 있습니다. 하지만 시체들 소지품에서 뭔가를 찾을 수 있을지도 모릅니다.",
@@ -34,7 +33,7 @@ export const HOSPITAL_NODES: Record<string, StoryNode> = {
             { id: 'hospital_3_morgue_loot', weight: 0.5 },
             { id: 'hospital_3_morgue_wake', weight: 0.5 }
         ],
-        effect: { target: 'ALL', sanity: -20 } // 정신력 대폭 감소
+        effect: { target: 'ALL', sanity: -20 }
     },
     'hospital_3_morgue_loot': {
         id: 'hospital_3_morgue_loot',
@@ -45,7 +44,7 @@ export const HOSPITAL_NODES: Record<string, StoryNode> = {
     'hospital_3_morgue_wake': {
         id: 'hospital_3_morgue_wake',
         text: "🧟 시체인 줄 알았던 것들이 일제히 일어납니다! 좁은 영안실에 갇혔습니다!",
-        next: [{ id: 'hospital_2a_stairs', weight: 1.0 }], // 강제 전투 후 계단으로 도주
+        next: [{ id: 'hospital_2a_stairs', weight: 1.0 }],
         effect: { target: 'RANDOM_HALF', hp: -20, infection: 10 }
     },
 
@@ -65,13 +64,13 @@ export const HOSPITAL_NODES: Record<string, StoryNode> = {
         id: 'hospital_3_nurse_station',
         text: "💉 3층 간호사 스테이션. 흩어진 차트들 사이에서 선택해야 합니다. 약제실로 갈까요, 아니면 옥상으로 갈까요?",
         next: [
-            { id: 'hospital_4_surgery', weight: 0.5 }, // 약제실 루트 (기존)
-            { id: 'hospital_4_roof', weight: 0.5 }     // 옥상 루트 (신규)
+            { id: 'hospital_4_surgery', weight: 0.4 },
+            { id: 'hospital_4_roof', weight: 0.4 },
+            { id: 'hospital_4_trap', weight: 0.2 }
         ],
         effect: { target: 'ALL', loot: ['붕대'] }
     },
     
-    // 신규 분기: 옥상
     'hospital_4_roof': {
         id: 'hospital_4_roof',
         text: "🚁 옥상으로 올라갑니다. 헬기 착륙장에 구조 신호를 보낼 수 있는 조명탄이 남아있을지도 모릅니다.",
@@ -113,7 +112,7 @@ export const HOSPITAL_NODES: Record<string, StoryNode> = {
         next: [{ id: 'hospital_6_win', weight: 1.0 }],
         effect: { target: 'ALL', loot: ['맥가이버 칼', '붕대'], sanity: 5 }
     },
-    'hospital_5_surgery_expert_nurse': { // Same as above
+    'hospital_5_surgery_expert_nurse': {
         id: 'hospital_5_surgery_expert_nurse',
         text: "💉 능숙한 솜씨로 좀비를 유인해 처리하고, 멸균된 붕대와 도구들을 챙겼습니다.",
         next: [{ id: 'hospital_6_win', weight: 1.0 }],

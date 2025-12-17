@@ -16,6 +16,11 @@ interface Props {
   onTogglePureLove: () => void; 
   restrictStudentDating: boolean;
   onToggleStudentDating: () => void;
+  friendshipMode: boolean; // New
+  onToggleFriendshipMode: () => void; // New
+  // Added restrictMinorAdultActions and onToggleRestrictMinorAdultActions to Props
+  restrictMinorAdultActions: boolean;
+  onToggleRestrictMinorAdultActions: () => void;
   developerMode: boolean; 
   onToggleDeveloperMode: () => void;
   useMentalStates: boolean;
@@ -62,6 +67,9 @@ const SystemMenu: React.FC<Props> = ({
     allowIncest, onToggleIncest,
     pureLoveMode, onTogglePureLove,
     restrictStudentDating, onToggleStudentDating,
+    friendshipMode, onToggleFriendshipMode,
+    // Added restrictMinorAdultActions and onToggleRestrictMinorAdultActions to destructuring
+    restrictMinorAdultActions, onToggleRestrictMinorAdultActions,
     developerMode, onToggleDeveloperMode,
     useMentalStates, onToggleMentalStates,
     allowInteractions, onToggleInteractions,
@@ -123,6 +131,13 @@ const SystemMenu: React.FC<Props> = ({
                     </h3>
                     <div className="grid grid-cols-1 gap-3">
                         <ToggleItem 
+                            label="우정 모드 (No Romance)" 
+                            desc="ON 설정 시 모든 캐릭터가 연애를 하지 않습니다." 
+                            checked={friendshipMode} 
+                            onChange={onToggleFriendshipMode} 
+                            colorClass="bg-blue-600" 
+                        />
+                        <ToggleItem 
                             label="학생 연애 제한 (Age Restriction)" 
                             desc="초/중/고등학생은 학생끼리만 연인이 됩니다." 
                             checked={restrictStudentDating} 
@@ -170,6 +185,14 @@ const SystemMenu: React.FC<Props> = ({
                         <span>🎮</span> 게임 플레이 시스템
                     </h3>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        {/* Added ToggleItem for restrictMinorAdultActions */}
+                        <ToggleItem 
+                            label="미성년자 부적절 행위 제한" 
+                            desc="초/중/고등학생의 술/담배 관련 묘사를 순화합니다." 
+                            checked={restrictMinorAdultActions} 
+                            onChange={onToggleRestrictMinorAdultActions} 
+                            colorClass="bg-orange-500" 
+                        />
                         <ToggleItem 
                             label="정신 상태 시스템" 
                             desc="트라우마, 광기 등 상태이상" 
@@ -321,8 +344,8 @@ const SystemMenu: React.FC<Props> = ({
                 </div>
 
                 <div className="text-center text-xs text-slate-400 dark:text-slate-500 mt-8">
-                    <p>Version 1.0.0</p>
-                    <p>Created by Dev</p>
+                    <p>Version 0.4.2</p>
+                    <p>Created by 김먁먁</p>
                 </div>
             </div>
           )}

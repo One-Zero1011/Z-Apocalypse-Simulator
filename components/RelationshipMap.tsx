@@ -93,6 +93,7 @@ const RelationshipMap: React.FC<Props> = ({ characters, onClose }) => {
     if (status === 'Lover') return { stroke: '#ec4899', width: isMobile ? 4 : 5, label: '연인', opacity: 1 }; // Pink
     
     if (status === 'Parent' || status === 'Child') return { stroke: '#f59e0b', width: isMobile ? 4 : 5, label: '가족(부모자식)', opacity: 1 }; // Amber
+    if (status === 'Guardian' || status === 'Ward') return { stroke: '#fbbf24', width: isMobile ? 4 : 5, label: '유사가족(보호)', opacity: 1 }; // Yellow-Amber
     if (status === 'Sibling') return { stroke: '#10b981', width: isMobile ? 4 : 5, label: '남매/형제', opacity: 1 }; // Emerald
     if (status === 'Family') return { stroke: '#eab308', width: isMobile ? 3 : 4, label: '친척', opacity: 1 }; // Yellow
     
@@ -131,6 +132,8 @@ const RelationshipMap: React.FC<Props> = ({ characters, onClose }) => {
           'Lover': '연인 ❤️', 
           'Parent': '부모 👪',
           'Child': '자식 🐣',
+          'Guardian': '보호자 🛡️',
+          'Ward': '피보호자 👧',
           'Sibling': '형제/자매 👫',
           'Family': '가족 🏠', 
           'BestFriend': '절친 🤞',
@@ -340,6 +343,7 @@ const RelationshipMap: React.FC<Props> = ({ characters, onClose }) => {
                         <div className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-pink-700"></span>부부</div>
                         <div className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-pink-500"></span>연인</div>
                         <div className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-amber-500"></span>부모자식</div>
+                        <div className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-yellow-400"></span>유사가족</div>
                         <div className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>남매/형제</div>
                         <div className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-yellow-500"></span>친척</div>
                         <div className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-blue-500"></span>절친</div>

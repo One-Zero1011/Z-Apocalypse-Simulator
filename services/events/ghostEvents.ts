@@ -1,3 +1,4 @@
+
 import { ActionEffect } from "../../types";
 
 export const GHOST_EVENTS: ((deadName: string, livingName: string) => ActionEffect)[] = [
@@ -12,13 +13,13 @@ export const GHOST_EVENTS: ((deadName: string, livingName: string) => ActionEffe
     }),
     (dead, living) => ({ 
         text: `👻 [유령] ${living}은(는) 꿈속에서 ${dead}이(가) 나타나 슬픈 표정으로 작별 인사를 하는 것을 보았습니다.`, 
-        sanity: 5, // Closure provides relief
+        sanity: 5, 
         fatigue: -5 
     }),
     (dead, living) => ({ 
         text: `👻 [유령] ${living}이(가) 위험에 처했을 때, 마치 ${dead}이(가) 밀쳐낸 것처럼 기적적으로 공격을 피했습니다.`, 
-        sanity: -5, // Scared but alive
-        hp: 5 // Avoided damage conceptually (small buff)
+        sanity: -5, 
+        hp: 5 
     }),
     (dead, living) => ({ 
         text: `👻 [유령] ${living}은(는) ${dead}이(가) 아끼던 물건이 갑자기 떨어진 것을 보고 소스라치게 놀랐습니다.`, 
@@ -36,7 +37,8 @@ export const GHOST_EVENTS: ((deadName: string, livingName: string) => ActionEffe
     (dead, living) => ({ 
         text: `👻 [유령] ${living}은(는) ${dead}의 환영이 가리키는 곳에서 쓸만한 물자를 발견했습니다.`, 
         sanity: -5, 
-        fatigue: -5 // Found resources ease burden
+        fatigue: -5,
+        loot: ['통조림'] // 텍스트에 맞춰 아이템 획득 데이터 추가
     }),
     (dead, living) => ({ 
         text: `👻 [유령] ${living}은(는) 거울에 비친 자신의 뒤에 ${dead}이(가) 서 있는 것을 보았습니다.`, 

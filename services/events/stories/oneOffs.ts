@@ -2,7 +2,11 @@
 import { StoryNode } from "../../../types";
 
 export const ONE_OFF_NODES: Record<string, StoryNode> = {
-    // --- 날씨 및 환경 (Weather & Environment) ---
+    'tarot_start': {
+        id: 'tarot_start',
+        text: "🃏 안개 낀 거리 한복판에 낡은 타로 천이 깔린 테이블이 놓여 있습니다. 누군가 방금 전까지 있었던 것처럼 촛불이 타오르고 있습니다. 운명의 카드가 우리를 기다립니다.",
+        effect: { target: 'ALL', sanity: -5 }
+    },
     'sunny_day': { 
         id: 'sunny_day', 
         text: "☀️ 구름 한 점 없는 맑은 날입니다. 젖은 옷을 말리고 장비를 정비하며 모처럼 평화로운 시간을 보냅니다.", 
@@ -25,7 +29,7 @@ export const ONE_OFF_NODES: Record<string, StoryNode> = {
     },
     'thunderstorm': {
         id: 'thunderstorm',
-        text: "⛈️ 천둥번개가 요란하게 치는 밤입니다. 굉음 때문에 좀비 소리를 듣지 못할까 봐 모두가 불안에 떱니다.",
+        text: "⛈️ 천둥번개가 요란하게 치는 밤입니다. 굉음 때문에 좀비 소리를 듣지 못할까 봐 모두가 불안에 니다.",
         effect: { target: 'ALL', sanity: -5, fatigue: 5 }
     },
     'full_moon': {
@@ -38,8 +42,6 @@ export const ONE_OFF_NODES: Record<string, StoryNode> = {
         text: "🌠 밤하늘에 별똥별이 떨어집니다. 잠시나마 지옥 같은 현실을 잊고 소원을 빌어봅니다.",
         effect: { target: 'ALL', sanity: 10 }
     },
-
-    // --- 분위기 및 상태 (Atmosphere & Status) ---
     'quiet_day': { 
         id: 'quiet_day', 
         text: "🤫 기묘할 정도로 고요한 하루입니다. 폭풍전야일까요? 아니면 잠시나마 신이 우리를 보살피는 걸까요?", 
@@ -60,8 +62,6 @@ export const ONE_OFF_NODES: Record<string, StoryNode> = {
         text: "😱 밤새 끔찍한 비명소리가 들려 모두가 잠을 설쳤습니다. 그것이 사람인지 짐승인지 알 수 없습니다.",
         effect: { target: 'ALL', sanity: -5, fatigue: 10 }
     },
-
-    // --- 소소한 발견 (Minor Discoveries) ---
     'old_music': {
         id: 'old_music',
         text: "🎵 배터리가 남은 낡은 MP3 플레이어를 발견했습니다. 흘러나오는 옛 노래가 모두의 마음을 적십니다.",
@@ -82,8 +82,6 @@ export const ONE_OFF_NODES: Record<string, StoryNode> = {
         text: "🐀 쥐 떼가 식량 창고를 습격했습니다! 급하게 쫓아냈지만 식량 일부가 오염되었습니다.",
         effect: { target: 'ALL', sanity: -5, inventoryRemove: ['통조림'] }
     },
-    
-    // Updated: Truck with Choice
     'abandoned_truck': {
         id: 'abandoned_truck',
         text: "🚚 갓길에 버려진 택배 트럭을 발견했습니다. 뒷문은 굳게 잠겨있습니다.",
@@ -98,13 +96,16 @@ export const ONE_OFF_NODES: Record<string, StoryNode> = {
         text: "🔧 전문 기술을 발휘해 소리 없이 문을 열었습니다. 안에는 유용한 물건들이 가득합니다!",
         effect: { target: 'ALL', loot: ['통조림', '통조림', '붕대'], sanity: 5 }
     },
-    'truck_lockpick_mech': { id: 'truck_lockpick', text: "🔧 전문 기술을 발휘해 소리 없이 문을 열었습니다. 안에는 유용한 물건들이 가득합니다!", effect: { target: 'ALL', loot: ['통조림', '통조림', '붕대'], sanity: 5 } },
+    'truck_lockpick_mech': { 
+        id: 'truck_lockpick_mech', 
+        text: "🔧 전문 기술을 발휘해 소리 없이 문을 열었습니다. 안에는 유용한 물건들이 가득합니다!", 
+        effect: { target: 'ALL', loot: ['통조림', '통조림', '붕대'], sanity: 5 } 
+    },
     'truck_force': {
         id: 'truck_force',
         text: "🔨 한참을 두드리고 부순 끝에 문을 열었습니다. 요란한 소리 때문에 서둘러 물건만 챙겨 떠납니다.",
         effect: { target: 'ALL', loot: ['통조림', '붕대'], fatigue: 15 }
     },
-
     'pharmacy_ruin': {
         id: 'pharmacy_ruin',
         text: "💊 약국 폐허의 금고가 열려있습니다. 누군가 털어가려다 실패한 것 같습니다. 안에는 귀한 백신과 약품이 그대로 있습니다!",
@@ -125,15 +126,11 @@ export const ONE_OFF_NODES: Record<string, StoryNode> = {
         text: "🔫 오늘은 이동을 멈추고 무기를 손질하고 장비를 점검하기로 했습니다. 준비된 상태가 마음을 편하게 합니다.",
         effect: { target: 'ALL', fatigue: 5, sanity: 5 }
     },
-    
-    // --- Dark Events ---
     'cannibal_meal': {
         id: 'cannibal_meal',
         text: "🍖 충격적인 광경을 목격했습니다. 누군가가 남기고 간 '고기'가 있습니다. 사람이었던 것 같습니다... 굶주림 앞에서는 선택의 여지가 없을지도 모릅니다.",
         effect: { target: 'ALL', sanity: -20, loot: ['인육', '인육'] }
     },
-
-    // --- Special Loot (High Value) ---
     'vaccine_drop': {
         id: 'vaccine_drop',
         text: "🚁 추락한 군용 드론의 잔해를 발견했습니다. 화물칸에 'Z-백신'이라고 적힌 앰플이 기적적으로 깨지지 않고 남아있습니다!",
@@ -157,12 +154,6 @@ export const ONE_OFF_NODES: Record<string, StoryNode> = {
         text: "👀 너무 위험해 보입니다. 아쉬움을 뒤로하고 조용히 자리를 뜹니다.",
         effect: { target: 'ALL', fatigue: 5 }
     },
-
-    // =========================================================================
-    // 신규 아이템 상호작용 이벤트 5종 (Item Interaction Events)
-    // =========================================================================
-
-    // 1. 잠긴 군용 보급상자 (맥가이버 칼 필요)
     'oneoff_locked_box': {
         id: 'oneoff_locked_box',
         text: "🔒 수풀 속에 숨겨진 군용 보급 상자를 발견했습니다. 열쇠 구멍은 녹슬었고, 틈새는 좁습니다.",
@@ -181,8 +172,6 @@ export const ONE_OFF_NODES: Record<string, StoryNode> = {
         text: "🔨 돌로 수십 번을 내리찍어 겨우 상자를 열었습니다. 그 과정에서 내용물 일부가 부서졌고, 소음을 듣고 좀비가 몰려와 급히 자리를 떴습니다.",
         effect: { target: 'ALL', loot: ['통조림'], fatigue: 15 }
     },
-
-    // 2. 안개 속의 갈림길 (지도 필요)
     'oneoff_confusing_path': {
         id: 'oneoff_confusing_path',
         text: "🌫️ 짙은 안개 때문에 방향 감각을 상실했습니다. 눈앞에 세 갈래 길이 나타났는데, 어디가 안전한지 알 수 없습니다.",
@@ -201,8 +190,6 @@ export const ONE_OFF_NODES: Record<string, StoryNode> = {
         text: "🌀 감을 믿고 이동했지만, 늪지대를 헤매며 체력만 낭비했습니다. 결국 제자리로 돌아왔습니다.",
         effect: { target: 'ALL', fatigue: 20, sanity: -5 }
     },
-
-    // 3. 광견(좀비견)의 습격 (권총 필요)
     'oneoff_zombie_dog': {
         id: 'oneoff_zombie_dog',
         text: "🐕르르릉... 덩치 큰 좀비견 세 마리가 좁은 골목길을 막아서고 침을 흘리고 있습니다. 도망칠 곳이 없습니다!",
@@ -221,8 +208,6 @@ export const ONE_OFF_NODES: Record<string, StoryNode> = {
         text: "⚔️ 무기를 들고 육탄전을 벌였습니다. 놈들을 처치했지만, 날카로운 이빨에 물리고 뜯겨 심한 상처를 입었습니다.",
         effect: { target: 'RANDOM_HALF', hp: -20, infection: 15, fatigue: 20 }
     },
-
-    // 4. 수수께끼의 주파수 (무전기 필요)
     'oneoff_faint_signal': {
         id: 'oneoff_faint_signal',
         text: "📡 버려진 통신탑 근처를 지나는데, 끊어진 전선들 사이에서 미세한 잡음이 들리는 것 같습니다.",
@@ -241,8 +226,6 @@ export const ONE_OFF_NODES: Record<string, StoryNode> = {
         text: "🔇 바람 소리겠거니 하고 지나쳤습니다. 무언가 중요한 기회를 놓친 것 같은 찜찜함이 남습니다.",
         effect: { target: 'ALL', fatigue: 5 }
     },
-
-    // 5. 끊긴 다리와 덩굴 (맥가이버 칼 필요)
     'oneoff_broken_bridge': {
         id: 'oneoff_broken_bridge',
         text: "🌉 협곡을 건너는 다리가 끊어져 있습니다. 반대편에는 안전한 쉼터가 보입니다. 주변에 튼튼해 보이는 덩굴 식물이 있습니다.",
@@ -257,7 +240,7 @@ export const ONE_OFF_NODES: Record<string, StoryNode> = {
         text: "🔪 맥가이버 칼의 톱날로 덩굴을 잘라 튼튼한 밧줄을 만들었습니다. 타잔처럼 줄을 타고 건너 시간을 대폭 단축했습니다.",
         effect: { target: 'ALL', fatigue: -15, sanity: 5 }
     },
-    'bridge_tech': { // Same effect
+    'bridge_tech': {
         id: 'bridge_tech',
         text: "🔧 주변의 자재를 모아 임시 다리를 뚝딱 만들어냈습니다. 모두가 안전하고 편하게 건넜습니다.",
         effect: { target: 'ALL', fatigue: -15, sanity: 5 }

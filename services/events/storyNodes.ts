@@ -45,6 +45,7 @@ export const STARTER_NODE_IDS = [
     'amusement_0_start', 
     
     // One-offs (Environmental/Atmospheric) (15)
+    'tarot_start', // 신규 타로 이벤트
     'sunny_day',
     'foggy_day',
     'heavy_rain',

@@ -7,10 +7,11 @@ interface Props {
   character: Character;
   allCharacters: Character[];
   onDelete: (id: string) => void;
-  onEdit?: (character: Character) => void; // New prop
+  onEdit?: (character: Character) => void; 
+  onPlan?: (character: Character) => void; // New prop for planning
 }
 
-const CharacterCard: React.FC<Props> = ({ character, allCharacters, onDelete, onEdit }) => {
+const CharacterCard: React.FC<Props> = ({ character, allCharacters, onDelete, onEdit, onPlan }) => {
   const [isExpanded, setIsExpanded] = useState(false);
   
   const isDead = character.status === 'Dead' || character.status === 'Missing';
@@ -45,6 +46,19 @@ const CharacterCard: React.FC<Props> = ({ character, allCharacters, onDelete, on
   const visibleRelationships = isExpanded ? allRelationships : allRelationships.slice(0, 3);
   const hiddenCount = allRelationships.length - 3;
 
+  const getPlannedActionLabel = (action?: string | null) => {
+    switch (action) {
+      case 'rest': return '휴식 대기';
+      case 'scavenge': return '수색 대기';
+      case 'fortify': return '보수 대기';
+      case 'meditate': return '명상 대기';
+      case 'patrol': return '섬멸 대기';
+      default: return null;
+    }
+  };
+
+  const plannedLabel = getPlannedActionLabel(character.plannedAction);
+
   return (
     <div className={`border p-4 rounded-lg shadow-sm hover:shadow-md transition-all ${getStatusColor()} relative overflow-hidden group`}>
       {isDead && (
@@ -60,7 +74,7 @@ const CharacterCard: React.FC<Props> = ({ character, allCharacters, onDelete, on
               {isZombie && <span title="좀비" className="text-xl">🧟</span>}
               {character.hasMuzzle && <span title="입마개 착용" className="text-sm">😷</span>}
               {!isZombie && (hasStatus('Lover') || hasStatus('Spouse')) && <span title="연인/배우자 있음" className="text-sm cursor-help">❤️</span>}
-              {!isZombie && (hasStatus('Child') || hasStatus('Parent')) && <span title="가족 있음" className="text-sm cursor-help">👪</span>}
+              {!isZombie && (hasStatus('Child') || hasStatus('Parent') || hasStatus('Guardian') || hasStatus('Ward')) && <span title="가족/유사가족 있음" className="text-sm cursor-help">👪</span>}
               {!isZombie && isExhausted && !isDead && <span title="탈진 상태" className="text-sm animate-pulse">💤</span>}
               {!isZombie && hasMentalIllness && !isDead && <span title="정신 이상" className="text-sm animate-pulse">🧠</span>}
           </h3>
@@ -72,16 +86,30 @@ const CharacterCard: React.FC<Props> = ({ character, allCharacters, onDelete, on
                     {character.job}
                 </span>
             )}
-            {!isZombie && hasMentalIllness && (
-                <span className="bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-300 px-1.5 rounded font-bold">{mentalState}</span>
-            )}
-            {isZombie && (
-                 <span className="bg-green-100 text-green-700 dark:bg-green-900/50 dark:text-green-300 px-1.5 rounded font-bold">ZOMBIE</span>
+            {plannedLabel && (
+              <span className="bg-zombie-green/20 text-lime-700 dark:text-zombie-green px-1.5 rounded font-bold border border-zombie-green/30 animate-pulse">
+                📌 {plannedLabel}
+              </span>
             )}
           </div>
         </div>
         <div className="text-right text-xs flex flex-col items-end gap-1 relative z-20">
             <div className="flex gap-1">
+                {onPlan && !isDead && !isZombie && (
+                    <button 
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            onPlan(character);
+                        }}
+                        className="text-slate-400 hover:text-zombie-green p-1.5 rounded-full hover:bg-lime-50 dark:hover:bg-lime-900/20 transition-colors"
+                        title="행동 계획 설정"
+                    >
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 0 0 2.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 0 0-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .415.139.797.373 1.1a2.25 2.25 0 0 0 1.833 1.258 2.25 2.25 0 0 0 1.833-1.258 2.25 2.25 0 0 0 .373-1.1c0-.231-.035-.454-.1-.664m-5.801 0a4.224 4.224 0 0 1 5.801 0M7.5 10.5h6.462c.969 0 1.885.474 2.448 1.272l1.322 1.872a.75.75 0 0 1-.165 1.05l-1.056.733a.75.75 0 0 1-1.05-.165l-1.322-1.872a.75.75 0 0 0-.612-.318H7.5V10.5Z" />
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 4.5h-.75A2.25 2.25 0 0 0 3.75 6.75v12A2.25 2.25 0 0 0 6 21h12a2.25 2.25 0 0 0 2.25-2.25v-12A2.25 2.25 0 0 0 18 4.5h-.75" />
+                        </svg>
+                    </button>
+                )}
                 {onEdit && (
                     <button 
                         onClick={(e) => {
@@ -213,6 +241,8 @@ const CharacterCard: React.FC<Props> = ({ character, allCharacters, onDelete, on
                         {status === 'Parent' && '👪'}
                         {status === 'Child' && '🐣'}
                         {status === 'Sibling' && '👫'}
+                        {status === 'Guardian' && '🛡️'}
+                        {status === 'Ward' && '👧'}
                         {status === 'BestFriend' && '🤝'}
                         {status === 'Colleague' && '💼'}
                         {status === 'Rival' && '⚔️'}

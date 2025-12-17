@@ -8,6 +8,7 @@ interface Props {
   disabled?: boolean;
   existingCharacters?: Character[];
   useMentalStates?: boolean;
+  friendshipMode?: boolean; // New prop
 }
 
 // Random Generation Data
@@ -15,7 +16,7 @@ const SURNAMES = ['김', '이', '박', '최', '정', '강', '조', '윤', '장',
 const MALE_NAMES = ['민준', '서준', '도윤', '예준', '시우', '하준', '지호', '지후', '준우', '현우', '도현', '지훈', '건우', '우진', '선우', '서진', '민재', '연우', '유준', '정우'];
 const FEMALE_NAMES = ['서연', '서윤', '지우', '서현', '하은', '민서', '지유', '윤서', '채원', '지아', '지민', '서아', '다은', '예은', '수아', '지안', '소율', '예린', '하윤', '지원'];
 
-const CharacterForm: React.FC<Props> = ({ onAdd, disabled, existingCharacters = [], useMentalStates = true }) => {
+const CharacterForm: React.FC<Props> = ({ onAdd, disabled, existingCharacters = [], useMentalStates = true, friendshipMode = false }) => {
   const [name, setName] = useState('');
   const [gender, setGender] = useState<Gender>('Male');
   const [mbti, setMbti] = useState<MBTI>('ISTJ');
@@ -82,6 +83,8 @@ const CharacterForm: React.FC<Props> = ({ onAdd, disabled, existingCharacters = 
           case 'Child': return '자식 (+80)';
           case 'Parent': return '부모 (+80)';
           case 'Sibling': return '형제/자매 (+70)';
+          case 'Guardian': return '보호자 (+80)';
+          case 'Ward': return '피보호자 (+80)';
           case 'Lover': return '연인 (+80)';
           case 'Family': return '가족/친척 (+60)';
           case 'BestFriend': return '절친 (+60)';
@@ -97,6 +100,10 @@ const CharacterForm: React.FC<Props> = ({ onAdd, disabled, existingCharacters = 
 
   const livingCharacters = existingCharacters.filter(c => c.status !== 'Dead' && c.status !== 'Missing');
   const availableTargets = livingCharacters.filter(c => !pendingRelations.some(r => r.targetId === c.id));
+
+  // 초등학생, 중학생 결혼 제한 로직
+  const targetJob = livingCharacters.find(c => c.id === tempTargetId)?.job || '';
+  const isMarriageForbidden = ['초등학생', '중학생'].includes(job) || ['초등학생', '중학생'].includes(targetJob);
 
   return (
     <form onSubmit={handleSubmit} className="bg-white dark:bg-slate-800 p-4 rounded-lg border border-slate-200 dark:border-slate-700 shadow-md">
@@ -241,14 +248,16 @@ const CharacterForm: React.FC<Props> = ({ onAdd, disabled, existingCharacters = 
                             disabled={!tempTargetId || disabled}
                         >
                             <optgroup label="가족 (Family)">
-                                <option value="Spouse">부부 (Spouse)</option>
+                                {!friendshipMode && !isMarriageForbidden && <option value="Spouse">부부 (Spouse)</option>}
                                 <option value="Child">자식 (Child)</option>
                                 <option value="Parent">부모 (Parent)</option>
                                 <option value="Sibling">형제/자매 (Sibling)</option>
+                                <option value="Guardian">보호자 (Guardian)</option>
+                                <option value="Ward">피보호자 (Ward)</option>
                                 <option value="Family">친척/기타 가족</option>
                             </optgroup>
                             <optgroup label="사회 (Social)">
-                                <option value="Lover">연인 (Lover)</option>
+                                {!friendshipMode && <option value="Lover">연인 (Lover)</option>}
                                 <option value="BestFriend">절친 (Best Friend)</option>
                                 <option value="Friend">친구 (Friend)</option>
                                 <option value="Colleague">동료 (Colleague)</option>
@@ -256,7 +265,7 @@ const CharacterForm: React.FC<Props> = ({ onAdd, disabled, existingCharacters = 
                             </optgroup>
                             <optgroup label="적대 (Hostile)">
                                 <option value="Rival">라이벌 (Rival)</option>
-                                <option value="Ex">전 애인 (Ex)</option>
+                                {!friendshipMode && <option value="Ex">전 애인 (Ex)</option>}
                                 <option value="Enemy">원수 (Enemy)</option>
                             </optgroup>
                         </select>

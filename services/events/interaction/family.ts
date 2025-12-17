@@ -50,3 +50,24 @@ export const CHILD_TO_PARENT_EVENTS: InteractionFunction[] = [
     (a: string, b: string) => ({ text: `${a}은(는) ${b}의 손을 꼭 잡고 "우린 절대 안 헤어질 거지?"라고 확인했습니다.`, affinity: 5, actorSanity: 2 }),
     (a: string, b: string) => ({ text: `${a}은(는) ${b}가 지쳐 보이자 조용히 옆에 앉아 곁을 지켰습니다.`, affinity: 10, targetSanity: 5 })
 ];
+
+// 보호자 -> 피보호자 (Guardian Actor -> Ward Target)
+export const GUARDIAN_TO_WARD_EVENTS: InteractionFunction[] = [
+    (a: string, b: string) => ({ text: `${a}은(는) ${b}의 안전을 최우선으로 생각하며 주변을 경계했습니다.`, affinity: 10 }),
+    (a: string, b: string) => ({ text: `${a}은(는) ${b}에게 "내가 있는 한 넌 안전해"라고 단호하게 말했습니다.`, affinity: 10, targetSanity: 5 }),
+    (a: string, b: string) => ({ text: `${a}은(는) ${b}의 서툰 생존 방식을 묵묵히 지켜보며 뒤에서 도와주었습니다.`, affinity: 5 }),
+    (a: string, b: string) => ({ text: `${a}은(는) 험악한 세상에서 ${b}의 순수함을 지켜주고 싶어했습니다.`, affinity: 5, targetSanity: 5 }),
+    (a: string, b: string) => ({ text: `${a}은(는) ${b}가 위험에 처하자 앞뒤 가리지 않고 뛰어들었습니다.`, affinity: 15, actorHp: -5 }),
+    (a: string, b: string) => ({ text: `${a}은(는) ${b}를 위해 은밀하게 더 나은 잠자리를 마련해주었습니다.`, affinity: 8, targetFatigue: -5 }),
+    (a: string, b: string) => ({ text: `${a}은(는) 피보호자인 ${b}에게 생존에 필요한 가장 기본적인 기술들을 반복해서 가르쳤습니다.`, affinity: 5, targetFatigue: 5 })
+];
+
+// 피보호자 -> 보호자 (Ward Actor -> Guardian Target)
+export const WARD_TO_GUARDIAN_EVENTS: InteractionFunction[] = [
+    (a: string, b: string) => ({ text: `${a}은(는) 불안할 때마다 ${b}의 옷자락을 붙잡으며 안정을 찾았습니다.`, affinity: 10, actorSanity: 5 }),
+    (a: string, b: string) => ({ text: `${a}은(는) ${b}를 절대적으로 신뢰하며 모든 결정을 맡겼습니다.`, affinity: 5 }),
+    (a: string, b: string) => ({ text: `${a}은(는) 지친 ${b}에게 자신이 아끼던 물건을 빌려주었습니다.`, affinity: 8, targetSanity: 5 }),
+    (a: string, b: string) => ({ text: `${a}은(는) ${b}의 뒤를 따르며 "나도 당신처럼 듬직한 사람이 되고 싶어요"라고 말했습니다.`, affinity: 10 }),
+    (a: string, b: string) => ({ text: `${a}은(는) ${b}에게 도움이 되기 위해 몰래 무기 연습을 했습니다.`, affinity: 5, actorFatigue: 5 }),
+    (a: string, b: string) => ({ text: `${a}은(는) ${b}가 잠들 때까지 그 곁을 지키며 감사를 느꼈습니다.`, affinity: 5 })
+];

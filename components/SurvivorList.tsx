@@ -6,10 +6,11 @@ import CharacterCard from './CharacterCard';
 interface Props {
     characters: Character[];
     onDelete: (id: string) => void;
-    onEdit?: (character: Character) => void; // New prop
+    onEdit?: (character: Character) => void; 
+    onPlan?: (character: Character) => void; // New prop
 }
 
-const SurvivorList: React.FC<Props> = ({ characters, onDelete, onEdit }) => {
+const SurvivorList: React.FC<Props> = ({ characters, onDelete, onEdit, onPlan }) => {
     return (
         <div>
             <h2 className="text-2xl font-bold mb-4 text-slate-800 dark:text-slate-200 flex items-center gap-2">
@@ -24,6 +25,7 @@ const SurvivorList: React.FC<Props> = ({ characters, onDelete, onEdit }) => {
                         allCharacters={characters}
                         onDelete={onDelete}
                         onEdit={onEdit}
+                        onPlan={onPlan}
                     />
                 ))}
             </div>

@@ -8,17 +8,16 @@ interface Props {
     allCharacters: Character[];
     onSave: (updatedChar: Character, relationshipUpdates: { targetId: string, status: RelationshipStatus, affinity: number }[]) => void;
     onClose: () => void;
+    friendshipMode?: boolean; // New prop added
 }
 
-const EditCharacterModal: React.FC<Props> = ({ character, allCharacters, onSave, onClose }) => {
+const EditCharacterModal: React.FC<Props> = ({ character, allCharacters, onSave, onClose, friendshipMode = false }) => {
     const [name, setName] = useState(character.name);
     const [gender, setGender] = useState<Gender>(character.gender);
     const [mbti, setMbti] = useState<MBTI>(character.mbti);
     const [job, setJob] = useState(character.job || '');
     const [mentalState, setMentalState] = useState<MentalState>(character.mentalState || 'Normal');
     
-    // Manage relationships for editing
-    // isFixed: true for relationships that existed before opening the modal
     const [relations, setRelations] = useState<{ targetId: string, status: RelationshipStatus, affinity: number, isFixed: boolean }[]>([]);
 
     useEffect(() => {
@@ -26,7 +25,7 @@ const EditCharacterModal: React.FC<Props> = ({ character, allCharacters, onSave,
             targetId,
             status: character.relationshipStatuses[targetId] || 'None',
             affinity: character.relationships[targetId] || 0,
-            isFixed: true // Mark existing relationships as fixed
+            isFixed: true 
         }));
         setRelations(initialRelations);
     }, [character]);
@@ -43,7 +42,6 @@ const EditCharacterModal: React.FC<Props> = ({ character, allCharacters, onSave,
     };
 
     const handleAddRelation = () => {
-        // Find a character not already in relations and not self
         const availableTargets = allCharacters.filter(c => 
             c.id !== character.id && !relations.some(r => r.targetId === c.id)
         );
@@ -53,7 +51,7 @@ const EditCharacterModal: React.FC<Props> = ({ character, allCharacters, onSave,
                 targetId: availableTargets[0].id, 
                 status: 'Friend', 
                 affinity: 30,
-                isFixed: false // New relations are editable
+                isFixed: false 
             }]);
         } else {
             alert("더 이상 관계를 추가할 대상이 없습니다.");
@@ -75,9 +73,7 @@ const EditCharacterModal: React.FC<Props> = ({ character, allCharacters, onSave,
             mbti,
             job,
             mentalState,
-            // We don't update relationships directly here, App.tsx handles the sync
         };
-        // Pass relations (extra isFixed prop is harmless)
         onSave(updatedChar, relations);
     };
 
@@ -101,7 +97,6 @@ const EditCharacterModal: React.FC<Props> = ({ character, allCharacters, onSave,
                 <div className="p-6 overflow-y-auto">
                     <form onSubmit={handleSubmit} className="space-y-4">
                         
-                        {/* Basic Info */}
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div>
                                 <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-1">이름</label>
@@ -126,7 +121,6 @@ const EditCharacterModal: React.FC<Props> = ({ character, allCharacters, onSave,
                                             ))}
                                         </optgroup>
                                     ))}
-                                    {/* 만약 기존 직업이 목록에 없다면 표시 */}
                                     {job && !Object.values(JOB_CATEGORIES).flat().includes(job) && (
                                         <option value={job}>{job} (기존 직업)</option>
                                     )}
@@ -170,7 +164,6 @@ const EditCharacterModal: React.FC<Props> = ({ character, allCharacters, onSave,
 
                         <hr className="border-slate-200 dark:border-slate-700" />
 
-                        {/* Relationships */}
                         <div>
                             <div className="flex justify-between items-center mb-2">
                                 <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">관계 설정 (호감도는 수정 불가)</label>
@@ -180,64 +173,71 @@ const EditCharacterModal: React.FC<Props> = ({ character, allCharacters, onSave,
                             </div>
                             
                             <div className="space-y-2 max-h-40 overflow-y-auto pr-1">
-                                {relations.map((rel, idx) => (
-                                    <div key={idx} className={`flex gap-2 items-center p-2 rounded border ${rel.isFixed ? 'bg-gray-100 dark:bg-slate-800 border-gray-200 dark:border-slate-700' : 'bg-slate-50 dark:bg-slate-700/50 border-slate-200 dark:border-slate-600'}`}>
-                                        <select 
-                                            value={rel.targetId} 
-                                            onChange={(e) => handleTargetChange(idx, e.target.value)}
-                                            className="flex-1 text-xs p-1 rounded border bg-white dark:bg-slate-800 dark:border-slate-600 dark:text-white disabled:bg-gray-100 dark:disabled:bg-slate-900 disabled:text-gray-500"
-                                            disabled={rel.isFixed}
-                                        >
-                                            {availableTargets.map(t => (
-                                                <option key={t.id} value={t.id} disabled={relations.some((r, i) => i !== idx && r.targetId === t.id)}>{t.name}</option>
-                                            ))}
-                                        </select>
-                                        
-                                        <select 
-                                            value={rel.status} 
-                                            onChange={(e) => handleRelationChange(idx, 'status', e.target.value)}
-                                            className="w-24 text-xs p-1 rounded border bg-white dark:bg-slate-800 dark:border-slate-600 dark:text-white"
-                                        >
-                                            <option value="None">관계없음</option>
-                                            <optgroup label="긍정">
-                                                <option value="Friend">친구</option>
-                                                <option value="BestFriend">절친</option>
-                                                <option value="Colleague">동료</option>
-                                                <option value="Savior">은인</option>
-                                                <option value="Lover">연인</option>
-                                                <option value="Spouse">부부</option>
-                                            </optgroup>
-                                            <optgroup label="가족">
-                                                <option value="Family">가족</option>
-                                                <option value="Parent">부모</option>
-                                                <option value="Child">자식</option>
-                                                <option value="Sibling">형제/자매</option>
-                                            </optgroup>
-                                            <optgroup label="부정">
-                                                <option value="Rival">라이벌</option>
-                                                <option value="Ex">전 애인</option>
-                                                <option value="Enemy">원수</option>
-                                            </optgroup>
-                                        </select>
+                                {relations.map((rel, idx) => {
+                                    const targetCharJob = allCharacters.find(c => c.id === rel.targetId)?.job || '';
+                                    const isMarriageForbidden = ['초등학생', '중학생'].includes(job) || ['초등학생', '중학생'].includes(targetCharJob);
 
-                                        <input 
-                                            type="number" 
-                                            value={rel.affinity} 
-                                            onChange={(e) => handleRelationChange(idx, 'affinity', parseInt(e.target.value))}
-                                            className="w-14 text-xs p-1 rounded border bg-white dark:bg-slate-800 dark:border-slate-600 dark:text-white text-center disabled:bg-gray-100 dark:disabled:bg-slate-900 disabled:text-gray-500"
-                                            placeholder="호감도"
-                                            disabled={rel.isFixed}
-                                        />
+                                    return (
+                                        <div key={idx} className={`flex gap-2 items-center p-2 rounded border ${rel.isFixed ? 'bg-gray-100 dark:bg-slate-800 border-gray-200 dark:border-slate-700' : 'bg-slate-50 dark:bg-slate-700/50 border-slate-200 dark:border-slate-600'}`}>
+                                            <select 
+                                                value={rel.targetId} 
+                                                onChange={(e) => handleTargetChange(idx, e.target.value)}
+                                                className="flex-1 text-xs p-1 rounded border bg-white dark:bg-slate-800 dark:border-slate-600 dark:text-white disabled:bg-gray-100 dark:disabled:bg-slate-900 disabled:text-gray-500"
+                                                disabled={rel.isFixed}
+                                            >
+                                                {availableTargets.map(t => (
+                                                    <option key={t.id} value={t.id} disabled={relations.some((r, i) => i !== idx && r.targetId === t.id)}>{t.name}</option>
+                                                ))}
+                                            </select>
+                                            
+                                            <select 
+                                                value={rel.status} 
+                                                onChange={(e) => handleRelationChange(idx, 'status', e.target.value)}
+                                                className="w-24 text-xs p-1 rounded border bg-white dark:bg-slate-800 dark:border-slate-600 dark:text-white"
+                                            >
+                                                <option value="None">관계없음</option>
+                                                <optgroup label="긍정">
+                                                    <option value="Friend">친구</option>
+                                                    <option value="BestFriend">절친</option>
+                                                    <option value="Colleague">동료</option>
+                                                    <option value="Savior">은인</option>
+                                                    {!friendshipMode && <option value="Lover">연인</option>}
+                                                    {!friendshipMode && !isMarriageForbidden && <option value="Spouse">부부</option>}
+                                                </optgroup>
+                                                <optgroup label="가족">
+                                                    <option value="Family">가족</option>
+                                                    <option value="Parent">부모</option>
+                                                    <option value="Child">자식</option>
+                                                    <option value="Sibling">형제/자매</option>
+                                                    <option value="Guardian">보호자</option>
+                                                    <option value="Ward">피보호자</option>
+                                                </optgroup>
+                                                <optgroup label="부정">
+                                                    <option value="Rival">라이벌</option>
+                                                    {!friendshipMode && <option value="Ex">전 애인</option>}
+                                                    <option value="Enemy">원수</option>
+                                                </optgroup>
+                                            </select>
 
-                                        {!rel.isFixed ? (
-                                            <button type="button" onClick={() => handleRemoveRelation(idx)} className="text-red-500 hover:text-red-700 px-1">
-                                                ×
-                                            </button>
-                                        ) : (
-                                            <span className="px-1 text-gray-400 text-xs cursor-not-allowed" title="초기 관계는 삭제/대상변경/호감도수정 불가">🔒</span>
-                                        )}
-                                    </div>
-                                ))}
+                                            <input 
+                                                type="number" 
+                                                value={rel.affinity} 
+                                                onChange={(e) => handleRelationChange(idx, 'affinity', parseInt(e.target.value))}
+                                                className="w-14 text-xs p-1 rounded border bg-white dark:bg-slate-800 dark:border-slate-600 dark:text-white text-center disabled:bg-gray-100 dark:disabled:bg-slate-900 disabled:text-gray-500"
+                                                placeholder="호감도"
+                                                disabled={rel.isFixed}
+                                            />
+
+                                            {!rel.isFixed ? (
+                                                <button type="button" onClick={() => handleRemoveRelation(idx)} className="text-red-500 hover:text-red-700 px-1">
+                                                    ×
+                                                </button>
+                                            ) : (
+                                                <span className="px-1 text-gray-400 text-xs cursor-not-allowed" title="초기 관계는 삭제/대상변경/호감도수정 불가">🔒</span>
+                                            )}
+                                        </div>
+                                    );
+                                })}
                                 {relations.length === 0 && <p className="text-xs text-slate-400 text-center py-2">설정된 관계가 없습니다.</p>}
                             </div>
                         </div>

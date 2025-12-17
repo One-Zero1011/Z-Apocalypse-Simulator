@@ -15,7 +15,7 @@ interface Props {
   availableItems: string[];
 }
 
-type TabType = 'STORY' | 'MBTI' | 'INTERACTION' | 'STATS' | 'ITEMS';
+type TabType = 'STORY' | 'MBTI' | 'INTERACTION' | 'JOB' | 'SYSTEM' | 'STATS' | 'ITEMS';
 
 const DeveloperMenu: React.FC<Props> = ({ onClose, forcedEvents, setForcedEvents, characters, onUpdateCharacter, onAddInventory, availableItems }) => {
   const [mainTab, setMainTab] = useState<TabType>('STORY');
@@ -24,17 +24,19 @@ const DeveloperMenu: React.FC<Props> = ({ onClose, forcedEvents, setForcedEvents
   // Selection Modal State
   const [selectionModal, setSelectionModal] = useState<{
       isOpen: boolean;
-      type: 'MBTI' | 'INTERACTION';
+      type: ForcedEvent['type'];
       key: string;
       index: number;
       preview: string;
       requiredMbti?: string;
+      requiredJob?: string;
   } | null>(null);
 
   const [selectedActor, setSelectedActor] = useState<string>('');
   const [selectedTarget, setSelectedTarget] = useState<string>('');
 
   const activeCharacters = characters.filter(c => c.status !== 'Dead' && c.status !== 'Missing');
+  const deadCharacters = characters.filter(c => c.status === 'Dead');
 
   // --- Handlers ---
   const handleStorySelect = (id: string, text: string) => {
@@ -46,30 +48,49 @@ const DeveloperMenu: React.FC<Props> = ({ onClose, forcedEvents, setForcedEvents
       });
   };
 
-  const openSelectionModal = (type: 'MBTI' | 'INTERACTION', key: string, index: number, preview: string) => {
-      setSelectionModal({ isOpen: true, type, key, index, preview, requiredMbti: type === 'MBTI' ? key : undefined });
+  const openSelectionModal = (type: ForcedEvent['type'], key: string, index: number, preview: string) => {
+      setSelectionModal({ 
+        isOpen: true, 
+        type, 
+        key, 
+        index, 
+        preview, 
+        requiredMbti: type === 'MBTI' ? key : undefined,
+        requiredJob: type === 'JOB' ? key : undefined
+      });
       setSelectedActor('');
       setSelectedTarget('');
   };
 
   const confirmSelection = () => {
-      if (!selectionModal || !selectedActor) return;
+      if (!selectionModal) return;
+      if (!selectedActor && selectionModal.type !== 'SYSTEM') return;
       
       const actorName = characters.find(c => c.id === selectedActor)?.name || 'Unknown';
-      let previewText = `[${selectionModal.key}] ${actorName}`;
+      let previewText = `[${selectionModal.key}] ${actorName || '시스템'}`;
+      
       if (selectionModal.type === 'INTERACTION' && selectedTarget) {
           const targetName = characters.find(c => c.id === selectedTarget)?.name || 'Target';
           previewText += ` -> ${targetName}`;
       }
-      previewText += `: ${selectionModal.preview.substring(0, 20)}...`;
+
+      if (selectionModal.key === 'GHOST' && selectedTarget) {
+          const targetName = characters.find(c => c.id === selectedTarget)?.name || 'Target';
+          previewText = `[유령] ${actorName} -> ${targetName}`;
+      }
+
+      if (selectionModal.key === 'PREGNANCY' && selectedTarget) {
+          const targetName = characters.find(c => c.id === selectedTarget)?.name || 'Target';
+          previewText = `[임신] ${actorName} + ${targetName}`;
+      }
 
       setForcedEvents(prev => [...prev, {
           type: selectionModal.type,
           key: selectionModal.key,
           index: selectionModal.index,
-          actorId: selectedActor,
+          actorId: selectedActor || undefined,
           targetId: selectedTarget || undefined,
-          previewText
+          previewText: `${previewText}: ${selectionModal.preview.substring(0, 15)}...`
       }]);
       setSelectionModal(null);
   };
@@ -87,16 +108,17 @@ const DeveloperMenu: React.FC<Props> = ({ onClose, forcedEvents, setForcedEvents
       }
   };
 
-  // Find active story id to highlight
   const activeStoryId = forcedEvents.find(e => e.type === 'STORY')?.key;
 
   const getTabLabel = (tab: TabType) => {
       switch(tab) {
           case 'STORY': return '스토리';
-          case 'MBTI': return '성격(MBTI)';
-          case 'INTERACTION': return '상호작용';
+          case 'MBTI': return '성격';
+          case 'INTERACTION': return '관계';
+          case 'JOB': return '직업';
+          case 'SYSTEM': return '시스템';
           case 'STATS': return '스탯';
-          case 'ITEMS': return '아이템';
+          case 'ITEMS': return '템';
           default: return tab;
       }
   };
@@ -107,43 +129,24 @@ const DeveloperMenu: React.FC<Props> = ({ onClose, forcedEvents, setForcedEvents
         
         {/* Header */}
         <div className="bg-slate-900 p-4 border-b border-slate-700 flex justify-between items-center shrink-0">
-            <h2 className="text-xl font-bold text-zombie-green flex items-center gap-2 font-mono">
-              🛠️ 이벤트 제어 (Event Controller)
+            <h2 className="text-xl font-bold text-zombie-green flex items-center gap-2 font-mono text-sm md:text-xl">
+              🛠️ 디버그 센터
             </h2>
             <button onClick={onClose} className="text-slate-400 hover:text-white transition-colors bg-slate-800 p-2 rounded-lg">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-6 h-6">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                </svg>
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
             </button>
         </div>
 
-        {/* Selected Events Queue */}
+        {/* Queue */}
         <div className="bg-slate-100 dark:bg-slate-800 p-2 border-b border-slate-200 dark:border-slate-700 shrink-0">
-            <div className="flex justify-between items-center mb-1 px-1">
-                <span className="text-xs font-bold uppercase text-slate-500 dark:text-slate-400">
-                    다음 턴 강제 이벤트 대기열 ({forcedEvents.length})
-                </span>
-                {forcedEvents.length > 0 && (
-                    <button onClick={() => setForcedEvents([])} className="text-[10px] text-red-500 hover:text-red-700 underline">
-                        전체 삭제
-                    </button>
-                )}
-            </div>
-            
             <div className="flex gap-2 overflow-x-auto pb-1 min-h-[40px] items-center">
                 {forcedEvents.length === 0 ? (
-                    <span className="text-sm text-slate-400 dark:text-slate-600 px-2 italic">
-                        -- 강제 이벤트 없음 (기본 시뮬레이션 진행) --
-                    </span>
+                    <span className="text-xs text-slate-400 dark:text-slate-600 px-2">-- 대기 중인 이벤트 없음 --</span>
                 ) : (
                     forcedEvents.map((ev, idx) => (
-                        <div key={idx} className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-mono whitespace-nowrap shadow-sm border ${
-                            ev.type === 'STORY' ? 'bg-blue-100 text-blue-800 border-blue-200 dark:bg-blue-900/40 dark:text-blue-200 dark:border-blue-700' :
-                            ev.type === 'MBTI' ? 'bg-purple-100 text-purple-800 border-purple-200 dark:bg-purple-900/40 dark:text-purple-200 dark:border-purple-700' :
-                            'bg-pink-100 text-pink-800 border-pink-200 dark:bg-pink-900/40 dark:text-pink-200 dark:border-pink-700'
-                        }`}>
-                            <span className="font-bold">{ev.type}</span>
-                            <span className="opacity-75 truncate max-w-[150px]">{ev.previewText || ev.key}</span>
+                        <div key={idx} className="flex items-center gap-2 px-3 py-1 bg-white dark:bg-slate-700 rounded-full text-[10px] whitespace-nowrap shadow-sm border border-slate-200 dark:border-slate-600">
+                            <span className="font-bold text-blue-500">{ev.type}</span>
+                            <span className="opacity-75 truncate max-w-[120px]">{ev.previewText || ev.key}</span>
                             <button onClick={() => removeEvent(idx)} className="ml-1 hover:text-red-600 font-bold">×</button>
                         </div>
                     ))
@@ -152,12 +155,12 @@ const DeveloperMenu: React.FC<Props> = ({ onClose, forcedEvents, setForcedEvents
         </div>
 
         {/* Tabs Navigation */}
-        <div className="flex border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 shrink-0">
-            {(['STORY', 'MBTI', 'INTERACTION', 'STATS', 'ITEMS'] as TabType[]).map(tab => (
+        <div className="flex overflow-x-auto border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 shrink-0">
+            {(['STORY', 'MBTI', 'INTERACTION', 'JOB', 'SYSTEM', 'STATS', 'ITEMS'] as TabType[]).map(tab => (
                 <button
                     key={tab}
                     onClick={() => setMainTab(tab)}
-                    className={`flex-1 py-3 text-sm font-bold tracking-wide transition-colors ${
+                    className={`flex-1 min-w-[60px] py-3 text-[11px] md:text-sm font-bold transition-colors ${
                         mainTab === tab 
                         ? 'bg-white dark:bg-slate-800 text-blue-600 dark:text-blue-400 border-b-2 border-blue-500' 
                         : 'text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200'
@@ -168,95 +171,54 @@ const DeveloperMenu: React.FC<Props> = ({ onClose, forcedEvents, setForcedEvents
             ))}
         </div>
 
-        {/* --- Content Area --- */}
         <div className="flex-1 overflow-hidden relative">
-            
-            {/* Event Lists (Story, MBTI, Interaction) */}
-            {(mainTab === 'STORY' || mainTab === 'MBTI' || mainTab === 'INTERACTION') && (
-                <DevEventLists 
-                    type={mainTab} 
-                    activeId={activeStoryId} 
-                    onSelectStory={handleStorySelect} 
-                    onOpenModal={openSelectionModal} 
-                />
-            )}
+            <DevEventLists 
+                type={mainTab as any} 
+                activeId={activeStoryId} 
+                onSelectStory={handleStorySelect} 
+                onOpenModal={openSelectionModal} 
+            />
 
-            {/* Stats Tab */}
             {mainTab === 'STATS' && (
                 <div className="flex h-full">
-                    {/* Character Selector */}
-                    <div className="w-1/3 md:w-1/4 bg-slate-50 dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 overflow-y-auto p-2 space-y-1">
+                    <div className="w-1/4 bg-slate-50 dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 overflow-y-auto p-2">
                         {characters.map(char => (
-                            <button 
-                                key={char.id} 
-                                onClick={() => setActiveStatCharId(char.id)} 
-                                className={`w-full text-left px-3 py-3 text-xs md:text-sm font-bold rounded-lg transition-all flex items-center justify-between ${
-                                    activeStatCharId === char.id ? 'bg-blue-600 text-white' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800'
-                                }`}
-                            >
-                                <span>{char.name}</span>
-                                <span className="text-[10px] opacity-70">{char.mbti}</span>
-                            </button>
+                            <button key={char.id} onClick={() => setActiveStatCharId(char.id)} className={`w-full text-left px-3 py-2 text-xs font-bold rounded mb-1 ${activeStatCharId === char.id ? 'bg-blue-600 text-white' : 'hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400'}`}>{char.name}</button>
                         ))}
                     </div>
-                    {/* Editor */}
-                    <div className="flex-1 bg-slate-100 dark:bg-slate-950 overflow-y-auto p-4">
-                        {activeStatCharId ? (
-                            (() => {
-                                const char = characters.find(c => c.id === activeStatCharId);
-                                return char ? <DevStats character={char} allCharacters={characters} onUpdate={handleStatUpdate} /> : null;
-                            })()
-                        ) : (
-                            <div className="text-center text-slate-400 mt-10">편집할 캐릭터를 선택하세요</div>
-                        )}
-                        <div className="h-10"></div>
+                    <div className="flex-1 overflow-y-auto p-4">
+                        {activeStatCharId ? <DevStats character={characters.find(c => c.id === activeStatCharId)!} allCharacters={characters} onUpdate={handleStatUpdate} /> : <div className="text-center text-slate-400 mt-10">대상을 선택하세요</div>}
                     </div>
                 </div>
             )}
 
-            {/* Items Tab */}
-            {mainTab === 'ITEMS' && (
-                <div className="h-full bg-slate-100 dark:bg-slate-950 overflow-y-auto p-4">
-                    <DevItems availableItems={availableItems} onAdd={onAddInventory} />
-                </div>
-            )}
+            {mainTab === 'ITEMS' && <div className="h-full overflow-y-auto p-4"><DevItems availableItems={availableItems} onAdd={onAddInventory} /></div>}
         </div>
 
-        {/* Selection Modal Overlay (Global) */}
         {selectionModal && (
             <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/60 p-4 animate-fade-in">
                 <div className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-2xl max-w-md w-full border border-slate-300 dark:border-slate-600">
-                    <h3 className="text-lg font-bold mb-4 text-slate-800 dark:text-white">
-                        {selectionModal.type === 'MBTI' ? '이벤트를 실행할 캐릭터 선택' : '상호작용 대상 선택'}
-                    </h3>
-                    <div className="mb-4 p-3 bg-slate-100 dark:bg-slate-700 rounded text-sm italic text-slate-600 dark:text-slate-300">
-                        "{selectionModal.preview}"
-                    </div>
+                    <h3 className="text-lg font-bold mb-4 dark:text-white">실행 옵션 설정</h3>
+                    <div className="mb-4 p-3 bg-slate-100 dark:bg-slate-700 rounded text-xs italic">"{selectionModal.preview}"</div>
                     <div className="space-y-4">
                         <div>
-                            <label className="block text-xs font-bold uppercase text-slate-500 mb-1">주체 (Actor)</label>
-                            <select 
-                                value={selectedActor} 
-                                onChange={(e) => setSelectedActor(e.target.value)}
-                                className="w-full p-2 border rounded dark:bg-slate-900 dark:border-slate-600 dark:text-white"
-                            >
+                            <label className="block text-[10px] font-bold uppercase text-slate-500 mb-1">
+                                {selectionModal.key === 'GHOST' ? '사망한 생존자 (유령)' : '주체 (Actor)'}
+                            </label>
+                            <select value={selectedActor} onChange={(e) => setSelectedActor(e.target.value)} className="w-full p-2 text-sm border rounded dark:bg-slate-900 dark:border-slate-600 dark:text-white">
                                 <option value="">-- 선택하세요 --</option>
-                                {activeCharacters.map(c => {
+                                {(selectionModal.key === 'GHOST' ? deadCharacters : activeCharacters).map(c => {
                                     if (selectionModal.requiredMbti && c.mbti !== selectionModal.requiredMbti) return null;
+                                    if (selectionModal.requiredJob && c.job !== selectionModal.requiredJob) return null;
                                     return <option key={c.id} value={c.id}>{c.name} ({c.mbti})</option>
                                 })}
                             </select>
-                            {selectionModal.requiredMbti && <p className="text-xs text-red-500 mt-1">* {selectionModal.requiredMbti} 유형만 선택 가능</p>}
                         </div>
-                        {selectionModal.type === 'INTERACTION' && (
+                        {(selectionModal.type === 'INTERACTION' || selectionModal.key === 'GHOST' || selectionModal.key === 'PREGNANCY') && (
                             <div>
-                                <label className="block text-xs font-bold uppercase text-slate-500 mb-1">대상 (Target)</label>
-                                <select 
-                                    value={selectedTarget} 
-                                    onChange={(e) => setSelectedTarget(e.target.value)}
-                                    className="w-full p-2 border rounded dark:bg-slate-900 dark:border-slate-600 dark:text-white"
-                                >
-                                    <option value="">-- 랜덤 (Random) --</option>
+                                <label className="block text-[10px] font-bold uppercase text-slate-500 mb-1">대상 (Target)</label>
+                                <select value={selectedTarget} onChange={(e) => setSelectedTarget(e.target.value)} className="w-full p-2 text-sm border rounded dark:bg-slate-900 dark:border-slate-600 dark:text-white">
+                                    <option value="">-- 선택하세요 --</option>
                                     {activeCharacters.filter(c => c.id !== selectedActor).map(c => (
                                         <option key={c.id} value={c.id}>{c.name}</option>
                                     ))}
@@ -265,8 +227,8 @@ const DeveloperMenu: React.FC<Props> = ({ onClose, forcedEvents, setForcedEvents
                         )}
                     </div>
                     <div className="flex gap-3 mt-6 justify-end">
-                        <button onClick={() => setSelectionModal(null)} className="px-4 py-2 text-slate-500 hover:text-slate-800 dark:text-slate-400">취소</button>
-                        <button onClick={confirmSelection} disabled={!selectedActor} className="px-4 py-2 bg-blue-600 text-white rounded font-bold hover:bg-blue-700 disabled:opacity-50">대기열 추가</button>
+                        <button onClick={() => setSelectionModal(null)} className="px-4 py-2 text-sm text-slate-500">취소</button>
+                        <button onClick={confirmSelection} disabled={!selectedActor && selectionModal.type !== 'SYSTEM'} className="px-4 py-2 bg-blue-600 text-white rounded text-sm font-bold">확인</button>
                     </div>
                 </div>
             </div>

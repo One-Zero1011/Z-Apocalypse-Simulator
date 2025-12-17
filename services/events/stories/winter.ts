@@ -12,14 +12,15 @@ export const WINTER_NODES: Record<string, StoryNode> = {
         id: 'winter_1_blizzard',
         text: "🌨️ 화이트아웃. 눈보라가 시야를 가립니다. 얼어 죽기 전에 대피할 곳을 찾아야 합니다.",
         next: [
-            { id: 'winter_2_shelter', weight: 0.4, choiceText: "산장 찾기 (안전, 시간 소모)" }, 
-            { id: 'winter_2_cave', weight: 0.3, choiceText: "동굴 탐색 (맹수 위험)" },    
-            { id: 'winter_2_lake', weight: 0.3, choiceText: "얼어붙은 호수 횡단 (빠름, 익사 위험)" }
+            { id: 'winter_2_shelter', weight: 0.35, choiceText: "산장 찾기 (안전, 시간 소모)" }, 
+            { id: 'winter_2_cave', weight: 0.25, choiceText: "동굴 탐색 (맹수 위험)" },    
+            { id: 'winter_2_lake', weight: 0.3, choiceText: "얼어붙은 호수 횡단 (빠름, 익사 위험)" },
+            { id: 'winter_2_exposure', weight: 0.1 } // 고립 노드 연결 (10% 확률)
         ],
         effect: { target: 'ALL', hp: -5, fatigue: 5 }
     },
     
-    // 신규 분기: 얼어붙은 호수 (위험하지만 빠름)
+    // 분기: 얼어붙은 호수 (위험하지만 빠름)
     'winter_2_lake': {
         id: 'winter_2_lake',
         text: "🧊 시간을 단축하기 위해 꽁꽁 언 호수를 가로지르기로 합니다. 얼음이 쩍쩍 갈라지는 소리가 들립니다.",
@@ -49,10 +50,10 @@ export const WINTER_NODES: Record<string, StoryNode> = {
         effect: { target: 'RANDOM_1', hp: -30, fatigue: 20 }
     },
 
-    // 신규 분기: 동굴 (곰)
+    // 분기: 동굴 (곰)
     'winter_2_cave': {
         id: 'winter_2_cave',
-        text: "🕳️ 바람을 피하기 위해 작은 동굴로 들어갔습니다. 하지만 그곳엔 겨울잠을 자던 거대한 곰(혹은 좀비 곰)이 있었습니다!",
+        text: "🕳️ 바람을 피하기 위해 작은 동굴로 들어갔습니다. 하지만 그곳엔 겨울잠을 자던 거대한 좀비 곰이 있었습니다!",
         next: [
             { id: 'winter_3_bear_fight', weight: 0.5 },
             { id: 'winter_3_bear_sneak', weight: 0.5 }
@@ -60,7 +61,7 @@ export const WINTER_NODES: Record<string, StoryNode> = {
     },
     'winter_3_bear_fight': {
         id: 'winter_3_bear_fight',
-        text: "⚔️ 곰이 깨어났습니다! 좁은 동굴 안에서 사생결단을 냅니다. 고기와 가죽을 얻을 수 있을까요?",
+        text: "⚔️ 곰이 깨어났습니다! 좁은 동굴 안에서 사생결단을 냅니다. 치열한 사투 끝에 고기와 가죽을 얻었습니다.",
         next: [{ id: 'winter_5_thaw', weight: 1.0 }],
         effect: { target: 'RANDOM_HALF', hp: -20, loot: ['고기', '고기'] }
     },
@@ -73,7 +74,7 @@ export const WINTER_NODES: Record<string, StoryNode> = {
 
     'winter_2_exposure': {
         id: 'winter_2_exposure',
-        text: "🥶 마땅한 은신처를 찾지 못했습니다. 생존자들은 서로의 체온에 의지해 떨며 밤을 지새웁니다. 동상 환자가 발생했습니다.",
+        text: "🥶 마땅한 은신처를 찾지 못했습니다. 생존자들은 서로의 체온에 의지해 떨며 밤을 지새웁니다. 심한 동상 환자가 발생했습니다.",
         next: [{ id: 'winter_3_wolves', weight: 1.0 }],
         effect: { target: 'RANDOM_HALF', hp: -15, fatigue: 20 }
     },
@@ -85,7 +86,7 @@ export const WINTER_NODES: Record<string, StoryNode> = {
     },
     'winter_3_wolves': {
         id: 'winter_3_wolves',
-        text: "🐺 눈보라 속에서 굶주린 늑대 떼가 습격해왔습니다!",
+        text: "🐺 눈보라 속에서 굶주린 늑대 떼가 습격해왔습니다! 우리는 무기를 들고 방어 태세를 갖춥니다.",
         next: [
             { id: 'winter_4_hunt_success', weight: 0.6 },
             { id: 'winter_4_hunt_fail', weight: 0.4 }
@@ -100,13 +101,13 @@ export const WINTER_NODES: Record<string, StoryNode> = {
     },
     'winter_4_hunt_success': {
         id: 'winter_4_hunt_success',
-        text: "🍖 위기는 기회가 되었습니다. 습격해온 짐승들을 사냥하여 신선한 고기(식량)를 얻었습니다.",
+        text: "🍖 위기는 기회가 되었습니다. 습격해온 짐승들을 사냥하여 신선한 고기를 얻었습니다.",
         next: [{ id: 'winter_5_thaw', weight: 1.0 }],
         effect: { target: 'ALL', loot: ['고기', '고기'] }
     },
     'winter_5_thaw': {
         id: 'winter_5_thaw',
-        text: "☀️ 며칠간의 혹한이 지나고 마침내 해가 떴습니다. 눈이 녹은 자리에서 얼어 죽은 다른 생존자의 배낭을 발견했습니다.",
+        text: "☀️ 며칠간의 혹한이 지나고 마침내 해가 떴습니다. 눈이 녹은 자리에서 버려진 배낭을 발견해 물자를 챙깁니다.",
         effect: { target: 'ALL', sanity: 5, loot: ['초콜릿', '비타민'] }
     }
 };

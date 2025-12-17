@@ -38,13 +38,11 @@ export const RADIO_NODES: Record<string, StoryNode> = {
         id: 'radio_4_studio',
         text: "🎧 5층 스튜디오. 그곳엔 미쳐버린 DJ가 좀비들을 청중 삼아 혼자만의 방송을 하고 있었습니다. 방송 장비는 살아있습니다.",
         next: [
-            { id: 'radio_5_fight', weight: 0.4 }, // 기존 전투
-            { id: 'radio_5_broadcast', weight: 0.3 }, // 방송 시도
-            { id: 'radio_5_talk', weight: 0.3 } // 기존 대화
+            { id: 'radio_5_fight', weight: 0.4 }, 
+            { id: 'radio_5_broadcast', weight: 0.3 }, 
+            { id: 'radio_5_talk', weight: 0.3 } 
         ]
     },
-    
-    // 방송 시도 (확장됨)
     'radio_5_broadcast': {
         id: 'radio_5_broadcast',
         text: "🎙️ DJ가 방심한 틈을 타 마이크를 잡았습니다. 어떤 방송을 내보낼까요?",
@@ -64,13 +62,13 @@ export const RADIO_NODES: Record<string, StoryNode> = {
     'radio_6_singer': {
         id: 'radio_6_singer',
         text: "🎤 마이크를 잡고 호소력 짙은 노래를 불렀습니다. 거리에 울려 퍼지는 목소리에 좀비들의 움직임이 일시적으로 멈추고, 생존자들은 희망을 얻습니다.",
-        next: [{ id: 'radio_9_rescue', weight: 1.0 }], // 바로 구조 엔딩
+        next: [{ id: 'radio_9_rescue', weight: 1.0 }], 
         effect: { target: 'ALL', sanity: 30, fatigue: -10 }
     },
     'radio_6_dev': {
         id: 'radio_6_dev',
         text: "💻 방송 장비의 주파수를 조작해 암호화된 군용 채널에 접속했습니다. 정확한 좌표를 전송하여 구조 헬기를 불렀습니다!",
-        next: [{ id: 'radio_9_rescue', weight: 1.0 }], // 바로 구조 엔딩
+        next: [{ id: 'radio_9_rescue', weight: 1.0 }], 
         effect: { target: 'ALL', sanity: 20 }
     },
     'radio_6_music': {
@@ -79,8 +77,6 @@ export const RADIO_NODES: Record<string, StoryNode> = {
         next: [{ id: 'radio_7_defense', weight: 1.0 }],
         effect: { target: 'ALL', sanity: 20, fatigue: 10 } 
     },
-
-    // 신규 확장: 방어전
     'radio_7_defense': {
         id: 'radio_7_defense',
         text: "🚪 쾅! 쾅! 방송실 문을 두드리는 소리가 들립니다. 방송을 듣고 몰려온 좀비 떼가 1층을 뚫고 올라오고 있습니다. 옥상으로 도망쳐야 합니다!",
@@ -105,19 +101,16 @@ export const RADIO_NODES: Record<string, StoryNode> = {
         ],
         effect: { target: 'ALL', fatigue: 10 }
     },
-
-    // 신규 확장: 엔딩 분기
     'radio_9_rescue': {
         id: 'radio_9_rescue',
         text: "🧗 사다리가 내려옵니다! 군용 헬기가 우리를 발견했습니다. 우리는 방송국 옥상에서 극적으로 구조되어 안전지대로 이송됩니다. (이벤트 종료)",
-        effect: { target: 'ALL', sanity: 50, hp: 50, fatigue: -50, status: 'Alive' } // 대성공
+        effect: { target: 'ALL', sanity: 50, hp: 50, fatigue: -50 } 
     },
     'radio_9_fail': {
         id: 'radio_9_fail',
-        text: "🚁 헬기는 우리를 보지 못하고 지나가 버렸습니다... 혹은 추락했습니다. 우리는 절망 속에 옥상 문을 걸어 잠그고 밤을 보냅니다.",
-        effect: { target: 'ALL', sanity: -30, fatigue: 20 }
+        text: "🚁 헬기는 우리를 보지 못하고 지나가 버렸습니다. 혼란 속에서 몇 명의 동료가 대열을 이탈하여 실종되었습니다.",
+        effect: { target: 'RANDOM_HALF', status: 'Missing', sanity: -30, fatigue: 20 }
     },
-
     'radio_5_fight': {
         id: 'radio_5_fight',
         text: "🔫 DJ는 우리를 보자마자 산탄총을 꺼내 들었습니다. 어쩔 수 없이 그를 제압했습니다.",

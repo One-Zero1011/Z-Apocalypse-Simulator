@@ -113,7 +113,7 @@ export const MENTAL_ILLNESS_ACTIONS: Record<MentalState | string, (char: Charact
             ],
             'EXPLORER': [
                 { text: `🔒 [불안] ${char.name}은(는) 누군가 미행하고 있다며 숲속에 함정을 설치했습니다.`, fatigue: 10 },
-                { text: `🔒 [불안] ${char.name}은(는) 작은 소리에도 과민반응하여 동료에게 총을 겨눴습니다.`, sanity: -15 },
+                { text: `🔒 [불안] ${char.name}은(는) 작은 소리에도 과민반응하여 동료에게 총을 겨눕니다.`, sanity: -15 },
                 { text: `🔒 [불안] ${char.name}은(는) 캠프가 발각되었다며 당장 떠나야 한다고 소란을 피웠습니다.`, fatigue: 5 }
             ]
         };
@@ -154,107 +154,102 @@ export const MENTAL_ILLNESS_ACTIONS: Record<MentalState | string, (char: Charact
 export const MENTAL_INTERACTIONS = [
     (actor: string, target: string) => ({
         text: `😨 ${actor}은(는) ${target}을(를) 좀비로 착각하고 공격했습니다!`,
-        affinityChange: -20,
-        victimHpChange: -15,
-        victimSanityChange: -10
+        affinity: -20,
+        targetHp: -15,
+        targetSanity: -10
     }),
     (actor: string, target: string) => ({
         text: `😭 ${actor}은(는) ${target}을(를) 붙잡고 "제발 날 버리지 마"라며 오열했습니다.`,
-        affinityChange: 5, // Pity
-        victimSanityChange: -5,
-        victimHpChange: 0
+        affinity: 5, // Pity
+        targetSanity: -5
     }),
     (actor: string, target: string) => ({
         text: `😡 ${actor}은(는) ${target}이(가) 자신을 감시한다며 멱살을 잡았습니다.`,
-        affinityChange: -15,
-        victimSanityChange: -5,
-        victimHpChange: 0
+        affinity: -15,
+        targetSanity: -5
     }),
     (actor: string, target: string) => ({
         text: `🌫️ ${actor}은(는) ${target}에게 알 수 없는 헛소리를 중얼거려 공포감을 주었습니다.`,
-        affinityChange: -5,
-        victimSanityChange: -10,
-        victimHpChange: 0
+        affinity: -5,
+        targetSanity: -10
     }),
     (actor: string, target: string) => ({
         text: `🎭 ${actor}은(는) 갑자기 ${target}을(를) 처음 보는 사람처럼 대하며 경계했습니다.`,
-        affinityChange: -5,
-        victimSanityChange: -5,
-        victimHpChange: 0
+        affinity: -5,
+        targetSanity: -5
     })
 ];
 
 // 3. Lover Specific Mental Events (Unique per Disease)
-// Now a Record instead of an Array
 export const LOVER_MENTAL_EVENTS: Record<MentalState | string, ((actor: string, target: string) => any)[]> = {
-    'Trauma': [ // Was PTSD
+    'Trauma': [ 
         (actor, target) => ({
             text: `💔 [트라우마] ${actor}은(는) ${target}이(가) 죽는 환영을 보고 "오지 마!"라고 소리치며 밀쳐냈습니다.`,
-            affinityChange: -5, victimSanityChange: -10
+            affinity: -5, targetSanity: -10
         }),
         (actor, target) => ({
             text: `💔 [트라우마] ${actor}은(는) 악몽을 꾸다 깨어나 ${target}의 품에서 하염없이 울었습니다.`,
-            affinityChange: 5, victimSanityChange: -5
+            affinity: 5, targetSanity: -5
         }),
         (actor, target) => ({
             text: `💔 [트라우마] ${actor}은(는) ${target}을(를) 잃을까 봐 과보호하며 집착했습니다.`,
-            affinityChange: -2, victimSanityChange: -2
+            affinity: -2, targetSanity: -2
         })
     ],
-    'Despair': [ // Was Depression
+    'Despair': [ 
         (actor, target) => ({
             text: `💔 [절망] ${actor}은(는) ${target}에게 "난 짐만 될 거야, 날 버려"라고 애원했습니다.`,
-            affinityChange: -5, victimSanityChange: -15
+            affinity: -5, targetSanity: -15
         }),
         (actor, target) => ({
             text: `💔 [절망] ${actor}은(는) ${target}의 키스에도 아무런 감정을 느끼지 못하고 멍하니 있었습니다.`,
-            affinityChange: -10, victimSanityChange: -10
+            affinity: -10, targetSanity: -10
         }),
         (actor, target) => ({
             text: `💔 [절망] ${actor}은(는) 하루 종일 등만 돌린 채 ${target}의 말을 무시했습니다.`,
-            affinityChange: -5, victimSanityChange: -5
+            affinity: -5, targetSanity: -5
         })
     ],
-    'Delusion': [ // Was Schizophrenia
+    'Delusion': [ 
         (actor, target) => ({
             text: `💔 [망상] ${actor}은(는) ${target}의 얼굴이 괴물로 변하는 환각을 보고 비명을 질렀습니다.`,
-            affinityChange: -10, victimSanityChange: -15
+            affinity: -10, targetSanity: -15
         }),
         (actor, target) => ({
             text: `💔 [망상] ${actor}은(는) ${target}에게 "너는 진짜 내 애인이 아니야, 껍데기야!"라고 의심했습니다.`,
-            affinityChange: -20, victimSanityChange: -15
+            affinity: -20, targetSanity: -15
         }),
         (actor, target) => ({
             text: `💔 [망상] ${actor}은(는) 허공의 목소리가 ${target}을(를) 죽이라고 한다며 괴로워했습니다.`,
-            affinityChange: -5, victimSanityChange: -20
+            affinity: -5, targetSanity: -20
         })
     ],
-    'Anxiety': [ // Was Paranoia
+    'Anxiety': [ 
         (actor, target) => ({
             text: `💔 [불안] ${actor}은(는) ${target}이(가) 음식에 독을 탔다고 의심하여 그릇을 엎었습니다.`,
-            affinityChange: -25, victimSanityChange: -10
+            affinity: -25, targetSanity: -10
         }),
         (actor, target) => ({
             text: `💔 [불안] ${actor}은(는) ${target}이(가) 잠든 사이 소지품을 뒤지며 증거를 찾으려 했습니다.`,
-            affinityChange: -15, victimSanityChange: -5
+            affinity: -15, targetSanity: -5
         }),
         (actor, target) => ({
             text: `💔 [불안] ${actor}은(는) ${target}이(가) 다른 생존자와 바람을 피우고 음모를 꾸민다고 확신했습니다.`,
-            affinityChange: -20, victimSanityChange: -10
+            affinity: -20, targetSanity: -10
         })
     ],
-    'Madness': [ // Was DID
+    'Madness': [ 
         (actor, target) => ({
             text: `💔 [광기] ${actor}은(는) 낯선 눈빛으로 ${target}을(를) 보며 "당신은 누구시죠?"라고 정중하게 물었습니다.`,
-            affinityChange: -5, victimSanityChange: -20
+            affinity: -5, targetSanity: -20
         }),
         (actor, target) => ({
             text: `💔 [광기] ${actor}의 폭력적인 충동이 깨어나 ${target}을(를) 위협했습니다.`,
-            affinityChange: -30, victimHpChange: -5, victimSanityChange: -15
+            affinity: -30, targetHp: -5, targetSanity: -15
         }),
         (actor, target) => ({
             text: `💔 [광기] ${actor}은(는) 어린아이처럼 변해 ${target}에게 업어달라고 보챘습니다.`,
-            affinityChange: 0, victimSanityChange: -5
+            affinity: 0, targetSanity: -5
         })
     ],
     'Normal': [] // Fallback

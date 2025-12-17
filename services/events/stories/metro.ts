@@ -25,8 +25,6 @@ export const METRO_NODES: Record<string, StoryNode> = {
         ],
         effect: { target: 'ALL', sanity: -5 }
     },
-    
-    // 신규 확장: 지하상가
     'metro_2_mall': {
         id: 'metro_2_mall',
         text: "🛍️ 지하철역과 연결된 대형 지하상가를 발견했습니다. 셔터가 내려진 가게들이 많지만, 물자가 남아있을 수 있습니다.",
@@ -66,8 +64,6 @@ export const METRO_NODES: Record<string, StoryNode> = {
         text: "🤢 출구를 찾는 데 시간이 걸려 유독 가스를 마시고 말았습니다. 구토와 어지러움을 호소하며 겨우 기어 나왔습니다.",
         effect: { target: 'ALL', hp: -15, fatigue: 20 }
     },
-
-    // 관리실 (전력 복구 시도)
     'metro_2_utility': {
         id: 'metro_2_utility',
         text: "⚡ '관계자 외 출입 금지' 표지판이 붙은 관리실 문을 엽니다. 비상 발전기를 가동해볼 수 있을 것 같습니다.",
@@ -88,7 +84,6 @@ export const METRO_NODES: Record<string, StoryNode> = {
         next: [{ id: 'metro_5_ambush', weight: 1.0 }],
         effect: { target: 'ALL', sanity: -10 }
     },
-
     'metro_2_tunnel': {
         id: 'metro_2_tunnel',
         text: "🛤️ 끝없는 터널을 걷고 있습니다. 벽면에는 '그들이 소리를 듣는다'라는 낙서가 피로 쓰여있습니다.",
@@ -120,7 +115,7 @@ export const METRO_NODES: Record<string, StoryNode> = {
         next: [{ id: 'metro_7_end', weight: 1.0 }],
         effect: { target: 'ALL', fatigue: -20, sanity: 10 }
     },
-    'metro_3_train_repair_tech': { // Same as above
+    'metro_3_train_repair_tech': {
         id: 'metro_3_train_repair_tech',
         text: "🔧 복잡한 배선을 다시 연결하여 전동차를 움직이게 만들었습니다. 좀비 떼를 따돌리고 쾌속으로 이동합니다!",
         next: [{ id: 'metro_7_end', weight: 1.0 }],
@@ -132,7 +127,6 @@ export const METRO_NODES: Record<string, StoryNode> = {
         next: [{ id: 'metro_4_nest', weight: 1.0 }],
         effect: { target: 'ALL', fatigue: -5, loot: ['초콜릿'] }
     },
-
     'metro_4_nest': {
         id: 'metro_4_nest',
         text: "🕸️ 터널의 천장이 이상한 점액질로 뒤덮여 있습니다. 이곳은 평범한 좀비가 아닌, 변종 '크롤러'들의 둥지입니다!",
@@ -156,9 +150,9 @@ export const METRO_NODES: Record<string, StoryNode> = {
     },
     'metro_6_sacrifice': {
         id: 'metro_6_sacrifice',
-        text: "🩸 누군가 미끼가 되어 괴물들의 시선을 끄는 사이, 나머지가 필사적으로 도망쳤습니다. 처절한 생존이었습니다.",
+        text: "🩸 누군가 미끼가 되어 괴물들의 시선을 끄는 사이, 나머지가 필사적으로 도망쳤습니다. 미끼가 된 동료는 어둠 속으로 사라졌습니다.",
         next: [{ id: 'metro_7_end', weight: 1.0 }],
-        effect: { target: 'RANDOM_1', hp: -40, sanity: -30 }
+        effect: { target: 'RANDOM_1', status: 'Missing', sanity: -30 }
     },
     'metro_7_end': {
         id: 'metro_7_end',
