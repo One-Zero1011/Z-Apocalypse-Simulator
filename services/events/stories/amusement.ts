@@ -20,14 +20,17 @@ export const AMUSEMENT_NODES: Record<string, StoryNode> = {
             { id: 'amusement_2_haunted', weight: 0.5, choiceText: "유령의 집 (지름길, 공포)" },
             { id: 'amusement_2_arcade', weight: 0.5, choiceText: "오락실 (물자 파밍)" },
             { id: 'amusement_2_arcade_gamer', weight: 0.0, choiceText: "오락실 털기 (프로게이머/학생 필요)", req: { job: '프로게이머' } },
-            { id: 'amusement_2_arcade_student', weight: 0.0, choiceText: "오락실 털기 (프로게이머/학생 필요)", req: { job: '중학생' } }
+            { id: 'amusement_2_arcade_student_mid', weight: 0.0, choiceText: "오락실 털기 (프로게이머/학생 필요)", req: { job: '중학생' } },
+            { id: 'amusement_2_arcade_student_high', weight: 0.0, choiceText: "오락실 털기 (프로게이머/학생 필요)", req: { job: '고등학생' } },
+            { id: 'amusement_2_arcade_student_univ', weight: 0.0, choiceText: "오락실 털기 (프로게이머/학생 필요)", req: { job: '대학생' } },
+            { id: 'amusement_2_arcade_student_elem', weight: 0.0, choiceText: "오락실 털기 (프로게이머/학생 필요)", req: { job: '초등학생' } }
         ]
     },
 
     // Depth 2: 어트랙션 선택 1
     'amusement_2_haunted': {
         id: 'amusement_2_haunted',
-        text: "👻 '유령의 집'. 어둡지만 지름길입니다. 모형 귀신인 줄 알았던 것이 갑자기 팔을 뻗어 잡습니다! 진짜 좀비입니다!",
+        text: "👻 '유령의 집'. 어둡지만 지름길입니다. 모형 귀신인 줄 알았던 것 중 진짜 좀비가 섞여 있어 깜짝 놀라 도망쳤습니다!",
         next: [{ id: 'amusement_3_rollercoaster', weight: 1.0 }],
         effect: { target: 'RANDOM_1', hp: -10, sanity: -15 }
     },
@@ -43,9 +46,27 @@ export const AMUSEMENT_NODES: Record<string, StoryNode> = {
         next: [{ id: 'amusement_3_rollercoaster', weight: 1.0 }],
         effect: { target: 'ALL', loot: ['초콜릿', '초콜릿', '비타민', '맥가이버 칼'], sanity: 10 }
     },
-    'amusement_2_arcade_student': { // Same as above
-        id: 'amusement_2_arcade_student',
+    'amusement_2_arcade_student_mid': { 
+        id: 'amusement_2_arcade_student_mid',
         text: "🕹️ 오락실의 숨겨진 직원용 창고를 찾아냈습니다! 익숙한 지형이라 구석구석 뒤져 귀한 간식과 상품을 싹쓸이합니다.",
+        next: [{ id: 'amusement_3_rollercoaster', weight: 1.0 }],
+        effect: { target: 'ALL', loot: ['초콜릿', '초콜릿', '비타민', '맥가이버 칼'], sanity: 10 }
+    },
+    'amusement_2_arcade_student_high': {
+        id: 'amusement_2_arcade_student_high',
+        text: "🕹️ 오락실의 숨겨진 직원용 창고를 찾아냈습니다! 익숙한 지형이라 구석구석 뒤져 귀한 간식과 상품을 싹쓸이합니다.",
+        next: [{ id: 'amusement_3_rollercoaster', weight: 1.0 }],
+        effect: { target: 'ALL', loot: ['초콜릿', '초콜릿', '비타민', '맥가이버 칼'], sanity: 10 }
+    },
+    'amusement_2_arcade_student_univ': {
+        id: 'amusement_2_arcade_student_univ',
+        text: "🕹️ 오락실의 숨겨진 직원용 창고를 찾아냈습니다! 익숙한 지형이라 구석구석 뒤져 귀한 간식과 상품을 싹쓸이합니다.",
+        next: [{ id: 'amusement_3_rollercoaster', weight: 1.0 }],
+        effect: { target: 'ALL', loot: ['초콜릿', '초콜릿', '비타민', '맥가이버 칼'], sanity: 10 }
+    },
+    'amusement_2_arcade_student_elem': {
+        id: 'amusement_2_arcade_student_elem',
+        text: "🕹️ 오락실의 숨겨진 직원용 창고를 찾아냈습니다! 작은 몸집으로 구석구석 뒤져 귀한 간식과 상품을 싹쓸이합니다.",
         next: [{ id: 'amusement_3_rollercoaster', weight: 1.0 }],
         effect: { target: 'ALL', loot: ['초콜릿', '초콜릿', '비타민', '맥가이버 칼'], sanity: 10 }
     },

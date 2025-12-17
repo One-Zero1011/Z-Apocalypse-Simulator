@@ -18,7 +18,8 @@ import DeveloperMenu from './components/DeveloperMenu';
 import ConfirmationModal from './components/ConfirmationModal'; 
 import TutorialModal from './components/TutorialModal';
 import StoryChoiceModal from './components/StoryChoiceModal'; 
-import BabyNamingModal from './components/BabyNamingModal'; // New Import
+import BabyNamingModal from './components/BabyNamingModal'; 
+import EditCharacterModal from './components/EditCharacterModal'; // New Import
 
 // Define Item Effects
 const ITEM_EFFECTS: Record<string, { desc: string, hp?: number, sanity?: number, fatigue?: number, cureMental?: boolean, cureInfection?: number, muzzle?: boolean, feed?: number }> = {
@@ -90,6 +91,9 @@ const App: React.FC = () => {
   // Baby Modal State
   const [pendingBaby, setPendingBaby] = useState<BabyEventData | null>(null);
 
+  // Edit Character State (New)
+  const [editingCharacter, setEditingCharacter] = useState<Character | null>(null);
+
   // Mobile Tab State
   const [activeMobileTab, setActiveMobileTab] = useState<MobileTab>('logs');
 
@@ -144,6 +148,7 @@ const App: React.FC = () => {
           setForcedEvents([]);
           setStorySelection(null);
           setPendingBaby(null);
+          setEditingCharacter(null); // Reset edit state
           setError(null);
           setConfirmState(null);
           
@@ -242,6 +247,7 @@ const App: React.FC = () => {
                       setError(null);
                       setConfirmState(null);
                       setForcedEvents([]);
+                      setEditingCharacter(null);
                       setTimeout(() => alert(`${parsed.day}일차 게임 데이터를 성공적으로 불러왔습니다.`), 100);
                   };
                   if (characters.length > 0 || day > 0) {
@@ -315,7 +321,7 @@ const App: React.FC = () => {
                           job: c.job || ''
                       })) as Character[];
                       setCharacters(initializedCharacters);
-                      setDay(0); setLogs([]); setInventory([]); setSelectedItem(null); setStoryNodeId(null); setStorySelection(null); setPendingBaby(null); setForcedEvents([]); setError(null); setConfirmState(null);
+                      setDay(0); setLogs([]); setInventory([]); setSelectedItem(null); setStoryNodeId(null); setStorySelection(null); setPendingBaby(null); setForcedEvents([]); setError(null); setConfirmState(null); setEditingCharacter(null);
                       setTimeout(() => alert(`${parsed.length}명의 생존자 명단을 불러왔습니다.`), 100);
                   };
                   if (characters.length > 0 || day > 0) {
@@ -419,6 +425,81 @@ const App: React.FC = () => {
 
   const handleUpdateCharacter = (updatedChar: Character) => {
       setCharacters(prev => prev.map(c => c.id === updatedChar.id ? updatedChar : c));
+  };
+
+  // --- Save Edited Character (From Modal) ---
+  const handleSaveEditedCharacter = (updatedChar: Character, relations: { targetId: string, status: RelationshipStatus, affinity: number }[]) => {
+      setCharacters(prev => {
+          // 1. Update the character itself and its forward relationships
+          const newRels = { ...updatedChar.relationships };
+          const newStatuses = { ...updatedChar.relationshipStatuses };
+          
+          // Clear old relationships from the edited char (for clean update)
+          // Actually, 'relations' from modal contains the full intended state
+          const relationTargets = new Set(relations.map(r => r.targetId));
+          
+          // Reset relationships for targets not in the new list (remove relationship)
+          Object.keys(newRels).forEach(targetId => {
+              if (!relationTargets.has(targetId)) {
+                  delete newRels[targetId];
+                  delete newStatuses[targetId];
+              }
+          });
+
+          // Apply new relations
+          relations.forEach(r => {
+              newRels[r.targetId] = r.affinity;
+              newStatuses[r.targetId] = r.status;
+          });
+
+          const charWithUpdatedRels = { ...updatedChar, relationships: newRels, relationshipStatuses: newStatuses };
+
+          // 2. Update OTHER characters (Reverse relationships)
+          const getReverseStatus = (status: string): RelationshipStatus => {
+            if (status === 'Parent') return 'Child';
+            if (status === 'Child') return 'Parent';
+            if (status === 'Spouse') return 'Spouse';
+            if (status === 'Lover') return 'Lover';
+            if (status === 'Sibling') return 'Sibling';
+            if (status === 'Rival') return 'Rival';
+            if (status === 'Enemy') return 'Enemy';
+            if (status === 'BestFriend') return 'BestFriend';
+            if (status === 'Family') return 'Family';
+            if (status === 'Colleague') return 'Colleague';
+            if (status === 'Ex') return 'Ex';
+            if (status === 'Friend') return 'Friend';
+            return 'None'; 
+          };
+
+          return prev.map(c => {
+              if (c.id === updatedChar.id) return charWithUpdatedRels;
+
+              // Check if this character is a target of the edited relationships
+              const relUpdate = relations.find(r => r.targetId === c.id);
+              
+              if (relUpdate) {
+                  // Update reciprocal relationship
+                  const updatedC = { ...c };
+                  updatedC.relationships = { ...c.relationships, [updatedChar.id]: relUpdate.affinity };
+                  updatedC.relationshipStatuses = { ...c.relationshipStatuses, [updatedChar.id]: getReverseStatus(relUpdate.status) };
+                  return updatedC;
+              } else {
+                  // If relationship was removed
+                  if (c.relationships[updatedChar.id] !== undefined) {
+                      const updatedC = { ...c };
+                      const cRels = { ...c.relationships };
+                      const cStatuses = { ...c.relationshipStatuses };
+                      delete cRels[updatedChar.id];
+                      delete cStatuses[updatedChar.id];
+                      updatedC.relationships = cRels;
+                      updatedC.relationshipStatuses = cStatuses;
+                      return updatedC;
+                  }
+              }
+              return c;
+          });
+      });
+      setEditingCharacter(null);
   };
 
   const handleDevAddInventory = (item: string, count: number) => {
@@ -666,7 +747,7 @@ const App: React.FC = () => {
              <InventoryPanel inventory={inventory} onSelectItem={setSelectedItem} />
           </div>
           <div className={`${activeMobileTab === 'survivors' ? 'block' : 'hidden'} md:block`}>
-            <SurvivorList characters={characters} onDelete={deleteCharacter} />
+            <SurvivorList characters={characters} onDelete={deleteCharacter} onEdit={setEditingCharacter} />
           </div>
         </div>
       </main>
@@ -694,6 +775,14 @@ const App: React.FC = () => {
       <ItemUseModal selectedItem={selectedItem} onClose={() => setSelectedItem(null)} onUseItem={handleUseItem} survivors={uiSurvivors} itemEffects={ITEM_EFFECTS} />
       {confirmState && <ConfirmationModal title={confirmState.title} message={confirmState.message} onConfirm={confirmState.action} onCancel={() => setConfirmState(null)} isDangerous={confirmState.isDangerous} />}
       {showRelationshipMap && <RelationshipMap characters={characters} onClose={() => setShowRelationshipMap(false)} />}
+      {editingCharacter && (
+          <EditCharacterModal 
+            character={editingCharacter} 
+            allCharacters={characters} 
+            onSave={handleSaveEditedCharacter} 
+            onClose={() => setEditingCharacter(null)} 
+          />
+      )}
       
       {showSystemMenu && (
         <SystemMenu 

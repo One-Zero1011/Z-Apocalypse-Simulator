@@ -46,7 +46,10 @@ const ItemUseModal: React.FC<Props> = ({ selectedItem, onClose, onUseItem, survi
                                 {char.status === 'Zombie' ? (
                                     <span className="text-red-500">허기: {char.hunger}</span>
                                 ) : (
-                                    <span className={char.sanity <= 10 ? 'text-red-500 font-bold' : ''}>멘탈: {char.sanity}</span>
+                                    <>
+                                        <span className={char.sanity <= 10 ? 'text-red-500 font-bold' : ''}>멘탈: {char.sanity}</span>
+                                        <span className={char.fatigue >= 80 ? 'text-purple-600 font-bold' : ''}>피로: {char.fatigue}</span>
+                                    </>
                                 )}
                             </div>
                         </button>

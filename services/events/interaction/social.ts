@@ -1,6 +1,17 @@
 
 import { InteractionFunction } from "./types";
 
+export const FRIEND_EVENTS: InteractionFunction[] = [
+    (a: string, b: string) => ({ text: `${a}은(는) ${b}에게 가벼운 장난을 치며 긴장을 풀었습니다.`, affinity: 2, actorSanity: 2 }),
+    (a: string, b: string) => ({ text: `${a}와(과) ${b}은(는) 시시콜콜한 잡담을 나누며 잠시 좀비를 잊었습니다.`, affinity: 3, actorSanity: 2, targetSanity: 2 }),
+    (a: string, b: string) => ({ text: `${a}은(는) ${b}의 어깨를 툭 치며 "살아있냐?"라고 농담했습니다.`, affinity: 2 }),
+    (a: string, b: string) => ({ text: `${a}은(는) ${b}에게 맛없는 비상식량을 주며 "너 먹어라"라고 놀렸습니다.`, affinity: 2 }),
+    (a: string, b: string) => ({ text: `${a}와(과) ${b}은(는) 서로의 꼴을 보고 낄낄거렸습니다.`, affinity: 3, actorSanity: 5, targetSanity: 5 }),
+    (a: string, b: string) => ({ text: `${a}은(는) ${b}에게 "나중에 밥 한 번 사라"고 말했습니다.`, affinity: 2 }),
+    (a: string, b: string) => ({ text: `${a}은(는) ${b}가 졸고 있을 때 얼굴에 낙서를 하려다 참았습니다.`, affinity: 1, actorSanity: 2 }),
+    (a: string, b: string) => ({ text: `${a}와(과) ${b}은(는) 하이파이브를 하며 생존을 자축했습니다.`, affinity: 5 })
+];
+
 export const BEST_FRIEND_EVENTS: InteractionFunction[] = [
     (a: string, b: string) => ({ text: `${a}와(과) ${b}은(는) 말하지 않아도 서로의 생각을 읽고 완벽한 호흡을 보여주었습니다.`, affinity: 10 }),
     (a: string, b: string) => ({ text: `${a}은(는) ${b}의 흑역사를 폭로하려다 입막음을 당했습니다.`, affinity: 2 }),

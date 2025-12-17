@@ -35,7 +35,8 @@ export const SCHOOL_NODES: Record<string, StoryNode> = {
             { id: 'school_3_cafeteria', weight: 0.5, choiceText: "급식실 (식량)" }, 
             { id: 'school_3_library', weight: 0.5, choiceText: "도서관 (정보)" },
             { id: 'school_3_science_lab', weight: 0.0, choiceText: "과학실 (약품/제조)", req: { job: '교사/교수' } },
-            { id: 'school_3_science_lab_res', weight: 0.0, choiceText: "과학실 (약품/제조)", req: { job: '연구원' } }
+            { id: 'school_3_science_lab_res', weight: 0.0, choiceText: "과학실 (약품/제조)", req: { job: '연구원' } },
+            { id: 'school_3_science_lab_univ', weight: 0.0, choiceText: "과학실 (약품/제조)", req: { job: '대학생' } }
         ]
     },
 
@@ -61,6 +62,12 @@ export const SCHOOL_NODES: Record<string, StoryNode> = {
     'school_3_science_lab_res': { // Duplicate for Researcher check
         id: 'school_3_science_lab_res',
         text: "🧪 과학실에는 실험용 약품들이 남아있습니다. 전문 지식을 활용해 '화염병'과 '소독약'을 제조했습니다.",
+        next: [{ id: 'school_4_broadcast', weight: 1.0 }],
+        effect: { target: 'ALL', loot: ['항생제', '권총'], sanity: 5 }
+    },
+    'school_3_science_lab_univ': { // Duplicate for University Student check
+        id: 'school_3_science_lab_univ',
+        text: "🧪 과학실에는 실험용 약품들이 남아있습니다. 전공 서적에서 본 내용을 떠올려 '화염병'과 '소독약'을 제조했습니다.",
         next: [{ id: 'school_4_broadcast', weight: 1.0 }],
         effect: { target: 'ALL', loot: ['항생제', '권총'], sanity: 5 }
     },

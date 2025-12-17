@@ -138,9 +138,13 @@ const processStoryEvent = (
     if (currentStoryNodeId && userSelectedNodeId && STORY_NODES[currentStoryNodeId]) {
         const currentNode = STORY_NODES[currentStoryNodeId];
         const selectedOption = currentNode.next?.find(o => o.id === userSelectedNodeId);
+        
+        // FIX: Removed automatic item consumption. Items like maps and knives should be reusable.
+        /* 
         if (selectedOption?.req?.item) {
             consumedItems.push(selectedOption.req.item);
         }
+        */
     }
 
     if (forcedStory && STORY_NODES[forcedStory.key]) {
@@ -318,7 +322,7 @@ const processIndividualEvents = (
 };
 
 // ----------------------------------------------------------------------
-// New Function: Infection Crisis Vote Logic (Previous Implementation kept)
+// New Function: Infection Crisis Vote Logic
 // ----------------------------------------------------------------------
 const processInfectionCrisis = (
     characters: Character[],
@@ -386,7 +390,7 @@ const processMarriageAndPregnancy = (
     characters: Character[],
     updates: CharacterUpdate[],
     events: string[],
-    settings: GameSettings // Added settings parameter to check pregnancy
+    settings: GameSettings
 ): BabyEventData | null => {
     const living = characters.filter(c => ['Alive', 'Infected'].includes(c.status));
     const processedPairs = new Set<string>();
@@ -419,7 +423,7 @@ const processMarriageAndPregnancy = (
 
                     let eventText = `💍 [결혼] ${char.name}와(과) ${partner.name}은(는) 서로의 사랑을 확인하고 부부가 되기로 맹세했습니다! (관계 지속 ${duration}일)`;
                     if (settings.showEventEffects) {
-                        eventText += ` (🧠+20)`; // Simple static log for marriage
+                        eventText += ` (🧠+20)`; 
                     }
                     events.push(eventText);
                     
@@ -449,6 +453,110 @@ const processMarriageAndPregnancy = (
         }
     }
     return babyEvent;
+};
+
+// ----------------------------------------------------------------------
+// New Function: Relationship Evolution Logic (Friend -> BestFriend, etc.)
+// ----------------------------------------------------------------------
+const processRelationshipEvolution = (
+    characters: Character[],
+    updates: CharacterUpdate[],
+    events: string[]
+) => {
+    const living = characters.filter(c => ['Alive', 'Infected'].includes(c.status));
+    const processedPairs = new Set<string>();
+
+    for (const char of living) {
+        // Iterate through all other living characters
+        for (const target of living) {
+            if (char.id === target.id) continue;
+
+            const pairKey = [char.id, target.id].sort().join('-');
+            if (processedPairs.has(pairKey)) continue;
+            processedPairs.add(pairKey);
+
+            // Get current projected affinity and status
+            const charUpdate = updates.find(u => u.id === char.id);
+            const targetUpdate = updates.find(u => u.id === target.id);
+            
+            // Helper to calculate current affinity considering pending updates
+            const getAffinity = (c: Character, tId: string, u: CharacterUpdate | undefined) => {
+                const base = c.relationships[tId] || 0;
+                const change = u?.relationshipUpdates?.find(r => r.targetId === tId)?.change || 0;
+                return base + change;
+            };
+
+            const affinityA = getAffinity(char, target.id, charUpdate);
+            const affinityB = getAffinity(target, char.id, targetUpdate);
+            const avgAffinity = (affinityA + affinityB) / 2;
+
+            const currentStatus = char.relationshipStatuses[target.id] || 'None';
+
+            // 1. Evolve to BestFriend (Friend + High Affinity)
+            if (currentStatus === 'Friend' && avgAffinity >= 80) {
+                if (Math.random() < 0.2) { // 20% chance
+                    const uA = getCharacterUpdate(updates, char.id);
+                    const uB = getCharacterUpdate(updates, target.id);
+                    
+                    if (!uA.relationshipUpdates) uA.relationshipUpdates = [];
+                    if (!uB.relationshipUpdates) uB.relationshipUpdates = [];
+
+                    uA.relationshipUpdates.push({ targetId: target.id, change: 10, newStatus: 'BestFriend' });
+                    uB.relationshipUpdates.push({ targetId: char.id, change: 10, newStatus: 'BestFriend' });
+
+                    events.push(`🤞 [절친] ${char.name}와(과) ${target.name}은(는) 수많은 위기를 함께 넘기며 둘도 없는 단짝 친구가 되었습니다.`);
+                }
+            }
+
+            // 2. Evolve to Rival (None + Low Affinity)
+            if ((currentStatus === 'None' || currentStatus === 'Colleague') && avgAffinity <= -20 && avgAffinity > -50) {
+                if (Math.random() < 0.15) {
+                    const uA = getCharacterUpdate(updates, char.id);
+                    const uB = getCharacterUpdate(updates, target.id);
+                    
+                    if (!uA.relationshipUpdates) uA.relationshipUpdates = [];
+                    if (!uB.relationshipUpdates) uB.relationshipUpdates = [];
+
+                    uA.relationshipUpdates.push({ targetId: target.id, change: -5, newStatus: 'Rival' });
+                    uB.relationshipUpdates.push({ targetId: char.id, change: -5, newStatus: 'Rival' });
+
+                    events.push(`⚔️ [라이벌] ${char.name}와(과) ${target.name} 사이에 묘한 경쟁 심리가 발동했습니다. 서로를 라이벌로 의식하기 시작합니다.`);
+                }
+            }
+
+            // 3. Evolve to Enemy (Rival/None + Very Low Affinity)
+            if ((currentStatus === 'Rival' || currentStatus === 'None') && avgAffinity <= -60) {
+                if (Math.random() < 0.1) {
+                    const uA = getCharacterUpdate(updates, char.id);
+                    const uB = getCharacterUpdate(updates, target.id);
+                    
+                    if (!uA.relationshipUpdates) uA.relationshipUpdates = [];
+                    if (!uB.relationshipUpdates) uB.relationshipUpdates = [];
+
+                    uA.relationshipUpdates.push({ targetId: target.id, change: -10, newStatus: 'Enemy' });
+                    uB.relationshipUpdates.push({ targetId: char.id, change: -10, newStatus: 'Enemy' });
+
+                    events.push(`👿 [원수] ${char.name}와(과) ${target.name}의 갈등이 폭발했습니다. 이제 둘은 서로를 원수로 여기며 증오합니다.`);
+                }
+            }
+
+            // 4. Breakup/Drift (Friend/BestFriend -> None if Affinity drops)
+            if ((currentStatus === 'Friend' || currentStatus === 'BestFriend') && avgAffinity < 0) {
+                 if (Math.random() < 0.3) {
+                    const uA = getCharacterUpdate(updates, char.id);
+                    const uB = getCharacterUpdate(updates, target.id);
+                    
+                    if (!uA.relationshipUpdates) uA.relationshipUpdates = [];
+                    if (!uB.relationshipUpdates) uB.relationshipUpdates = [];
+
+                    uA.relationshipUpdates.push({ targetId: target.id, change: 0, newStatus: 'None' });
+                    uB.relationshipUpdates.push({ targetId: char.id, change: 0, newStatus: 'None' });
+
+                    events.push(`💔 [소원] ${char.name}와(과) ${target.name}의 사이가 예전 같지 않습니다. 서먹한 관계로 돌아갔습니다.`);
+                 }
+            }
+        }
+    }
 };
 
 const processInteractionPhase = (
@@ -574,6 +682,8 @@ const processInteractionPhase = (
                 poolKey = relStatus === 'Enemy' ? 'ENEMY' : 'RIVAL';
             } else if (relStatus === 'BestFriend') {
                 poolKey = 'BEST_FRIEND';
+            } else if (relStatus === 'Friend') {
+                poolKey = 'FRIEND'; // Added explicit check for Friend
             } else if (relStatus === 'Colleague') {
                 poolKey = 'COLLEAGUE';
             } else if (relStatus === 'Savior') {
@@ -657,9 +767,26 @@ function processInteractionResult(
     if (effect.affinity) {
         const change = effect.affinity;
         if (!actorUpdate.relationshipUpdates) actorUpdate.relationshipUpdates = [];
+        
+        // FIX: Removed strict filter on newRelStatus to allow updating statuses like BestFriend, Rival etc if passed manually.
+        // Also the reciprocal relationship status update logic has been simplified to trust the input if provided.
         actorUpdate.relationshipUpdates.push({ targetId: target.id, change: change, newStatus: newRelStatus });
+        
         if (!targetUpdate.relationshipUpdates) targetUpdate.relationshipUpdates = [];
-        targetUpdate.relationshipUpdates.push({ targetId: actor.id, change: change, newStatus: newRelStatus === 'Lover' ? 'Lover' : newRelStatus === 'Ex' ? 'Ex' : undefined });
+        // For reciprocal updates, we generally just update affinity unless it's a mutual status change event handled by caller
+        // Logic for specific status mirroring (e.g. Lover->Lover) is handled in App.tsx or implicit via reciprocal events if needed.
+        // Here we mainly ensure affinity is mirrored.
+        // Special Case: If becoming Lover/Ex, mirror it immediately for consistency in this update cycle? 
+        // Actually App.tsx handles mirroring. Here we just push the update for the target's view of actor.
+        
+        // We push the same newStatus to the target for mutual relationships (Lover, Ex, Spouse, BestFriend, Enemy, Rival are mutual usually)
+        // If it's one-sided (Savior), we might need differentiation, but for now we assume mutual status updates for simplicity in simulation.
+        let targetNewStatus = newRelStatus;
+        if (newRelStatus === 'Parent') targetNewStatus = 'Child';
+        else if (newRelStatus === 'Child') targetNewStatus = 'Parent';
+        // (Other asymmetric relationships logic would go here if needed)
+
+        targetUpdate.relationshipUpdates.push({ targetId: actor.id, change: change, newStatus: targetNewStatus });
     }
     // Also handle affinityChange which was used in some mental events
     if (effect.affinityChange) {
@@ -667,7 +794,7 @@ function processInteractionResult(
         if (!actorUpdate.relationshipUpdates) actorUpdate.relationshipUpdates = [];
         actorUpdate.relationshipUpdates.push({ targetId: target.id, change: change, newStatus: newRelStatus });
         if (!targetUpdate.relationshipUpdates) targetUpdate.relationshipUpdates = [];
-        targetUpdate.relationshipUpdates.push({ targetId: actor.id, change: change, newStatus: newRelStatus === 'Lover' ? 'Lover' : newRelStatus === 'Ex' ? 'Ex' : undefined });
+        targetUpdate.relationshipUpdates.push({ targetId: actor.id, change: change, newStatus: newRelStatus });
     }
     // Handle victim stats from mental events
     if (effect.victimHpChange) targetUpdate.hpChange = (targetUpdate.hpChange || 0) + effect.victimHpChange;
@@ -702,6 +829,9 @@ export const simulateDay = async (
 
     // Phase 3: Interactions
     processInteractionPhase(characters, forcedEvents, settings, updates, events, globalLoot);
+
+    // Phase 4: Relationship Evolution (New - Evolve Friend to BestFriend, etc.)
+    processRelationshipEvolution(characters, updates, events);
 
     return {
         narrative,
