@@ -74,12 +74,14 @@ const App: React.FC = () => {
   const [gameSettings, setGameSettings] = useState<GameSettings>({
       allowSameSexCouples: true, 
       allowIncest: false, 
-      pureLoveMode: false, 
+      pureLoveMode: false,
+      restrictStudentDating: true, // Default ON
       developerMode: false, 
       useMentalStates: true,
       enableInteractions: true,
       enableStoryChoices: true,
-      enablePregnancy: true // Default ON
+      enablePregnancy: true,
+      showEventEffects: false // Default OFF
   });
 
   // Story Choice State
@@ -227,11 +229,13 @@ const App: React.FC = () => {
                               allowSameSexCouples: true,
                               allowIncest: false,
                               pureLoveMode: false,
+                              restrictStudentDating: true,
                               developerMode: false, 
                               useMentalStates: true,
                               enableInteractions: true,
                               enableStoryChoices: true,
                               enablePregnancy: true,
+                              showEventEffects: false, // Ensure defaults
                               ...parsed.settings 
                           });
                       }
@@ -335,7 +339,7 @@ const App: React.FC = () => {
       reader.readAsText(file);
   };
 
-  // --- Character Logic (Skipped for brevity as unchanged) ---
+  // --- Character Logic --- (Omitted)
   const addCharacter = (name: string, gender: Gender, mbti: MBTI, job: string, mentalState: MentalState, initialRelations: { targetId: string, type: string }[] = []) => {
     const newId = crypto.randomUUID();
     const newChar: Character = {
@@ -439,7 +443,7 @@ const App: React.FC = () => {
               { targetId: mother.id, type: 'Parent' }
           ]);
 
-          // Log (Optional, already logged in simulation but adding detail)
+          // Log
           setLogs(prev => {
               const lastLog = prev[prev.length - 1];
               if (lastLog) {
@@ -473,28 +477,25 @@ const App: React.FC = () => {
     try {
       const nextDay = day + 1;
       
-      // Update Relationship Durations BEFORE simulation
+      // Update Relationship Durations
       const charactersWithUpdatedDurations = characters.map(char => {
           const newDurations = { ...char.relationshipDurations };
           Object.entries(char.relationshipStatuses).forEach(([targetId, status]) => {
               if (status === 'Lover' || status === 'Spouse') {
                   newDurations[targetId] = (newDurations[targetId] || 0) + 1;
               } else {
-                  // Reset duration if not lover/spouse
                   newDurations[targetId] = 0;
               }
           });
           return { ...char, relationshipDurations: newDurations };
       });
 
-      // Pass the selected choice ID (if any) to simulateDay
       const result = await simulateDay(nextDay, charactersWithUpdatedDurations, storyNodeId, gameSettings, forcedEvents, storySelection?.id);
       
       setForcedEvents([]);
-      setStorySelection(null); // Reset choice after processing
+      setStorySelection(null); 
 
       setCharacters(prev => {
-        // Use the duration-updated list as base
         const nextChars = [...charactersWithUpdatedDurations];
         
         result.updates.forEach((update: CharacterUpdate) => {
@@ -525,15 +526,12 @@ const App: React.FC = () => {
           if (update.relationshipUpdates) {
              const newRels = { ...char.relationships };
              const newStatuses = { ...char.relationshipStatuses };
-             // Do not reset durations here, let them persist unless status changes
              update.relationshipUpdates.forEach((rel: RelationshipUpdate) => {
                  const currentVal = newRels[rel.targetId] || 0;
                  newRels[rel.targetId] = Math.max(-100, Math.min(100, currentVal + rel.change));
                  
                  if (rel.newStatus) {
                      newStatuses[rel.targetId] = rel.newStatus;
-                     // If status changes (e.g., Lover -> Spouse, or Lover -> Ex), handled next day or keep track
-                     // Note: If Lover -> Spouse, duration continues. If Lover -> Ex, reset next day.
                  }
              });
              char.relationships = newRels;
@@ -546,7 +544,6 @@ const App: React.FC = () => {
 
       if (result.loot && result.loot.length > 0) setInventory(prev => [...prev, ...result.loot]);
       
-      // Handle Inventory Removal from Global Camp Inventory (e.g., used in choices)
       if (result.inventoryRemove && result.inventoryRemove.length > 0) {
           setInventory(prev => {
               const newInv = [...prev];
@@ -562,7 +559,6 @@ const App: React.FC = () => {
       setDay(nextDay);
       setStoryNodeId(result.nextStoryNodeId); 
       
-      // Handle Baby Event
       if (result.babyEvent) {
           setPendingBaby(result.babyEvent);
       }
@@ -576,6 +572,7 @@ const App: React.FC = () => {
   }, [day, characters, loading, storyNodeId, gameSettings, forcedEvents, storySelection]);
 
   const handleUseItem = (targetId: string) => {
+      // (Item Logic Omitted for brevity - same as before)
       if (!selectedItem) return;
       const effect = ITEM_EFFECTS[selectedItem];
       if (!effect) return;
@@ -614,11 +611,7 @@ const App: React.FC = () => {
 
   const activeSurvivors = characters.filter(c => c.status !== 'Dead' && c.status !== 'Missing').length;
   const uiSurvivors = characters.filter(c => c.status === 'Alive' || c.status === 'Infected' || c.status === 'Zombie');
-
-  // Check if current story node requires user input, AND if setting is enabled
   const currentStoryHasChoices = gameSettings.enableStoryChoices && storyNodeId && STORY_NODES[storyNodeId]?.next?.some(n => n.choiceText);
-
-  // Helper for Baby Modal
   const getParents = () => {
       if (!pendingBaby) return { father: null, mother: null };
       const f = characters.find(c => c.id === pendingBaby.fatherId);
@@ -629,43 +622,19 @@ const App: React.FC = () => {
 
   return (
     <div className="min-h-screen p-4 md:p-8 max-w-7xl mx-auto transition-colors duration-300 pb-20 md:pb-8">
+      <GameHeader day={day} survivorsCount={activeSurvivors} totalCount={characters.length} darkMode={darkMode} setDarkMode={setDarkMode} developerMode={gameSettings.developerMode} />
       
-      <GameHeader 
-        day={day}
-        survivorsCount={activeSurvivors}
-        totalCount={characters.length}
-        darkMode={darkMode}
-        setDarkMode={setDarkMode}
-        developerMode={gameSettings.developerMode}
-      />
-      
-      {/* Mobile Tab Navigation */}
+      {/* (Mobile Tab Nav - Same) */}
       <div className="md:hidden sticky top-0 z-30 bg-white/95 dark:bg-dark-slate/95 backdrop-blur-sm border-b border-slate-200 dark:border-slate-700 -mx-4 px-4 mb-6 flex justify-between shadow-sm">
-          <button 
-            onClick={() => setActiveMobileTab('logs')} 
-            className={`flex-1 py-3 text-sm font-bold border-b-2 transition-colors ${activeMobileTab === 'logs' ? 'border-zombie-green text-zombie-green' : 'border-transparent text-slate-500 dark:text-slate-400'}`}
-          >
-            📜 생존 일지
-          </button>
-          <button 
-            onClick={() => setActiveMobileTab('survivors')} 
-            className={`flex-1 py-3 text-sm font-bold border-b-2 transition-colors ${activeMobileTab === 'survivors' ? 'border-blue-500 text-blue-500' : 'border-transparent text-slate-500 dark:text-slate-400'}`}
-          >
-            👥 생존자 목록
-          </button>
-          <button 
-            onClick={() => setActiveMobileTab('manage')} 
-            className={`flex-1 py-3 text-sm font-bold border-b-2 transition-colors ${activeMobileTab === 'manage' ? 'border-purple-500 text-purple-500' : 'border-transparent text-slate-500 dark:text-slate-400'}`}
-          >
-            🎒 정비/영입
-          </button>
+          <button onClick={() => setActiveMobileTab('logs')} className={`flex-1 py-3 text-sm font-bold border-b-2 transition-colors ${activeMobileTab === 'logs' ? 'border-zombie-green text-zombie-green' : 'border-transparent text-slate-500 dark:text-slate-400'}`}>📜 생존 일지</button>
+          <button onClick={() => setActiveMobileTab('survivors')} className={`flex-1 py-3 text-sm font-bold border-b-2 transition-colors ${activeMobileTab === 'survivors' ? 'border-blue-500 text-blue-500' : 'border-transparent text-slate-500 dark:text-slate-400'}`}>👥 생존자 목록</button>
+          <button onClick={() => setActiveMobileTab('manage')} className={`flex-1 py-3 text-sm font-bold border-b-2 transition-colors ${activeMobileTab === 'manage' ? 'border-purple-500 text-purple-500' : 'border-transparent text-slate-500 dark:text-slate-400'}`}>🎒 정비/영입</button>
       </div>
         
-      {/* Invisible inputs for file operations */}
       <input type="file" ref={rosterInputRef} style={{ display: 'none' }} accept=".json" onChange={handleLoadRosterFile} />
       <input type="file" ref={gameSaveInputRef} style={{ display: 'none' }} accept=".json" onChange={handleLoadGameFile} />
 
-      {/* Control Buttons */}
+      {/* (Buttons - Same) */}
       <div className="flex flex-wrap justify-end items-center gap-4 mb-4">
             {gameSettings.developerMode && (
                 <button onClick={() => setShowDevMenu(true)} className="flex items-center gap-2 px-3 py-2 rounded font-bold text-sm transition-all border border-zombie-green text-zombie-green hover:bg-zombie-green hover:text-white">
@@ -683,10 +652,9 @@ const App: React.FC = () => {
             </button>
       </div>
 
-      {/* Global Error Display */}
       {error && <div className="mb-6 p-4 bg-red-100 dark:bg-red-900/30 border border-red-300 dark:border-red-800 text-red-800 dark:text-red-200 rounded">{error}</div>}
 
-      {/* Main Grid Layout */}
+      {/* Main Grid */}
       <main className="grid grid-cols-1 md:grid-cols-12 gap-8">
         <div className={`md:col-span-5 lg:col-span-4 order-2 md:order-1 ${activeMobileTab === 'logs' ? 'block' : 'hidden'} md:block`}>
           <EventLog logs={logs} />
@@ -694,65 +662,36 @@ const App: React.FC = () => {
 
         <div className={`md:col-span-7 lg:col-span-8 order-1 md:order-2 space-y-8 ${activeMobileTab !== 'logs' ? 'block' : 'hidden'} md:block`}>
           <div className={`gap-8 ${activeMobileTab === 'manage' ? 'flex flex-col' : 'hidden'} md:grid md:grid-cols-1 xl:grid-cols-2`}>
-             <CharacterForm 
-                onAdd={addCharacter} 
-                disabled={loading} 
-                existingCharacters={characters} 
-                useMentalStates={gameSettings.useMentalStates}
-             />
+             <CharacterForm onAdd={addCharacter} disabled={loading} existingCharacters={characters} useMentalStates={gameSettings.useMentalStates} />
              <InventoryPanel inventory={inventory} onSelectItem={setSelectedItem} />
           </div>
-          
           <div className={`${activeMobileTab === 'survivors' ? 'block' : 'hidden'} md:block`}>
             <SurvivorList characters={characters} onDelete={deleteCharacter} />
           </div>
         </div>
       </main>
 
-      {/* Mobile Fixed Next Day Button */}
+      {/* Next Day Buttons */}
       <div className="fixed bottom-4 left-4 right-4 z-40 md:hidden">
         <button onClick={handleNextDay} disabled={loading || characters.length === 0} className={`w-full py-4 rounded-xl font-bold text-lg uppercase tracking-wide transition-all shadow-lg flex justify-center items-center gap-2 ${loading ? 'bg-slate-700 text-slate-400' : characters.length === 0 ? 'bg-slate-700 text-slate-500' : 'bg-red-600 hover:bg-red-700 text-white shadow-red-900/50'}`}>
             {loading ? '진행 중...' : storySelection ? '선택 완료: 다음 날' : <>다음 날 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-6 h-6"><path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" /></svg></>}
         </button>
       </div>
-
-      {/* Desktop/Tablet Fixed Next Day Button */}
       <div className="fixed bottom-10 right-10 z-40 hidden md:block">
         <button onClick={handleNextDay} disabled={loading || characters.length === 0} className={`px-8 py-4 rounded-full font-bold text-xl uppercase tracking-wide transition-all shadow-xl hover:shadow-2xl flex justify-center items-center gap-3 transform hover:-translate-y-1 ${loading ? 'bg-slate-600 text-slate-400 cursor-wait' : characters.length === 0 ? 'bg-slate-600 text-slate-500 cursor-not-allowed' : 'bg-red-600 hover:bg-red-500 text-white shadow-red-900/40'}`}>
             {loading ? '진행 중...' : storySelection ? '선택 완료: 다음 날' : <>다음 날 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-6 h-6"><path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" /></svg></>}
         </button>
       </div>
 
-      {/* --- Modals & Overlays --- */}
+      {/* Modals */}
       {showTutorial && <TutorialModal onClose={closeTutorial} />}
-      
       {currentStoryHasChoices && storyNodeId && (
-          <StoryChoiceModal 
-            node={STORY_NODES[storyNodeId]} 
-            onSelect={(id, text) => setStorySelection({ id, text })}
-            currentSelection={storySelection}
-            characters={characters} 
-            inventory={inventory} 
-          />
+          <StoryChoiceModal node={STORY_NODES[storyNodeId]} onSelect={(id, text) => setStorySelection({ id, text })} currentSelection={storySelection} characters={characters} inventory={inventory} />
       )}
-
       {pendingBaby && father && mother && (
-          <BabyNamingModal 
-            father={father} 
-            mother={mother} 
-            onConfirm={handleBabyBorn} 
-            onCancel={() => setPendingBaby(null)} 
-          />
+          <BabyNamingModal father={father} mother={mother} onConfirm={handleBabyBorn} onCancel={() => setPendingBaby(null)} />
       )}
-
-      <ItemUseModal 
-        selectedItem={selectedItem} 
-        onClose={() => setSelectedItem(null)} 
-        onUseItem={handleUseItem}
-        survivors={uiSurvivors}
-        itemEffects={ITEM_EFFECTS}
-      />
-
+      <ItemUseModal selectedItem={selectedItem} onClose={() => setSelectedItem(null)} onUseItem={handleUseItem} survivors={uiSurvivors} itemEffects={ITEM_EFFECTS} />
       {confirmState && <ConfirmationModal title={confirmState.title} message={confirmState.message} onConfirm={confirmState.action} onCancel={() => setConfirmState(null)} isDangerous={confirmState.isDangerous} />}
       {showRelationshipMap && <RelationshipMap characters={characters} onClose={() => setShowRelationshipMap(false)} />}
       
@@ -770,6 +709,8 @@ const App: React.FC = () => {
             onToggleIncest={() => setGameSettings(prev => ({...prev, allowIncest: !prev.allowIncest}))}
             pureLoveMode={gameSettings.pureLoveMode}
             onTogglePureLove={() => setGameSettings(prev => ({...prev, pureLoveMode: !prev.pureLoveMode}))}
+            restrictStudentDating={gameSettings.restrictStudentDating}
+            onToggleStudentDating={() => setGameSettings(prev => ({...prev, restrictStudentDating: !prev.restrictStudentDating}))}
             developerMode={gameSettings.developerMode} 
             onToggleDeveloperMode={() => setGameSettings(prev => ({...prev, developerMode: !prev.developerMode}))}
             useMentalStates={gameSettings.useMentalStates}
@@ -780,6 +721,8 @@ const App: React.FC = () => {
             onToggleStoryChoices={() => setGameSettings(prev => ({...prev, enableStoryChoices: !prev.enableStoryChoices}))}
             enablePregnancy={gameSettings.enablePregnancy}
             onTogglePregnancy={() => setGameSettings(prev => ({...prev, enablePregnancy: !prev.enablePregnancy}))}
+            showEventEffects={gameSettings.showEventEffects} // New
+            onToggleEventEffects={() => setGameSettings(prev => ({...prev, showEventEffects: !prev.showEventEffects}))} // New
             onShowTutorial={openTutorial} 
         />
       )}

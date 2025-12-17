@@ -97,17 +97,24 @@ export interface ActionEffect {
     loot?: string[]; // Added for Job Events and others
     status?: Status; // Added
     inventoryRemove?: string[]; // Added
+    actorHp?: number; // Explicit actor HP change
+    targetHp?: number; // Explicit target HP change
+    actorSanity?: number; // Explicit actor Sanity change
+    targetSanity?: number; // Explicit target Sanity change
+    targetInfection?: number; // Explicit target Infection change
 }
 
 export interface GameSettings {
     allowSameSexCouples: boolean;
     allowIncest: boolean; // Added: 근친 허용
     pureLoveMode: boolean; // Added: 순애 모드 (일부일처제)
+    restrictStudentDating: boolean; // Added: 학생끼리만 연애 허용
     developerMode: boolean; // Added developerMode
     useMentalStates: boolean; // Added useMentalStates
     enableInteractions: boolean; // Added: 플레이어(생존자) 상호작용 옵션
     enableStoryChoices: boolean; // Added: 스토리 선택지 활성화 여부
     enablePregnancy: boolean; // Added: 임신 시스템 활성화 여부
+    showEventEffects: boolean; // Added: 이벤트 효과(수치) 표시 여부
 }
 
 export interface GameState {

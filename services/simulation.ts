@@ -45,6 +45,38 @@ const getCharacterUpdate = (updates: CharacterUpdate[], id: string): CharacterUp
 // Helper: Check if character has a lover/spouse
 const hasPartner = (c: Character) => Object.values(c.relationshipStatuses).some(s => s === 'Lover' || s === 'Spouse');
 
+// Helper: Generate Effect String
+const generateEffectLog = (effect: ActionEffect, characters: Character[], targetId?: string): string => {
+    const parts: string[] = [];
+    if (effect.hp) parts.push(`❤️${effect.hp > 0 ? '+' : ''}${effect.hp}`);
+    if (effect.sanity) parts.push(`🧠${effect.sanity > 0 ? '+' : ''}${effect.sanity}`);
+    if (effect.fatigue) parts.push(`💤${effect.fatigue > 0 ? '+' : ''}${effect.fatigue}`);
+    if (effect.infection) parts.push(`🦠${effect.infection > 0 ? '+' : ''}${effect.infection}`);
+    if (effect.hunger) parts.push(`🍖${effect.hunger > 0 ? '+' : ''}${effect.hunger}`);
+    if (effect.status && effect.status !== 'Alive') parts.push(`💀${effect.status}`);
+    
+    // Explicit Actor/Target changes (used in Interactions)
+    if (effect.actorHp) parts.push(`(나)❤️${effect.actorHp > 0 ? '+' : ''}${effect.actorHp}`);
+    if (effect.targetHp) parts.push(`(상대)❤️${effect.targetHp > 0 ? '+' : ''}${effect.targetHp}`);
+    if (effect.actorSanity) parts.push(`(나)🧠${effect.actorSanity > 0 ? '+' : ''}${effect.actorSanity}`);
+    if (effect.targetSanity) parts.push(`(상대)🧠${effect.targetSanity > 0 ? '+' : ''}${effect.targetSanity}`);
+    
+    // Affinity
+    if (effect.affinity && targetId) {
+        const target = characters.find(c => c.id === targetId);
+        const targetName = target ? target.name : 'Unknown';
+        parts.push(`💞 ${targetName} ${effect.affinity > 0 ? '+' : ''}${effect.affinity}`);
+    }
+    
+    // Loot
+    if (effect.loot && effect.loot.length > 0) {
+        parts.push(`📦${effect.loot.join(',')}`);
+    }
+
+    if (parts.length === 0) return '';
+    return ` (${parts.join(', ')})`;
+};
+
 // Helper: Get specific loot based on job category
 const getJobLootEvent = (char: Character): ActionEffect => {
     const job = char.job || '';
@@ -93,7 +125,8 @@ const processStoryEvent = (
     characters: Character[],
     updates: CharacterUpdate[],
     globalLoot: string[],
-    userSelectedNodeId?: string // New Parameter
+    userSelectedNodeId?: string,
+    settings?: GameSettings // Add settings to check showEventEffects
 ) => {
     // 1. Determine Story Node
     const forcedStory = forcedEvents.find(e => e.type === 'STORY');
@@ -119,13 +152,16 @@ const processStoryEvent = (
         nextStoryNodeId = storyNode.id;
     }
 
-    const narrative = storyNode.text;
+    let narrative = storyNode.text;
 
     // 2. Apply Story Effects
     if (storyNode.effect) {
         const effect = storyNode.effect;
         let targets: Character[] = [];
-        const livingChars = characters.filter(c => c.status !== 'Dead' && c.status !== 'Missing');
+        
+        // BUG FIX: Restrict targets to only Alive or Infected. 
+        // Previously used (!Dead && !Missing), which included Zombies, causing them to be revived by events.
+        const livingChars = characters.filter(c => c.status === 'Alive' || c.status === 'Infected');
 
         if (effect.target === 'ALL') targets = livingChars;
         else if (effect.target === 'RANDOM_1') targets = [livingChars[Math.floor(Math.random() * livingChars.length)]];
@@ -150,6 +186,21 @@ const processStoryEvent = (
             applyEffectToUpdate(update, storyActionEffect);
         });
 
+        // Append Effect String to Narrative if enabled
+        if (settings?.showEventEffects) {
+            const effectSummary = generateEffectLog({
+                text: '',
+                hp: effect.hp,
+                sanity: effect.sanity,
+                fatigue: effect.fatigue,
+                infection: effect.infection,
+                hunger: effect.hunger,
+                loot: effect.loot,
+                status: effect.status
+            }, characters);
+            if (effectSummary) narrative += effectSummary;
+        }
+
         if (effect.loot) globalLoot.push(...effect.loot);
     }
 
@@ -161,36 +212,50 @@ const processIndividualEvents = (
     forcedEvents: ForcedEvent[],
     settings: GameSettings,
     updates: CharacterUpdate[],
-    events: string[]
+    events: string[],
+    globalLoot: string[] // Added param to capture individual loot
 ) => {
     for (const char of characters) {
         const update = getCharacterUpdate(updates, char.id);
+        let action: ActionEffect | null = null; // Helper to store action
 
-        // Zombie Hunger Decay
+        // Zombie Hunger Decay & SKIP
         if (char.status === 'Zombie') {
             update.hungerChange = (update.hungerChange || 0) - DAILY_HUNGER_LOSS;
+            continue; // CRITICAL FIX: Zombies must NOT perform individual actions (Jobs, MBTI, etc.)
         }
 
         // Dead/Ghost Events
         if (char.status === 'Dead' || char.status === 'Missing') {
-            const livingTargets = characters.filter(c => c.status !== 'Dead' && c.status !== 'Missing');
-            // Shuffle targets to avoid bias
+            // Ghost should not haunt Zombies
+            const livingTargets = characters.filter(c => c.status === 'Alive' || c.status === 'Infected');
             const shuffledTargets = [...livingTargets].sort(() => 0.5 - Math.random());
 
             for (const target of shuffledTargets) {
                 const relStatus = char.relationshipStatuses[target.id];
                 const isDeepConnection = ['Lover', 'Spouse', 'Family', 'Parent', 'Child', 'Sibling'].includes(relStatus || '');
                 
-                // Base 10%, Deep connection 25%
                 const probability = isDeepConnection ? 0.25 : 0.10;
 
                 if (Math.random() < probability) {
                     const ghostEvent = GHOST_EVENTS[Math.floor(Math.random() * GHOST_EVENTS.length)];
                     const result = ghostEvent(char.name, target.name);
-                    events.push(result.text);
+                    
+                    let eventText = result.text;
+                    if (settings.showEventEffects) {
+                        eventText += generateEffectLog(result, characters);
+                    }
+                    events.push(eventText);
                     
                     const targetUpdate = getCharacterUpdate(updates, target.id);
-                    applyEffectToUpdate(targetUpdate, result);
+                    // Handle loot from ghost events if any
+                    if (result.loot && result.loot.length > 0) {
+                        globalLoot.push(...result.loot);
+                        const { loot, ...rest } = result;
+                        applyEffectToUpdate(targetUpdate, rest);
+                    } else {
+                        applyEffectToUpdate(targetUpdate, result);
+                    }
                     
                     // Trigger only one ghost event per dead character per day
                     break;
@@ -203,45 +268,50 @@ const processIndividualEvents = (
         const forcedCharEvent = forcedEvents.find(e => e.type !== 'STORY' && e.actorId === char.id);
         if (forcedCharEvent && forcedCharEvent.type === 'MBTI') {
             const mbtiGen = MBTI_SPECIFIC_ACTIONS[char.mbti]; 
-            const action = mbtiGen(char.name, char.gender);
-            events.push(action.text);
-            applyEffectToUpdate(update, action);
-            continue;
+            action = mbtiGen(char.name, char.gender);
         }
-
         // Priority Logic
-        if (settings.useMentalStates && char.mentalState !== 'Normal' && Math.random() < 0.3) {
-            const mentalAction = MENTAL_ILLNESS_ACTIONS[char.mentalState](char);
-            events.push(mentalAction.text);
-            applyEffectToUpdate(update, mentalAction);
+        else if (settings.useMentalStates && char.mentalState !== 'Normal' && Math.random() < 0.3) {
+            action = MENTAL_ILLNESS_ACTIONS[char.mentalState](char);
         } else if (char.fatigue >= FATIGUE_THRESHOLD && Math.random() < 0.4) {
-            const fatigueAction = FATIGUE_EVENTS[Math.floor(Math.random() * FATIGUE_EVENTS.length)](char.name);
-            events.push(fatigueAction.text);
-            applyEffectToUpdate(update, fatigueAction);
-        } else if (char.status !== 'Zombie') {
+            const fatigueGen = FATIGUE_EVENTS[Math.floor(Math.random() * FATIGUE_EVENTS.length)];
+            action = fatigueGen(char.name);
+        } else {
+            // Normal Daily Events (Alive/Infected non-zombie)
             
             // Production Job Loot Logic (30% Guarantee)
             const isProduction = PRODUCTION_JOBS.includes(char.job || '');
             if (isProduction && Math.random() < 0.3) {
-                const lootAction = getJobLootEvent(char);
-                events.push(lootAction.text);
-                applyEffectToUpdate(update, lootAction);
-                continue; // Skip standard job/mbti event if loot is produced
+                action = getJobLootEvent(char);
             }
+            else {
+                const rand = Math.random();
+                if (char.fatigue > 60 && rand < 0.3) {
+                    const restGen = REST_EVENTS[Math.floor(Math.random() * REST_EVENTS.length)];
+                    action = restGen(char.name);
+                } else if (char.job && rand < 0.6) {
+                    action = getJobMbtiEvent(char.job, char.mbti, char.name);
+                } else {
+                    action = MBTI_SPECIFIC_ACTIONS[char.mbti](char.name, char.gender);
+                }
+            }
+        }
 
-            const rand = Math.random();
-            if (char.fatigue > 60 && rand < 0.3) {
-                const restAction = REST_EVENTS[Math.floor(Math.random() * REST_EVENTS.length)](char.name);
-                events.push(restAction.text);
-                applyEffectToUpdate(update, restAction);
-            } else if (char.job && rand < 0.6) {
-                const jobAction = getJobMbtiEvent(char.job, char.mbti, char.name);
-                events.push(jobAction.text);
-                applyEffectToUpdate(update, jobAction);
+        // Unified Action Processor
+        if (action) {
+            let eventText = action.text;
+            if (settings.showEventEffects) {
+                eventText += generateEffectLog(action, characters);
+            }
+            events.push(eventText);
+
+            if (action.loot && action.loot.length > 0) {
+                globalLoot.push(...action.loot);
+                // loot를 globalLoot에 추가하고, char update에서는 제거하여 중복(또는 숨김 인벤토리 저장)을 방지
+                const { loot, ...rest } = action;
+                applyEffectToUpdate(update, rest);
             } else {
-                const mbtiAction = MBTI_SPECIFIC_ACTIONS[char.mbti](char.name, char.gender);
-                events.push(mbtiAction.text);
-                applyEffectToUpdate(update, mbtiAction);
+                applyEffectToUpdate(update, action);
             }
         }
     }
@@ -347,7 +417,11 @@ const processMarriageAndPregnancy = (
                     charUpdate.relationshipUpdates.push({ targetId: partner.id, change: 20, newStatus: 'Spouse' });
                     partnerUpdate.relationshipUpdates.push({ targetId: char.id, change: 20, newStatus: 'Spouse' });
 
-                    events.push(`💍 [결혼] ${char.name}와(과) ${partner.name}은(는) 서로의 사랑을 확인하고 부부가 되기로 맹세했습니다! (관계 지속 ${duration}일)`);
+                    let eventText = `💍 [결혼] ${char.name}와(과) ${partner.name}은(는) 서로의 사랑을 확인하고 부부가 되기로 맹세했습니다! (관계 지속 ${duration}일)`;
+                    if (settings.showEventEffects) {
+                        eventText += ` (🧠+20)`; // Simple static log for marriage
+                    }
+                    events.push(eventText);
                     
                     // Boost sanity for both
                     applyEffectToUpdate(charUpdate, { text: '', sanity: 20 });
@@ -382,7 +456,8 @@ const processInteractionPhase = (
     forcedEvents: ForcedEvent[],
     settings: GameSettings,
     updates: CharacterUpdate[],
-    events: string[]
+    events: string[],
+    globalLoot: string[] // Added param to capture individual loot
 ) => {
     const getProjectedStatus = (c: Character) => {
         const u = updates.find(up => up.id === c.id);
@@ -400,7 +475,7 @@ const processInteractionPhase = (
             const pool = INTERACTION_POOL[fe.key];
             if (pool && pool[fe.index || 0]) {
                 const result = pool[fe.index || 0](actor.name, target.name);
-                processInteractionResult(result, actor, target, updates, events);
+                processInteractionResult(result, actor, target, updates, events, settings);
             }
         }
     }
@@ -422,16 +497,26 @@ const processInteractionPhase = (
         let poolKey = 'POSITIVE';
         let interactionResult: any = null;
         let relationshipChangeType: RelationshipStatus | undefined = undefined;
+        
+        // --- ZOMBIE INTERACTION LOGIC ---
+        // If either party is a Zombie, we override normal social logic.
         if (actorStatus === 'Zombie' || targetStatus === 'Zombie') {
             const z = actorStatus === 'Zombie' ? actor : target;
             const h = actorStatus === 'Zombie' ? target : actor;
             const zUpdate = updates.find(u => u.id === z.id);
             const hasMuzzle = zUpdate?.hasMuzzle !== undefined ? zUpdate.hasMuzzle : z.hasMuzzle;
+            
+            // Zombies ignore each other
             if (actorStatus === 'Zombie' && targetStatus === 'Zombie') continue; 
+            
+            // Interaction Pool for Zombies
+            const pool = INTERACTION_POOL['ZOMBIE_HUMAN'];
+            
             if (hasMuzzle) {
-               const pool = INTERACTION_POOL['ZOMBIE_HUMAN'];
+               // Safe interaction if muzzled
                interactionResult = pool[Math.floor(Math.random() * pool.length)](z.name, h.name);
             } else {
+               // 10% Chance to Attack, 90% Chance for Flavor Interaction
                if (Math.random() < 0.1) {
                    interactionResult = { 
                        text: `🩸 [위험] 입마개를 하지 않은 좀비 ${z.name}이(가) 본능을 이기지 못하고 ${h.name}을(를) 물어뜯었습니다!`,
@@ -439,11 +524,11 @@ const processInteractionPhase = (
                        targetInfection: 20
                    };
                } else {
-                   const pool = INTERACTION_POOL['ZOMBIE_HUMAN'];
                    interactionResult = pool[Math.floor(Math.random() * pool.length)](z.name, h.name);
                }
             }
         } 
+        // --- HUMAN INTERACTION LOGIC (Only if neither is Zombie) ---
         else if (settings.useMentalStates && actor.mentalState !== 'Normal' && Math.random() < 0.4) {
             if (relStatus === 'Lover' || relStatus === 'Spouse') {
                 const pool = LOVER_MENTAL_EVENTS[actor.mentalState] || [];
@@ -483,18 +568,35 @@ const processInteractionPhase = (
             } else if (['Parent', 'Child', 'Sibling', 'Family'].includes(relStatus)) {
                 if (relStatus === 'Sibling') poolKey = 'SIBLING';
                 else if (relStatus === 'Family') poolKey = 'FAMILY';
-                else poolKey = 'PARENT_CHILD';
+                else if (relStatus === 'Child') poolKey = 'PARENT_TO_CHILD'; // Actor views Target as Child (Actor is Parent)
+                else poolKey = 'CHILD_TO_PARENT'; // Actor views Target as Parent (Actor is Child)
             } else if (relStatus === 'Enemy' || relStatus === 'Rival') {
                 poolKey = relStatus === 'Enemy' ? 'ENEMY' : 'RIVAL';
             } else if (relStatus === 'BestFriend') {
                 poolKey = 'BEST_FRIEND';
+            } else if (relStatus === 'Colleague') {
+                poolKey = 'COLLEAGUE';
+            } else if (relStatus === 'Savior') {
+                poolKey = 'SAVIOR';
             } else {
                 if (!['Lover', 'Spouse', 'Ex'].includes(relStatus) && affinity > 60 && Math.random() < 0.15) {
                     const isSameSex = actor.gender === target.gender;
                     const isFamily = ['Parent', 'Child', 'Sibling', 'Family'].includes(relStatus);
                     const allowedByGender = settings.allowSameSexCouples || !isSameSex;
                     const allowedByFamily = settings.allowIncest || !isFamily;
-                    if (allowedByGender && allowedByFamily) {
+                    
+                    // --- Age Gap Check (Student Restriction) ---
+                    const studentJobs = ['초등학생', '중학생', '고등학생'];
+                    const isActorStudent = studentJobs.includes(actor.job || '');
+                    const isTargetStudent = studentJobs.includes(target.job || '');
+                    // If restriction is ON:
+                    // - If Actor is Student and Target is NOT Student => Disallow
+                    // - If Actor is NOT Student and Target is Student => Disallow
+                    // (Equivalent to: must match student status if either is a student)
+                    // If restriction is OFF: Always allowed (true)
+                    const allowedByAge = !settings.restrictStudentDating || (isActorStudent === isTargetStudent);
+
+                    if (allowedByGender && allowedByFamily && allowedByAge) {
                         const actorHasPartner = hasPartner(actor);
                         const targetHasPartner = hasPartner(target);
                         if (settings.pureLoveMode && (actorHasPartner || targetHasPartner)) {
@@ -519,7 +621,7 @@ const processInteractionPhase = (
                 interactionResult = pool[Math.floor(Math.random() * pool.length)](actor.name, target.name);
             }
         }
-        processInteractionResult(interactionResult, actor, target, updates, events, relationshipChangeType);
+        processInteractionResult(interactionResult, actor, target, updates, events, settings, relationshipChangeType);
     }
 };
 
@@ -529,12 +631,20 @@ function processInteractionResult(
     target: Character, 
     updates: CharacterUpdate[], 
     events: string[],
+    settings?: GameSettings,
     newRelStatus?: RelationshipStatus
 ) {
     if (!result) return;
-    const text = typeof result === 'string' ? result : result.text;
-    events.push(text);
+    
+    // Add Effects String
+    let text = typeof result === 'string' ? result : result.text;
     const effect = typeof result === 'string' ? {} : result;
+
+    if (settings?.showEventEffects) {
+        text += generateEffectLog(effect, [actor, target], target.id);
+    }
+    events.push(text);
+
     const actorUpdate = getCharacterUpdate(updates, actor.id);
     const targetUpdate = getCharacterUpdate(updates, target.id);
     if (effect.actorHp) actorUpdate.hpChange = (actorUpdate.hpChange || 0) + effect.actorHp;
@@ -551,6 +661,17 @@ function processInteractionResult(
         if (!targetUpdate.relationshipUpdates) targetUpdate.relationshipUpdates = [];
         targetUpdate.relationshipUpdates.push({ targetId: actor.id, change: change, newStatus: newRelStatus === 'Lover' ? 'Lover' : newRelStatus === 'Ex' ? 'Ex' : undefined });
     }
+    // Also handle affinityChange which was used in some mental events
+    if (effect.affinityChange) {
+        const change = effect.affinityChange;
+        if (!actorUpdate.relationshipUpdates) actorUpdate.relationshipUpdates = [];
+        actorUpdate.relationshipUpdates.push({ targetId: target.id, change: change, newStatus: newRelStatus });
+        if (!targetUpdate.relationshipUpdates) targetUpdate.relationshipUpdates = [];
+        targetUpdate.relationshipUpdates.push({ targetId: actor.id, change: change, newStatus: newRelStatus === 'Lover' ? 'Lover' : newRelStatus === 'Ex' ? 'Ex' : undefined });
+    }
+    // Handle victim stats from mental events
+    if (effect.victimHpChange) targetUpdate.hpChange = (targetUpdate.hpChange || 0) + effect.victimHpChange;
+    if (effect.victimSanityChange) targetUpdate.sanityChange = (targetUpdate.sanityChange || 0) + effect.victimSanityChange;
 }
 
 // --- Main Export ---
@@ -568,10 +689,10 @@ export const simulateDay = async (
     const globalLoot: string[] = [];
 
     // Phase 1: Story (Pass user selection)
-    const { narrative, nextStoryNodeId, consumedItems } = processStoryEvent(currentStoryNodeId, forcedEvents, characters, updates, globalLoot, userSelectedNodeId);
+    const { narrative, nextStoryNodeId, consumedItems } = processStoryEvent(currentStoryNodeId, forcedEvents, characters, updates, globalLoot, userSelectedNodeId, settings);
 
     // Phase 2: Individual Events
-    processIndividualEvents(characters, forcedEvents, settings, updates, events);
+    processIndividualEvents(characters, forcedEvents, settings, updates, events, globalLoot); // Pass globalLoot
 
     // Phase 2.5: Infection Crisis Vote
     processInfectionCrisis(characters, updates, events);
@@ -580,7 +701,7 @@ export const simulateDay = async (
     const babyEvent = processMarriageAndPregnancy(characters, updates, events, settings);
 
     // Phase 3: Interactions
-    processInteractionPhase(characters, forcedEvents, settings, updates, events);
+    processInteractionPhase(characters, forcedEvents, settings, updates, events, globalLoot);
 
     return {
         narrative,
