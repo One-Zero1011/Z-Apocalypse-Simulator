@@ -177,7 +177,7 @@ const ProbabilityModal: React.FC<Props> = ({ characters, settings, onClose }) =>
                         <section>
                             <h4 className="font-bold text-red-600 dark:text-red-400 border-b pb-1 mb-4 uppercase tracking-wider">🗳️ 감염 위기 투표 시스템</h4>
                             <div className="bg-red-50 dark:bg-red-900/10 p-4 rounded-xl border border-red-100 dark:border-red-900/30 text-xs">
-                                <p className="mb-3 font-bold">감염도 100% 도달 시 생존자 투표 로직 (합산 > 0 이면 찬성):</p>
+                                <p className="mb-3 font-bold">감염도 100% 도달 시 생존자 투표 로직 (합산 &gt; 0 이면 찬성):</p>
                                 <div className="space-y-2 font-mono text-[10px] opacity-80">
                                     <div className="flex justify-between"><span>성향 보너스</span> <span>F: +2 / T: -2</span></div>
                                     <div className="flex justify-between"><span>호감도 가중치</span> <span>50이상: +4 / -20이하: -3</span></div>
