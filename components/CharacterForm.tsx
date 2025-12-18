@@ -1,10 +1,10 @@
 
 import React, { useState } from 'react';
-import { MBTI, Gender, Character, MentalState } from '../types';
+import { MBTI, Gender, Character, MentalState, Stats } from '../types';
 import { MBTI_TYPES, JOB_CATEGORIES } from '../constants';
 
 interface Props {
-  onAdd: (name: string, gender: Gender, mbti: MBTI, job: string, mentalState: MentalState, initialRelations?: { targetId: string, type: string }[]) => void;
+  onAdd: (name: string, gender: Gender, mbti: MBTI, job: string, mentalState: MentalState, stats: Stats, initialRelations?: { targetId: string, type: string }[]) => void;
   disabled?: boolean;
   existingCharacters?: Character[];
   useMentalStates?: boolean;
@@ -22,20 +22,35 @@ const CharacterForm: React.FC<Props> = ({ onAdd, disabled, existingCharacters = 
   const [mbti, setMbti] = useState<MBTI>('ISTJ');
   const [job, setJob] = useState<string>('');
   const [mentalState, setMentalState] = useState<MentalState>('Normal');
+  const [stats, setStats] = useState<Stats>({ str: 5, agi: 5, con: 5, int: 5, cha: 5 });
   
   // Relationship State
   const [pendingRelations, setPendingRelations] = useState<{ targetId: string, type: string }[]>([]);
   const [tempTargetId, setTempTargetId] = useState<string>('');
   const [tempRelationType, setTempRelationType] = useState<string>('Friend');
 
+  const handleStatChange = (stat: keyof Stats, value: string) => {
+    const num = Math.max(0, Math.min(10, parseInt(value) || 0));
+    setStats(prev => ({ ...prev, [stat]: num }));
+  };
+
+  const generateRandomStats = (): Stats => ({
+    str: Math.floor(Math.random() * 11),
+    agi: Math.floor(Math.random() * 11),
+    con: Math.floor(Math.random() * 11),
+    int: Math.floor(Math.random() * 11),
+    cha: Math.floor(Math.random() * 11),
+  });
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (name.trim()) {
-      onAdd(name, gender, mbti, job, mentalState, pendingRelations);
+      onAdd(name, gender, mbti, job, mentalState, stats, pendingRelations);
       
       setName('');
       setJob('');
       setMentalState('Normal');
+      setStats({ str: 5, agi: 5, con: 5, int: 5, cha: 5 });
       // Reset relation
       setPendingRelations([]);
       setTempTargetId('');
@@ -44,25 +59,18 @@ const CharacterForm: React.FC<Props> = ({ onAdd, disabled, existingCharacters = 
   };
 
   const handleRandomAdd = () => {
-      // 1. Gender
       const rGender: Gender = Math.random() > 0.5 ? 'Male' : 'Female';
-      
-      // 2. Name
       const surname = SURNAMES[Math.floor(Math.random() * SURNAMES.length)];
       const givenName = rGender === 'Male' 
           ? MALE_NAMES[Math.floor(Math.random() * MALE_NAMES.length)]
           : FEMALE_NAMES[Math.floor(Math.random() * FEMALE_NAMES.length)];
       const rName = `${surname}${givenName}`;
-      
-      // 3. MBTI
       const rMbti = MBTI_TYPES[Math.floor(Math.random() * MBTI_TYPES.length)];
-      
-      // 4. Job
       const allJobs = Object.values(JOB_CATEGORIES).flat();
       const rJob = allJobs[Math.floor(Math.random() * allJobs.length)];
+      const rStats = generateRandomStats();
 
-      // 5. Add Immediately
-      onAdd(rName, rGender, rMbti, rJob, 'Normal', []);
+      onAdd(rName, rGender, rMbti, rJob, 'Normal', rStats, []);
   };
 
   const handleAddRelation = () => {
@@ -114,7 +122,7 @@ const CharacterForm: React.FC<Props> = ({ onAdd, disabled, existingCharacters = 
             onClick={handleRandomAdd}
             disabled={disabled}
             className="text-xs bg-purple-100 hover:bg-purple-200 dark:bg-purple-900/40 dark:hover:bg-purple-900/60 text-purple-700 dark:text-purple-300 px-3 py-1.5 rounded-full font-bold transition-colors flex items-center gap-1"
-            title="랜덤한 이름, 직업, MBTI를 가진 생존자를 즉시 추가합니다."
+            title="랜덤한 이름, 직업, MBTI, 스탯을 가진 생존자를 즉시 추가합니다."
           >
             <span>🎲</span> 랜덤 생존자 추가
           </button>
@@ -153,6 +161,42 @@ const CharacterForm: React.FC<Props> = ({ onAdd, disabled, existingCharacters = 
                     ))}
                 </select>
             </div>
+        </div>
+
+        {/* Stat Selection Section */}
+        <div className="bg-slate-50 dark:bg-slate-900/50 p-3 rounded-lg border border-slate-200 dark:border-slate-700">
+          <div className="flex justify-between items-center mb-3">
+            <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-tighter">능력치 (Stats 0-10)</label>
+            <button 
+              type="button" 
+              onClick={() => setStats(generateRandomStats())}
+              className="text-[10px] bg-slate-200 dark:bg-slate-700 px-2 py-0.5 rounded hover:bg-slate-300 transition-colors font-bold"
+            >
+              스탯 랜덤
+            </button>
+          </div>
+          <div className="grid grid-cols-5 gap-2">
+            {[
+              { id: 'str' as keyof Stats, label: '💪힘' },
+              { id: 'agi' as keyof Stats, label: '🏃민첩' },
+              { id: 'con' as keyof Stats, label: '🛡️체력' },
+              { id: 'int' as keyof Stats, label: '🧠지능' },
+              { id: 'cha' as keyof Stats, label: '✨매력' }
+            ].map(s => (
+              <div key={s.id} className="flex flex-col items-center">
+                <span className="text-[10px] mb-1 font-bold text-slate-500">{s.label}</span>
+                <input 
+                  type="number" min="0" max="10" 
+                  value={stats[s.id]} 
+                  onChange={(e) => handleStatChange(s.id, e.target.value)}
+                  className="w-full text-center bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded p-1 text-sm font-mono focus:border-zombie-green outline-none"
+                />
+              </div>
+            ))}
+          </div>
+          <p className="mt-2 text-[9px] text-slate-400 italic leading-tight">
+            * 체력(🛡️)은 최대 HP를, 지능(🧠)은 최대 정신력을 증가시킵니다.
+          </p>
         </div>
         
         <div className={`grid grid-cols-1 ${useMentalStates ? 'md:grid-cols-3' : 'md:grid-cols-2'} gap-4`}>

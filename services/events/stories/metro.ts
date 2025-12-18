@@ -1,6 +1,13 @@
 
 import { StoryNode } from "../../../types";
 
+const S = {
+    SENSORY: { name: "절대 감각", description: "오감을 이용해 보이지 않는 위협을 먼저 감지합니다.", icon: "👂" },
+    MECHANIC: { name: "기계 수리", description: "차량, 발전기 등 복잡한 기계 장치를 수리합니다.", icon: "⚙️" },
+    AGILITY: { name: "기동력", description: "좀비 사이를 빠르게 빠져나가거나 도망칩니다.", icon: "🏃" },
+    STEALTH: { name: "은밀 기동", description: "소리 없이 움직여 좀비의 시선을 피합니다.", icon: "🤫" }
+};
+
 export const METRO_NODES: Record<string, StoryNode> = {
     'metro_0_start': {
         id: 'metro_0_start',
@@ -13,17 +20,24 @@ export const METRO_NODES: Record<string, StoryNode> = {
     'metro_avoid': {
         id: 'metro_avoid',
         text: "🚶 지하의 어둠은 믿을 수 없습니다. 시간이 걸리더라도 지상으로 우회합니다.",
-        effect: { target: 'ALL', fatigue: 15 }
+        effect: { target: 'ALL', fatigue: 15, statChanges: { con: 1 } }
     },
     'metro_1_entrance': {
         id: 'metro_1_entrance',
-        text: "🔦 개찰구를 넘어 승강장으로 내려갑니다. 어디선가 물 떨어지는 소리와 쥐들이 움직이는 소리가 들립니다.",
+        text: "🔦 개찰구를 넘어 승강장으로 내려갑니다. 어둠 속에서 기분 나쁜 소리가 들립니다.",
         next: [
+            { id: 'metro_2_sensory', weight: 0.0, choiceText: "어둠 속 소리 분석 (절대 감각 필요)", req: { skill: '절대 감각' } },
             { id: 'metro_2_tunnel', weight: 0.4, choiceText: "선로 진입 (빠름, 위험)" }, 
             { id: 'metro_2_utility', weight: 0.3, choiceText: "관리실 수색 (전력/자판기)" }, 
             { id: 'metro_2_mall', weight: 0.3, choiceText: "지하상가 수색 (물자/가스)" }
         ],
         effect: { target: 'ALL', sanity: -5 }
+    },
+    'metro_2_sensory': {
+        id: 'metro_2_sensory',
+        text: "👂 절대 감각 스킬로 어둠 속에 매복한 변종들의 호흡 소리를 읽어냈습니다. 매복을 완벽히 피하고 안전하게 관리실로 이동합니다.",
+        next: [{ id: 'metro_2_utility', weight: 1.0 }],
+        effect: { target: 'ALL', sanity: 10, skillsAdd: [S.SENSORY], statChanges: { int: 1 } }
     },
     'metro_2_mall': {
         id: 'metro_2_mall',
@@ -37,52 +51,72 @@ export const METRO_NODES: Record<string, StoryNode> = {
         id: 'metro_3_fashion',
         text: "👕 의류 매장에서 튼튼한 옷과 가방을 챙겨 방한 대책을 세우고 가방 용량을 늘렸습니다. 마네킹들이 사람처럼 보여 섬뜩합니다.",
         next: [{ id: 'metro_4_gas', weight: 1.0 }],
-        effect: { target: 'ALL', sanity: -2, fatigue: -5 }
+        effect: { target: 'ALL', sanity: -2, fatigue: -5, statChanges: { con: 1 } }
     },
     'metro_3_food': {
         id: 'metro_3_food',
         text: "🍔 푸드코트를 뒤졌습니다. 썩은 냄새가 진동하지만, 밀봉된 음료수와 통조림을 꽤 발견했습니다.",
+        next: [
+          { id: 'metro_3_plumbing', weight: 0.0, choiceText: "배관 정화 및 식수 확보 (수원 확보 필요)", req: { skill: '수원 확보' } },
+          { id: 'metro_4_gas', weight: 1.0 }
+        ],
+        effect: { target: 'ALL', loot: ['통조림'] }
+    },
+    'metro_3_plumbing': {
+        id: 'metro_3_plumbing',
+        text: "🚰 막힌 배관을 뚫고 정화 장치를 가동하여 깨끗한 물을 확보했습니다. 모두의 갈증이 해소됩니다.",
         next: [{ id: 'metro_4_gas', weight: 1.0 }],
-        effect: { target: 'ALL', loot: ['통조림', '비타민'] }
+        effect: { target: 'ALL', hp: 10, sanity: 10 }
     },
     'metro_4_gas': {
         id: 'metro_4_gas',
-        text: "💨 상가 깊은 곳에서 가스 누출 경보기가 울리고 있습니다. 매캐한 냄새가 차오릅니다! 빨리 지상으로 나가는 환풍구를 찾아야 합니다.",
+        text: "💨 상가 깊은 곳에서 가스 누출 경보기가 울리고 있습니다. 매캐한 냄새가 차오릅니다!",
         next: [
+            { id: 'metro_5_agility', weight: 0.0, choiceText: "가스 차오르기 전 탈출 (기동력 필요)", req: { skill: '기동력' } },
             { id: 'metro_5_vent_exit', weight: 0.6 },
             { id: 'metro_5_gas_poison', weight: 0.4 }
         ],
         effect: { target: 'ALL', sanity: -5 }
     },
+    'metro_5_agility': {
+        id: 'metro_5_agility',
+        text: "🏃 기동력 스킬을 발휘해 장애물을 뛰어넘어 가스가 퍼지기 전 지상 출구에 도달했습니다.",
+        next: [{ id: 'metro_7_end', weight: 1.0 }],
+        effect: { target: 'ALL', fatigue: 5, sanity: 10, skillsAdd: [S.AGILITY] }
+    },
     'metro_5_vent_exit': {
         id: 'metro_5_vent_exit',
         text: "🌬️ 다행히 환풍구를 발견하고 사다리를 타고 지상으로 탈출했습니다. 맑은 공기가 이렇게 맛있는 줄 몰랐습니다.",
-        effect: { target: 'ALL', fatigue: 10 }
+        effect: { target: 'ALL', fatigue: 10, statChanges: { agi: 1 } }
     },
     'metro_5_gas_poison': {
         id: 'metro_5_gas_poison',
         text: "🤢 출구를 찾는 데 시간이 걸려 유독 가스를 마시고 말았습니다. 구토와 어지러움을 호소하며 겨우 기어 나왔습니다.",
-        effect: { target: 'ALL', hp: -15, fatigue: 20 }
+        effect: { target: 'ALL', hp: -15, fatigue: 20, statChanges: { con: -1 }, skillsRemove: ["기동력"] }
     },
     'metro_2_utility': {
         id: 'metro_2_utility',
         text: "⚡ '관계자 외 출입 금지' 표지판이 붙은 관리실 문을 엽니다. 비상 발전기를 가동해볼 수 있을 것 같습니다.",
         next: [
-            { id: 'metro_3_power_on', weight: 0.5 },
-            { id: 'metro_3_power_fail', weight: 0.5 }
+            { 
+                id: 'metro_3_power_on', 
+                weight: 1.0, 
+                choiceText: "발전기 회로 수리 (지능 기반)",
+                dice: { threshold: 80, stat: 'int', successId: 'metro_3_power_on', failId: 'metro_3_power_fail', sanityPenalty: -10 }
+            }
         ]
     },
     'metro_3_power_on': {
         id: 'metro_3_power_on',
-        text: "💡 발전기가 굉음을 내며 돌아갑니다! 승강장에 불이 켜지고 자판기가 작동합니다. 음료수를 얻었습니다.",
+        text: "💡 판정 성공! 발전기가 굉음을 내며 돌아갑니다! 승강장에 불이 켜지고 자판기가 작동합니다. 음료수를 얻었습니다.",
         next: [{ id: 'metro_4_nest', weight: 1.0 }],
-        effect: { target: 'ALL', loot: ['비타민', '비타민'] }
+        effect: { target: 'ALL', loot: ['비타민', '비타민'], skillsAdd: [S.MECHANIC], statChanges: { int: 1 } }
     },
     'metro_3_power_fail': {
         id: 'metro_3_power_fail',
-        text: "🔊 발전기가 켜지는 대신 요란한 경보음이 울립니다! 소리를 듣고 좀비들이 몰려옵니다.",
+        text: "🔊 판정 실패! 발전기가 켜지는 대신 요란한 경보음이 울립니다! 소리를 듣고 좀비들이 몰려옵니다.",
         next: [{ id: 'metro_5_ambush', weight: 1.0 }],
-        effect: { target: 'ALL', sanity: -10 }
+        effect: { target: 'ALL', sanity: -10, skillsRemove: ["기계 수리"] }
     },
     'metro_2_tunnel': {
         id: 'metro_2_tunnel',
@@ -91,20 +125,20 @@ export const METRO_NODES: Record<string, StoryNode> = {
             { id: 'metro_3_echo', weight: 0.5 },
             { id: 'metro_3_train', weight: 0.5, choiceText: "전동차 수색" }
         ],
-        effect: { target: 'ALL', fatigue: 10 }
+        effect: { target: 'ALL', fatigue: 10, skillsAdd: [S.STEALTH] }
     },
     'metro_3_echo': {
         id: 'metro_3_echo',
         text: "👂 어디선가 기괴한 울음소리가 메아리칩니다. 소리의 근원지를 파악할 수 없어 공포감이 증폭됩니다.",
         next: [{ id: 'metro_4_nest', weight: 1.0 }],
-        effect: { target: 'ALL', sanity: -15 }
+        effect: { target: 'ALL', sanity: -15, statChanges: { int: -1 } }
     },
     'metro_3_train': {
         id: 'metro_3_train',
         text: "🚃 멈춰선 전동차를 발견했습니다. 배터리가 방전된 것 같지만, 기술이 있다면 살릴 수 있을지도 모릅니다.",
         next: [
-            { id: 'metro_3_train_repair', weight: 0.0, choiceText: "엔진 수리 및 가동 (정비공/기술자 필요)", req: { job: '정비공' } },
-            { id: 'metro_3_train_repair_tech', weight: 0.0, choiceText: "엔진 수리 및 가동 (정비공/기술자 필요)", req: { job: '기술자(엔지니어)' } },
+            { id: 'metro_3_train_repair', weight: 0.0, choiceText: "엔진 수리 및 가동 (기계 수리 필요)", req: { skill: '기계 수리' } },
+            { id: 'metro_3_train_repair_tech', weight: 0.0, choiceText: "회로 연결 및 가동 (전자 공학 필요)", req: { skill: '전자 공학' } },
             { id: 'metro_3_train_rest', weight: 1.0, choiceText: "단순 휴식 및 수색" }
         ],
         effect: { target: 'ALL', fatigue: -5 }
@@ -113,13 +147,13 @@ export const METRO_NODES: Record<string, StoryNode> = {
         id: 'metro_3_train_repair',
         text: "🔧 \"이 정도는 껌이지.\" 엔진을 수리하고 비상 전력을 연결했습니다. 전동차가 움직입니다! 편안하게 다음 역까지 이동합니다.",
         next: [{ id: 'metro_7_end', weight: 1.0 }],
-        effect: { target: 'ALL', fatigue: -20, sanity: 10 }
+        effect: { target: 'ALL', fatigue: -20, sanity: 10, skillsAdd: [S.MECHANIC], statChanges: { str: 1 } }
     },
     'metro_3_train_repair_tech': {
         id: 'metro_3_train_repair_tech',
         text: "🔧 복잡한 배선을 다시 연결하여 전동차를 움직이게 만들었습니다. 좀비 떼를 따돌리고 쾌속으로 이동합니다!",
         next: [{ id: 'metro_7_end', weight: 1.0 }],
-        effect: { target: 'ALL', fatigue: -20, sanity: 10 }
+        effect: { target: 'ALL', fatigue: -20, sanity: 10, statChanges: { int: 1 } }
     },
     'metro_3_train_rest': {
         id: 'metro_3_train_rest',
@@ -146,17 +180,17 @@ export const METRO_NODES: Record<string, StoryNode> = {
         id: 'metro_6_breach',
         text: "💣 수류탄(혹은 폭발물)을 던져 벽을 뚫고 환풍구로 탈출했습니다. 폭발의 충격으로 모두가 이명에 시달립니다.",
         next: [{ id: 'metro_7_end', weight: 1.0 }],
-        effect: { target: 'ALL', hp: -5 }
+        effect: { target: 'ALL', hp: -5, statChanges: { str: 1 } }
     },
     'metro_6_sacrifice': {
         id: 'metro_6_sacrifice',
         text: "🩸 누군가 미끼가 되어 괴물들의 시선을 끄는 사이, 나머지가 필사적으로 도망쳤습니다. 미끼가 된 동료는 어둠 속으로 사라졌습니다.",
         next: [{ id: 'metro_7_end', weight: 1.0 }],
-        effect: { target: 'RANDOM_1', status: 'Missing', sanity: -30 }
+        effect: { target: 'RANDOM_1', status: 'Missing', sanity: -30, statChanges: { cha: -1 } }
     },
     'metro_7_end': {
         id: 'metro_7_end',
         text: "🚉 마침내 지상의 빛이 보입니다. 다음 역은 군사 기지로 쓰였던 곳 같습니다. 버려진 보급품들이 쌓여있습니다.",
-        effect: { target: 'ALL', sanity: 20, loot: ['통조림', '붕대', '항생제'] }
+        effect: { target: 'ALL', sanity: 20, loot: ['통조림', '붕대', '항생제'], statChanges: { int: 1 } }
     }
 };

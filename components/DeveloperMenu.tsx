@@ -172,27 +172,50 @@ const DeveloperMenu: React.FC<Props> = ({ onClose, forcedEvents, setForcedEvents
         </div>
 
         <div className="flex-1 overflow-hidden relative">
-            <DevEventLists 
-                type={mainTab as any} 
-                activeId={activeStoryId} 
-                onSelectStory={handleStorySelect} 
-                onOpenModal={openSelectionModal} 
-            />
+            {/* 리스트 기반 탭 (Story, MBTI 등) 일 때만 DevEventLists 렌더링 */}
+            {['STORY', 'MBTI', 'INTERACTION', 'JOB', 'SYSTEM'].includes(mainTab) && (
+                <DevEventLists 
+                    type={mainTab as any} 
+                    activeId={activeStoryId} 
+                    onSelectStory={handleStorySelect} 
+                    onOpenModal={openSelectionModal} 
+                />
+            )}
 
             {mainTab === 'STATS' && (
                 <div className="flex h-full">
                     <div className="w-1/4 bg-slate-50 dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 overflow-y-auto p-2">
                         {characters.map(char => (
-                            <button key={char.id} onClick={() => setActiveStatCharId(char.id)} className={`w-full text-left px-3 py-2 text-xs font-bold rounded mb-1 ${activeStatCharId === char.id ? 'bg-blue-600 text-white' : 'hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400'}`}>{char.name}</button>
+                            <button 
+                                key={char.id} 
+                                onClick={() => setActiveStatCharId(char.id)} 
+                                className={`w-full text-left px-3 py-2 text-xs font-bold rounded mb-1 transition-colors ${activeStatCharId === char.id ? 'bg-blue-600 text-white shadow-sm' : 'hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400'}`}
+                            >
+                                {char.name}
+                            </button>
                         ))}
+                        {characters.length === 0 && <div className="text-center text-[10px] text-slate-400 py-4">생존자 없음</div>}
                     </div>
-                    <div className="flex-1 overflow-y-auto p-4">
-                        {activeStatCharId ? <DevStats character={characters.find(c => c.id === activeStatCharId)!} allCharacters={characters} onUpdate={handleStatUpdate} /> : <div className="text-center text-slate-400 mt-10">대상을 선택하세요</div>}
+                    <div className="flex-1 overflow-y-auto p-4 bg-white dark:bg-slate-950">
+                        {activeStatCharId ? (
+                            <DevStats 
+                                character={characters.find(c => c.id === activeStatCharId)!} 
+                                allCharacters={characters} 
+                                onUpdate={handleStatUpdate} 
+                            />
+                        ) : (
+                            <div className="flex flex-col items-center justify-center h-64 text-slate-400">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-12 h-12 mb-2 opacity-20">
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" />
+                                </svg>
+                                <p className="text-sm">편집할 생존자를 왼쪽 목록에서 선택하세요.</p>
+                            </div>
+                        )}
                     </div>
                 </div>
             )}
 
-            {mainTab === 'ITEMS' && <div className="h-full overflow-y-auto p-4"><DevItems availableItems={availableItems} onAdd={onAddInventory} /></div>}
+            {mainTab === 'ITEMS' && <div className="h-full overflow-y-auto p-4 bg-white dark:bg-slate-950"><DevItems availableItems={availableItems} onAdd={onAddInventory} /></div>}
         </div>
 
         {selectionModal && (

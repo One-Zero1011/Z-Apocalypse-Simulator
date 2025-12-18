@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Character, Status } from '../types';
+import { Character, Status, Skill } from '../types';
 import { MAX_HP, MAX_SANITY, MAX_FATIGUE, MAX_INFECTION, MAX_HUNGER, FATIGUE_THRESHOLD } from '../constants';
 
 interface Props {
@@ -8,17 +8,18 @@ interface Props {
   allCharacters: Character[];
   onDelete: (id: string) => void;
   onEdit?: (character: Character) => void; 
-  onPlan?: (character: Character) => void; // New prop for planning
+  onPlan?: (character: Character) => void;
+  onShowDetail?: (character: Character) => void; 
 }
 
-const CharacterCard: React.FC<Props> = ({ character, allCharacters, onDelete, onEdit, onPlan }) => {
+const CharacterCard: React.FC<Props> = ({ character, allCharacters, onDelete, onEdit, onPlan, onShowDetail }) => {
   const [isExpanded, setIsExpanded] = useState(false);
+  const [showSkills, setShowSkills] = useState(false);
   
   const isDead = character.status === 'Dead' || character.status === 'Missing';
   const isZombie = character.status === 'Zombie';
   const isInfected = character.status === 'Infected' || (character.infection > 0 && !isZombie);
   const isExhausted = character.fatigue >= FATIGUE_THRESHOLD;
-  // Fallback for mentalState if not present (backward compatibility)
   const mentalState = character.mentalState || 'Normal';
   const hasMentalIllness = mentalState !== 'Normal';
   
@@ -39,7 +40,6 @@ const CharacterCard: React.FC<Props> = ({ character, allCharacters, onDelete, on
 
   const hasStatus = (status: string) => Object.values(character.relationshipStatuses).includes(status as any);
 
-  // Sort relationships by affinity
   const allRelationships = Object.entries(character.relationships)
     .sort(([, a], [, b]) => Math.abs(b as number) - Math.abs(a as number));
 
@@ -94,7 +94,21 @@ const CharacterCard: React.FC<Props> = ({ character, allCharacters, onDelete, on
           </div>
         </div>
         <div className="text-right text-xs flex flex-col items-end gap-1 relative z-20">
-            <div className="flex gap-1">
+            <div className="flex gap-1 items-center">
+                {onShowDetail && (
+                    <button 
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            onShowDetail(character);
+                        }}
+                        className="text-slate-400 hover:text-indigo-600 p-1.5 rounded-full hover:bg-indigo-50 dark:hover:bg-indigo-900/20 transition-all active:scale-90"
+                        title="생존 기록 및 정보"
+                    >
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.042A8.967 8.967 0 0 0 6 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 0 1 6 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 0 1 6-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0 0 18 18c-2.305 0-4.408.867-6 2.292m0-14.25v14.25" />
+                        </svg>
+                    </button>
+                )}
                 {onPlan && !isDead && !isZombie && (
                     <button 
                         onClick={(e) => {
@@ -138,29 +152,43 @@ const CharacterCard: React.FC<Props> = ({ character, allCharacters, onDelete, on
                     </svg>
                 </button>
             </div>
-            <div className="font-mono text-slate-600 dark:text-slate-400 mt-1">처치: {character.killCount}</div>
+            <div className="font-mono text-slate-600 dark:text-slate-400 mt-1 text-[10px]">ID: {character.id.split('-')[0]}...</div>
+            <div className="font-mono text-slate-600 dark:text-slate-400 mt-0.5">처치: {character.killCount}</div>
             <div className={`font-bold ${isZombie ? 'text-green-600 dark:text-green-400' : isInfected ? 'text-orange-500 animate-pulse' : ''}`}>
                 {character.status === 'Infected' ? '감염됨' : character.status}
             </div>
         </div>
       </div>
 
-      <div className="space-y-2 mt-4 text-xs font-mono text-slate-600 dark:text-slate-400">
-        {/* HP Bar */}
+      <div className="grid grid-cols-5 gap-1 mb-4">
+        {[
+          { label: 'STR', val: character.stats?.str ?? 5, icon: '💪' },
+          { label: 'AGI', val: character.stats?.agi ?? 5, icon: '🏃' },
+          { label: 'CON', val: character.stats?.con ?? 5, icon: '🛡️' },
+          { label: 'INT', val: character.stats?.int ?? 5, icon: '🧠' },
+          { label: 'CHA', val: character.stats?.cha ?? 5, icon: '✨' }
+        ].map(s => (
+          <div key={s.label} className="bg-slate-100 dark:bg-slate-700/50 rounded p-1 flex flex-col items-center border border-slate-200 dark:border-slate-600" title={`${s.label}: ${s.val}`}>
+            <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 leading-none mb-0.5">{s.label}</span>
+            <span className="text-xs font-mono font-bold dark:text-slate-100">{s.val}</span>
+          </div>
+        ))}
+      </div>
+
+      <div className="space-y-2 mt-2 text-xs font-mono text-slate-600 dark:text-slate-400">
         <div className="w-full">
           <div className="flex justify-between mb-0.5">
             <span>체력</span>
-            <span>{character.hp}/{MAX_HP}</span>
+            <span>{character.hp}/{character.maxHp || MAX_HP}</span>
           </div>
           <div className="h-2 w-full bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
             <div 
               className="h-full bg-red-500 dark:bg-red-600 transition-all duration-500" 
-              style={{ width: `${(character.hp / MAX_HP) * 100}%` }}
+              style={{ width: `${(character.hp / (character.maxHp || MAX_HP)) * 100}%` }}
             ></div>
           </div>
         </div>
 
-        {/* Zombie: Hunger Bar, Human: Sanity Bar */}
         <div className="w-full">
           <div className="flex justify-between mb-0.5">
             {isZombie ? (
@@ -171,7 +199,7 @@ const CharacterCard: React.FC<Props> = ({ character, allCharacters, onDelete, on
                 </span>
             )}
             <span>
-                {isZombie ? `${character.hunger}/${MAX_HUNGER}` : `${character.sanity}/${MAX_SANITY}`}
+                {isZombie ? `${character.hunger}/${MAX_HUNGER}` : `${character.sanity}/${character.maxSanity || MAX_SANITY}`}
             </span>
           </div>
           <div className="h-2 w-full bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
@@ -179,12 +207,11 @@ const CharacterCard: React.FC<Props> = ({ character, allCharacters, onDelete, on
               className={`h-full transition-all duration-500 ${
                   isZombie ? 'bg-red-800' : hasMentalIllness ? 'bg-purple-600' : 'bg-blue-500'
               }`} 
-              style={{ width: `${isZombie ? (character.hunger / MAX_HUNGER) * 100 : (character.sanity / MAX_SANITY) * 100}%` }}
+              style={{ width: `${isZombie ? (character.hunger / MAX_HUNGER) * 100 : (character.sanity / (character.maxSanity || MAX_SANITY)) * 100}%` }}
             ></div>
           </div>
         </div>
 
-        {/* Human: Fatigue & Infection, Zombie: Just Infection (always 100) */}
         {!isZombie && (
         <>
             <div className="w-full">
@@ -200,7 +227,6 @@ const CharacterCard: React.FC<Props> = ({ character, allCharacters, onDelete, on
             </div>
             </div>
 
-            {/* Infection Bar (Only visible if > 0) */}
             {(character.infection > 0) && (
                 <div className="w-full">
                     <div className="flex justify-between mb-0.5 text-zombie-green">
@@ -218,6 +244,31 @@ const CharacterCard: React.FC<Props> = ({ character, allCharacters, onDelete, on
                 </div>
             )}
         </>
+        )}
+      </div>
+
+      <div className="mt-4">
+        <button 
+          onClick={() => setShowSkills(!showSkills)}
+          className="w-full py-1.5 rounded-md text-[11px] font-bold uppercase tracking-tighter bg-amber-100 hover:bg-amber-200 dark:bg-amber-900/30 dark:hover:bg-amber-900/50 text-amber-800 dark:text-amber-200 border border-amber-200 dark:border-amber-800 transition-colors flex items-center justify-center gap-1.5"
+        >
+          {showSkills ? '스킬 닫기 ▲' : `직업 스킬 (${character.skills?.length || 0}) ▼`}
+        </button>
+        
+        {showSkills && character.skills && (
+          <div className="mt-2 space-y-1.5 animate-fade-in">
+            {character.skills.map((skill, idx) => (
+              <div key={idx} className="bg-amber-50 dark:bg-amber-900/10 p-2 rounded border border-amber-100 dark:border-amber-900/30">
+                <div className="flex items-center gap-1.5 mb-0.5">
+                  <span className="text-sm">{skill.icon}</span>
+                  <span className="text-xs font-bold text-amber-900 dark:text-amber-100">{skill.name}</span>
+                </div>
+                <p className="text-[10px] text-amber-700 dark:text-amber-300 leading-tight">
+                  {skill.description}
+                </p>
+              </div>
+            ))}
+          </div>
         )}
       </div>
 

@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 interface Props {
     availableItems: string[];
@@ -7,8 +7,15 @@ interface Props {
 }
 
 const DevItems: React.FC<Props> = ({ availableItems, onAdd }) => {
-    const [itemToAdd, setItemToAdd] = useState<string>(availableItems[0] || '');
+    const [itemToAdd, setItemToAdd] = useState<string>('');
     const [itemCount, setItemCount] = useState<number>(1);
+
+    // FIX: availableItems가 로드되었을 때 기본 선택값 설정
+    useEffect(() => {
+        if (availableItems.length > 0 && !itemToAdd) {
+            setItemToAdd(availableItems[0]);
+        }
+    }, [availableItems]);
 
     const handleAddItem = () => {
         if (itemToAdd && itemCount > 0) {
@@ -31,6 +38,7 @@ const DevItems: React.FC<Props> = ({ availableItems, onAdd }) => {
                         onChange={(e) => setItemToAdd(e.target.value)}
                         className="w-full p-3 rounded-lg border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none"
                     >
+                        <option value="" disabled>아이템 선택</option>
                         {availableItems.map(item => (
                             <option key={item} value={item}>{item}</option>
                         ))}
@@ -45,7 +53,7 @@ const DevItems: React.FC<Props> = ({ availableItems, onAdd }) => {
                             min="1" 
                             max="100"
                             value={itemCount}
-                            onChange={(e) => setItemCount(Math.max(1, parseInt(e.target.value)))}
+                            onChange={(e) => setItemCount(Math.max(1, parseInt(e.target.value) || 0))}
                             className="flex-1 p-3 rounded-lg border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none text-center font-mono text-lg"
                         />
                         <div className="flex gap-2">
@@ -57,7 +65,8 @@ const DevItems: React.FC<Props> = ({ availableItems, onAdd }) => {
 
                 <button 
                     onClick={handleAddItem}
-                    className="w-full py-4 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg shadow-md transition-transform active:scale-95 flex justify-center items-center gap-2"
+                    disabled={!itemToAdd}
+                    className="w-full py-4 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg shadow-md transition-transform active:scale-95 flex justify-center items-center gap-2 disabled:opacity-50"
                 >
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5">
                         <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />

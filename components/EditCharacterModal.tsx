@@ -8,7 +8,7 @@ interface Props {
     allCharacters: Character[];
     onSave: (updatedChar: Character, relationshipUpdates: { targetId: string, status: RelationshipStatus, affinity: number }[]) => void;
     onClose: () => void;
-    friendshipMode?: boolean; // New prop added
+    friendshipMode?: boolean; 
 }
 
 const EditCharacterModal: React.FC<Props> = ({ character, allCharacters, onSave, onClose, friendshipMode = false }) => {
@@ -30,9 +30,39 @@ const EditCharacterModal: React.FC<Props> = ({ character, allCharacters, onSave,
         setRelations(initialRelations);
     }, [character]);
 
+    const getAffinityByStatus = (status: RelationshipStatus): number => {
+        switch (status) {
+            case 'Spouse': return 90;
+            case 'Child':
+            case 'Parent':
+            case 'Guardian':
+            case 'Ward':
+            case 'Lover': return 80;
+            case 'Sibling': return 70;
+            case 'Family':
+            case 'BestFriend': return 60;
+            case 'Savior': return 50;
+            case 'Friend': return 30;
+            case 'Colleague': return 15;
+            case 'Rival': return -15;
+            case 'Ex': return -20;
+            case 'Enemy': return -50;
+            default: return 0;
+        }
+    };
+
     const handleRelationChange = (index: number, field: 'status' | 'affinity', value: any) => {
         const newRelations = [...relations];
-        newRelations[index] = { ...newRelations[index], [field]: value };
+        if (field === 'status') {
+            const newStatus = value as RelationshipStatus;
+            newRelations[index] = { 
+                ...newRelations[index], 
+                status: newStatus,
+                affinity: getAffinityByStatus(newStatus) // 유형 변경 시 호감도 자동 설정
+            };
+        } else {
+            newRelations[index] = { ...newRelations[index], [field]: value };
+        }
         setRelations(newRelations);
     };
 
@@ -47,10 +77,11 @@ const EditCharacterModal: React.FC<Props> = ({ character, allCharacters, onSave,
         );
         
         if (availableTargets.length > 0) {
+            const defaultStatus: RelationshipStatus = 'Friend';
             setRelations([...relations, { 
                 targetId: availableTargets[0].id, 
-                status: 'Friend', 
-                affinity: 30,
+                status: defaultStatus, 
+                affinity: getAffinityByStatus(defaultStatus),
                 isFixed: false 
             }]);
         } else {
@@ -166,7 +197,7 @@ const EditCharacterModal: React.FC<Props> = ({ character, allCharacters, onSave,
 
                         <div>
                             <div className="flex justify-between items-center mb-2">
-                                <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">관계 설정 (호감도는 수정 불가)</label>
+                                <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">관계 설정 (호감도 자동 계산)</label>
                                 <button type="button" onClick={handleAddRelation} className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded hover:bg-blue-200 dark:bg-blue-900/50 dark:text-blue-300">
                                     + 관계 추가
                                 </button>
@@ -219,21 +250,23 @@ const EditCharacterModal: React.FC<Props> = ({ character, allCharacters, onSave,
                                                 </optgroup>
                                             </select>
 
-                                            <input 
-                                                type="number" 
-                                                value={rel.affinity} 
-                                                onChange={(e) => handleRelationChange(idx, 'affinity', parseInt(e.target.value))}
-                                                className="w-14 text-xs p-1 rounded border bg-white dark:bg-slate-800 dark:border-slate-600 dark:text-white text-center disabled:bg-gray-100 dark:disabled:bg-slate-900 disabled:text-gray-500"
-                                                placeholder="호감도"
-                                                disabled={rel.isFixed}
-                                            />
+                                            <div className="w-16 flex flex-col items-center">
+                                                <span className="text-[9px] text-slate-400 font-bold uppercase">Affinity</span>
+                                                <input 
+                                                    type="number" 
+                                                    value={rel.affinity} 
+                                                    readOnly
+                                                    className="w-14 text-xs p-1 rounded border bg-gray-100 dark:bg-slate-900 dark:border-slate-600 text-slate-500 dark:text-slate-400 text-center font-mono cursor-not-allowed"
+                                                    title="호감도는 관계 유형에 따라 자동 설정됩니다."
+                                                />
+                                            </div>
 
                                             {!rel.isFixed ? (
                                                 <button type="button" onClick={() => handleRemoveRelation(idx)} className="text-red-500 hover:text-red-700 px-1">
                                                     ×
                                                 </button>
                                             ) : (
-                                                <span className="px-1 text-gray-400 text-xs cursor-not-allowed" title="초기 관계는 삭제/대상변경/호감도수정 불가">🔒</span>
+                                                <span className="px-1 text-gray-400 text-xs cursor-not-allowed" title="이미 저장된 관계는 유형 변경만 가능합니다.">🔒</span>
                                             )}
                                         </div>
                                     );

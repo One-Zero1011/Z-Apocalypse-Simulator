@@ -18,19 +18,27 @@ export const getNextStoryNode = (currentId: string | null, forcedNextId?: string
     if (currentId && STORY_NODES[currentId] && STORY_NODES[currentId].next) {
         const nextOptions = STORY_NODES[currentId].next!;
         const totalWeight = nextOptions.reduce((sum, opt) => sum + opt.weight, 0);
-        let random = Math.random() * totalWeight;
         
-        for (const option of nextOptions) {
-            random -= option.weight;
-            if (random <= 0) {
-                return STORY_NODES[option.id];
+        if (totalWeight > 0) {
+            let random = Math.random() * totalWeight;
+            for (const option of nextOptions) {
+                random -= option.weight;
+                if (random <= 0 && STORY_NODES[option.id]) {
+                    return STORY_NODES[option.id];
+                }
             }
         }
-        // Fallback
-        return STORY_NODES[nextOptions[0].id];
+        
+        // 가중치가 0이거나 선택된 노드가 없는 경우 첫 번째 가능한 노드 시도
+        const firstValid = nextOptions.find(opt => STORY_NODES[opt.id]);
+        if (firstValid) return STORY_NODES[firstValid.id];
     }
 
-    // 2. 진행 중인 이벤트가 없거나, 체인의 끝이라면 -> 새로운 메인 이벤트 시작
-    const randomStarterId = STARTER_NODE_IDS[Math.floor(Math.random() * STARTER_NODE_IDS.length)];
-    return STORY_NODES[randomStarterId];
+    // 2. 진행 중인 이벤트가 없거나, 체인의 끝이거나, 데이터 오류가 발생한 경우 -> 새로운 메인 이벤트 랜덤 시작
+    // 안전 장치: 유효한 스타터 ID만 필터링
+    const validStarters = STARTER_NODE_IDS.filter(id => STORY_NODES[id]);
+    const randomStarterId = validStarters[Math.floor(Math.random() * validStarters.length)];
+    
+    // 최종 방어선: 만약 스타터조차 없다면 (그럴 일은 없어야 함) 아무거나 하나 반환
+    return STORY_NODES[randomStarterId] || Object.values(STORY_NODES)[0];
 };

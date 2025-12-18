@@ -1,0 +1,161 @@
+
+import { Skill } from "../types";
+
+// --- 60개 마스터 스킬 정의 (60 Mastery Skills) ---
+export const SKILLS: Record<string, Skill> = {
+    // 전투 (1-8)
+    MARKSMANSHIP: { name: "전술 사격", description: "총기류를 능숙하게 다루며 명중률과 처치 효율이 상승합니다.", icon: "🔫" },
+    MELEE_COMBAT: { name: "근접 제압", description: "근거리 무기나 맨손으로 좀비를 효율적으로 무력화합니다.", icon: "✊" },
+    DEFENSE_STANCE: { name: "철벽 방어", description: "방어 태세를 갖춰 자신과 동료가 입는 피해를 줄입니다.", icon: "🛡️" },
+    AMBUSH: { name: "매복 습격", description: "적의 사각지대에서 기습하여 큰 피해를 입힙니다.", icon: "🗡️" },
+    TRAP_SETTING: { name: "함정 설치", description: "주변 지형을 이용해 좀비의 발을 묶거나 처치하는 함정을 만듭니다.", icon: "🪤" },
+    BOMBER: { name: "폭발 전문가", description: "투척물이나 폭발물을 제조하고 안전하게 다룹니다.", icon: "💣" },
+    WEAPON_MAINTENANCE: { name: "병기 관리", description: "무기의 상태를 최상으로 유지해 고장 확률을 줄입니다.", icon: "🔧" },
+    TACTICAL_COMMAND: { name: "전술 지휘", description: "전투 시 동료들의 위치를 지정해 효율을 극대화합니다.", icon: "🚩" },
+
+    // 의료/정신 (9-16)
+    FIRST_AID: { name: "응급 처치", description: "현장에서 즉석으로 상처를 지혈하고 통증을 완화합니다.", icon: "🩹" },
+    SURGERY: { name: "정밀 수술", description: "심각한 부상을 입은 생존자를 수술해 살려냅니다.", icon: "🩺" },
+    PHARMACOLOGY: { name: "약물 조제", description: "화학 물질이나 약초를 배합해 치료제를 만듭니다.", icon: "🧪" },
+    HYGIENE_CONTROL: { name: "위생 관리", description: "주변 환경을 청결히 유지해 감염 위험을 낮춥니다.", icon: "🧼" },
+    MENTAL_CARE: { name: "심리 상담", description: "불안해하는 동료의 마음을 진정시키고 정신력을 회복시킵니다.", icon: " Couch" },
+    TRAUMA_RELIEF: { name: "트라우마 극복", description: "과거의 공포에서 벗어나 정신적 내성을 강화합니다.", icon: "🧠" },
+    DETOX: { name: "해독술", description: "체내의 독소나 가벼운 감염 수치를 억제합니다.", icon: "🧪" },
+    ANATOMY_KNOWLEDGE: { name: "해부학 지식", description: "생명체의 급소를 파악해 전투나 치료에 응용합니다.", icon: "🦴" },
+
+    // 기술/공작 (17-24)
+    MECHANIC: { name: "기계 수리", description: "차량, 발전기 등 복잡한 기계 장치를 수리합니다.", icon: "⚙️" },
+    ELECTRONICS: { name: "전자 공학", description: "회로를 조작해 잠긴 문을 열거나 전자기기를 개조합니다.", icon: "📟" },
+    HACKING: { name: "시스템 해킹", description: "보안 네트워크에 침투해 정보를 빼내거나 제어권을 얻습니다.", icon: "💻" },
+    CARPENTRY: { name: "구조물 강화", description: "목재나 철재로 바리케이드를 튼튼하게 보강합니다.", icon: "🪵" },
+    PLUMBING: { name: "수원 확보", description: "배관을 연결해 깨끗한 물을 구하거나 정화합니다.", icon: "🚰" },
+    RECYCLING: { name: "부품 재활용", description: "쓰레기나 고철에서 유용한 부품을 추출합니다.", icon: "🛠️" },
+    CRAFTING: { name: "도구 제작", description: "잡동사니로 칼, 횃불 등 필요한 도구를 뚝딱 만듭니다.", icon: "⚒️" },
+    DRIVING: { name: "숙련된 운전", description: "어떤 탈것이든 안정적이고 빠르게 조종합니다.", icon: "🚗" },
+
+    // 생산/채집 (25-30)
+    FARMING: { name: "식량 생산", description: "작물을 재배하거나 채집하여 식량을 확보합니다.", icon: "🌱" },
+    LIVESTOCK: { name: "가축 사육", description: "동물을 길러 고기, 가죽, 우유 등을 얻습니다.", icon: "🐄" },
+    COOKING: { name: "요리 마스터", description: "식재료의 맛과 영양을 살려 효율적인 식사를 준비합니다.", icon: "🍳" },
+    FISHING: { name: "그물 낚시", description: "물가에서 물고기를 잡아 단백질을 보충합니다.", icon: "🎣" },
+    HUNTING: { name: "야생 추적", description: "짐승의 흔적을 쫓아 사냥하고 고기를 얻습니다.", icon: "🏹" },
+    FORAGING: { name: "산야초 채집", description: "숲에서 먹을 수 있는 열매나 약초를 구분해냅니다.", icon: "🌿" },
+
+    // 사무/전문 (31-42)
+    ADMINISTRATION: { name: "행정 처리", description: "물자 분배와 인력 배치를 체계적으로 관리합니다.", icon: "📑" },
+    LOGISTICS: { name: "자원 관리", description: "보유한 물자의 소모를 최소화하고 재고를 파악합니다.", icon: "🧮" },
+    NEGOTIATION: { name: "협상 기술", description: "다른 생존자와의 거래나 대화에서 유리한 고지를 점합니다.", icon: "🤝" },
+    LEADERSHIP: { name: "카리스마", description: "사람들을 이끌어 집단의 사기와 결속력을 높입니다.", icon: "🗣️" },
+    INVESTIGATION: { name: "수사 근성", description: "현장의 단서를 추적해 숨겨진 물자나 위험을 찾아냅니다.", icon: "🔍" },
+    TEACHING: { name: "지식 전수", description: "자신이 가진 기술을 동료들에게 효율적으로 가르칩니다.", icon: "🎓" },
+    ACCOUNTING: { name: "가치 평가", description: "아이템의 진정한 가치를 판별해 손해를 막습니다.", icon: "📉" },
+    REPORTING: { name: "정보 수집", description: "주변 소문을 분석하거나 방송으로 정보를 얻습니다.", icon: "📰" },
+    SECRETARY: { name: "보좌술", description: "리더의 결정을 돕고 스케줄을 효율적으로 조정합니다.", icon: "📅" },
+    LAW_ENFORCEMENT: { name: "질서 유지", description: "그룹 내 규칙을 세우고 갈등을 법대로 중재합니다.", icon: "⚖️" },
+    PLANNING: { name: "전략 수립", description: "장기적인 생존 계획을 세워 행동 실패를 줄입니다. ", icon: "📊" },
+    PUBLIC_RELATIONS: { name: "이미지 메이킹", description: "자신의 평판을 관리해 신뢰를 얻습니다.", icon: "😎" },
+
+    // 예술/신체 (43-52)
+    MUSIC: { name: "희망의 노래", description: "음악으로 동료들의 슬픔과 피로를 씻어냅니다.", icon: "🎵" },
+    ACTING: { name: "메소드 연기", description: "자신의 감정이나 상태를 완벽하게 속여 위기를 넘깁니다.", icon: "🎭" },
+    ARTISTIC: { name: "예술적 통찰", description: "창의적인 생각으로 예상치 못한 해결책을 제시합니다.", icon: "🎨" },
+    ACROBATIC: { name: "유연한 몸놀림", description: "좁은 길을 통과하거나 추락 시 피해를 줄입니다.", icon: "🤸" },
+    ATHLETICS: { name: "폭발적 근력", description: "무거운 짐을 들거나 문을 부수는 등 힘을 씁니다.", icon: "💪" },
+    AGILITY: { name: "기동력", description: "좀비 사이를 빠르게 빠져나가거나 도망칩니다.", icon: "🏃" },
+    STEALTH: { name: "은밀 기동", description: "소리 없이 움직여 좀비의 시선을 피합니다.", icon: "🤫" },
+    SENSORY: { name: "절대 감각", description: "오감을 이용해 보이지 않는 위협을 먼저 감지합니다.", icon: "👂" },
+    GAMER_REFLEX: { name: "반사 신경", description: "순간적인 판단과 빠른 손놀림으로 위기를 피합니다.", icon: "🕹️" },
+    PERFORMANCE: { name: "매력 발산", description: "남들의 주목을 끌어 어그로를 담당하거나 호감을 얻습니다.", icon: "✨" },
+
+    // 특수/영성 (53-60)
+    SPIRITUALITY: { name: "종교적 신념", description: "강한 신앙심으로 공포에 굴하지 않고 버팁니다.", icon: "🙏" },
+    MEDITATION: { name: "명상법", description: "정적 속에서 정신력을 회복하고 집중력을 높입니다.", icon: "🧘" },
+    DIVINATION: { name: "예지력", description: "앞으로 일어날 불행을 직감적으로 예고합니다.", icon: "🔮" },
+    LUCK: { name: "도박사의 운", description: "절망적인 확률 속에서도 기적적으로 살아남습니다.", icon: "🎲" },
+    SURVIVAL_INSTINCT: { name: "생존 본능", description: "죽음의 문턱에서 초인적인 힘을 발휘합니다.", icon: "🔥" },
+    SCAVENGING: { name: "폐지 줍기", description: "남들이 지나친 쓰레기 더미에서 귀중품을 찾습니다.", icon: "📦" },
+    INFILTRATION: { name: "잠입 기술", description: "폐쇄된 구역이나 적진에 몰래 들어갑니다.", icon: "🗝️" },
+    POTENTIAL: { name: "성장 잠재력", description: "시간이 지날수록 모든 방면에서 빠르게 성장합니다.", icon: "🍼" }
+};
+
+// --- 직업별 스킬 할당 (JOB_SKILLS) ---
+export const JOB_SKILLS: Record<string, Skill[]> = {
+    "군인": [SKILLS.MARKSMANSHIP, SKILLS.TACTICAL_COMMAND, SKILLS.SURVIVAL_INSTINCT],
+    "경찰": [SKILLS.MARKSMANSHIP, SKILLS.LAW_ENFORCEMENT],
+    "형사": [SKILLS.INVESTIGATION, SKILLS.AMBUSH],
+    "소방관": [SKILLS.ATHLETICS, SKILLS.DEFENSE_STANCE],
+    "경호원": [SKILLS.DEFENSE_STANCE, SKILLS.MELEE_COMBAT],
+    "용병": [SKILLS.WEAPON_MAINTENANCE, SKILLS.MELEE_COMBAT],
+    "교도관": [SKILLS.LAW_ENFORCEMENT, SKILLS.DEFENSE_STANCE],
+    "사냥꾼": [SKILLS.HUNTING, SKILLS.TRAP_SETTING],
+    "탐정": [SKILLS.INVESTIGATION, SKILLS.SENSORY],
+    "의사": [SKILLS.SURGERY, SKILLS.ANATOMY_KNOWLEDGE, SKILLS.HYGIENE_CONTROL],
+    "간호사": [SKILLS.FIRST_AID, SKILLS.HYGIENE_CONTROL],
+    "수의사": [SKILLS.ANATOMY_KNOWLEDGE, SKILLS.FORAGING],
+    "약사": [SKILLS.PHARMACOLOGY, SKILLS.DETOX],
+    "심리상담사": [SKILLS.MENTAL_CARE, SKILLS.TRAUMA_RELIEF],
+    "연구원": [SKILLS.PLANNING, SKILLS.HACKING],
+    "응급구조사": [SKILLS.FIRST_AID, SKILLS.AGILITY],
+    "물리치료사": [SKILLS.ATHLETICS, SKILLS.TRAUMA_RELIEF],
+    "개발자": [SKILLS.HACKING, SKILLS.ELECTRONICS],
+    "기술자(엔지니어)": [SKILLS.MECHANIC, SKILLS.ELECTRONICS],
+    "목수": [SKILLS.CARPENTRY, SKILLS.CRAFTING],
+    "배관공": [SKILLS.PLUMBING, SKILLS.RECYCLING],
+    "정비공": [SKILLS.MECHANIC, SKILLS.DRIVING],
+    "농부": [SKILLS.FARMING, SKILLS.LIVESTOCK],
+    "사육사": [SKILLS.LIVESTOCK, SKILLS.SENSORY],
+    "요리사": [SKILLS.COOKING, SKILLS.LOGISTICS],
+    "어부": [SKILLS.FISHING, SKILLS.DRIVING],
+    "바리스타": [SKILLS.COOKING, SKILLS.PUBLIC_RELATIONS],
+    "회사원": [SKILLS.ADMINISTRATION, SKILLS.SECRETARY],
+    "공무원": [SKILLS.ADMINISTRATION, SKILLS.LAW_ENFORCEMENT],
+    "변호사": [SKILLS.NEGOTIATION, SKILLS.LAW_ENFORCEMENT],
+    "판사": [SKILLS.LAW_ENFORCEMENT, SKILLS.ADMINISTRATION],
+    "검사": [SKILLS.INVESTIGATION, SKILLS.LAW_ENFORCEMENT],
+    "정치인": [SKILLS.LEADERSHIP, SKILLS.NEGOTIATION],
+    "기자": [SKILLS.REPORTING, SKILLS.INVESTIGATION],
+    "비서": [SKILLS.SECRETARY, SKILLS.ADMINISTRATION],
+    "교사/교수": [SKILLS.TEACHING, SKILLS.PLANNING],
+    "회계사": [SKILLS.ACCOUNTING, SKILLS.LOGISTICS],
+    "영업직": [SKILLS.NEGOTIATION, SKILLS.PUBLIC_RELATIONS],
+    "연예인": [SKILLS.PERFORMANCE, SKILLS.PUBLIC_RELATIONS],
+    "가수": [SKILLS.MUSIC, SKILLS.PERFORMANCE],
+    "배우": [SKILLS.ACTING, SKILLS.PERFORMANCE],
+    "아이돌": [SKILLS.PERFORMANCE, SKILLS.AGILITY],
+    "만화가/웹툰작가": [SKILLS.ARTISTIC, SKILLS.PLANNING],
+    "작가": [SKILLS.REPORTING, SKILLS.PLANNING],
+    "발레리나/무용수": [SKILLS.ACROBATIC, SKILLS.AGILITY],
+    "광대": [SKILLS.ACTING, SKILLS.ACROBATIC],
+    "미식가": [SKILLS.ACCOUNTING, SKILLS.FORAGING],
+    "화가": [SKILLS.ARTISTIC, SKILLS.SENSORY],
+    "음악가": [SKILLS.MUSIC, SKILLS.SENSORY],
+    "미용사": [SKILLS.CRAFTING, SKILLS.PUBLIC_RELATIONS],
+    "호텔리어": [SKILLS.SECRETARY, SKILLS.PUBLIC_RELATIONS],
+    "승무원": [SKILLS.ADMINISTRATION, SKILLS.AGILITY],
+    "택시기사": [SKILLS.DRIVING, SKILLS.REPORTING],
+    "배달원": [SKILLS.AGILITY, SKILLS.STEALTH],
+    "유튜버/스트리머": [SKILLS.REPORTING, SKILLS.PERFORMANCE],
+    "프로게이머": [SKILLS.GAMER_REFLEX, SKILLS.PLANNING],
+    "운동선수": [SKILLS.ATHLETICS, SKILLS.AGILITY],
+    "성직자(신부/목사)": [SKILLS.SPIRITUALITY, SKILLS.MENTAL_CARE],
+    "스님": [SKILLS.MEDITATION, SKILLS.SPIRITUALITY],
+    "무당": [SKILLS.DIVINATION, SKILLS.SPIRITUALITY],
+    "수녀": [SKILLS.SPIRITUALITY, SKILLS.MENTAL_CARE],
+    "대학생": [SKILLS.TEACHING, SKILLS.RECYCLING],
+    "고등학생": [SKILLS.ATHLETICS, SKILLS.STEALTH],
+    "중학생": [SKILLS.AGILITY, SKILLS.GAMER_REFLEX],
+    "초등학생": [SKILLS.STEALTH, SKILLS.ACROBATIC],
+    "백수": [SKILLS.RECYCLING, SKILLS.SCAVENGING],
+    "거지/노숙자": [SKILLS.SCAVENGING, SKILLS.SURVIVAL_INSTINCT],
+    "조폭/마피아": [SKILLS.MELEE_COMBAT, SKILLS.LEADERSHIP],
+    "도박사": [SKILLS.LUCK, SKILLS.NEGOTIATION],
+    "죄수": [SKILLS.INFILTRATION, SKILLS.SURVIVAL_INSTINCT],
+    "아기": [SKILLS.POTENTIAL, SKILLS.LUCK]
+};
+
+export const getInitialSkills = (job: string): Skill[] => {
+    return JOB_SKILLS[job] || [
+        SKILLS.SURVIVAL_INSTINCT,
+        { name: "평범한 노력", description: "남들만큼은 해낼 수 있는 능력입니다.", icon: "🏃" }
+    ];
+};
