@@ -35,6 +35,10 @@ const CharacterDetailModal: React.FC<Props> = ({ character, allCharacters, onClo
     }
   };
 
+  const stats = character.stats || { str: 5, agi: 5, con: 5, int: 5, cha: 5 };
+  const relationships = character.relationships || {};
+  const relationshipStatuses = character.relationshipStatuses || {};
+
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 backdrop-blur-sm p-4 animate-fade-in">
       <div className="bg-white dark:bg-slate-800 rounded-3xl shadow-2xl max-w-md w-full overflow-hidden border border-slate-200 dark:border-slate-700 flex flex-col">
@@ -53,11 +57,11 @@ const CharacterDetailModal: React.FC<Props> = ({ character, allCharacters, onClo
             <h3 className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-3">상세 능력치 (Stats)</h3>
             <div className="grid grid-cols-5 gap-2">
               {[
-                { label: '힘', val: character.stats.str, icon: '💪' },
-                { label: '민첩', val: character.stats.agi, icon: '🏃' },
-                { label: '체력', val: character.stats.con, icon: '🛡️' },
-                { label: '지능', val: character.stats.int, icon: '🧠' },
-                { label: '매력', val: character.stats.cha, icon: '✨' }
+                { label: '힘', val: stats.str, icon: '💪' },
+                { label: '민첩', val: stats.agi, icon: '🏃' },
+                { label: '체력', val: stats.con, icon: '🛡️' },
+                { label: '지능', val: stats.int, icon: '🧠' },
+                { label: '매력', val: stats.cha, icon: '✨' }
               ].map(s => (
                 <div key={s.label} className="bg-slate-50 dark:bg-slate-900 p-2 rounded-xl border border-slate-100 dark:border-slate-700 text-center">
                   <div className="text-lg">{s.icon}</div>
@@ -92,11 +96,11 @@ const CharacterDetailModal: React.FC<Props> = ({ character, allCharacters, onClo
           <section>
             <h3 className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-3">전체 관계망 (Relationships)</h3>
             <div className="space-y-2">
-              {Object.entries(character.relationships).length > 0 ? (
-                Object.entries(character.relationships)
+              {Object.entries(relationships).length > 0 ? (
+                Object.entries(relationships)
                   .sort(([, a], [, b]) => Math.abs(b as number) - Math.abs(a as number))
                   .map(([targetId, score]) => {
-                    const status = character.relationshipStatuses[targetId] || 'None';
+                    const status = relationshipStatuses[targetId] || 'None';
                     const numericScore = score as number;
                     return (
                       <div key={targetId} className="flex items-center justify-between bg-slate-50 dark:bg-slate-900 p-3 rounded-2xl border border-slate-100 dark:border-slate-700">

@@ -38,9 +38,9 @@ const CharacterCard: React.FC<Props> = ({ character, allCharacters, onDelete, on
     return target ? target.name : '알 수 없음';
   };
 
-  const hasStatus = (status: string) => Object.values(character.relationshipStatuses).includes(status as any);
+  const hasStatus = (status: string) => Object.values(character.relationshipStatuses || {}).includes(status as any);
 
-  const allRelationships = Object.entries(character.relationships)
+  const allRelationships = Object.entries(character.relationships || {})
     .sort(([, a], [, b]) => Math.abs(b as number) - Math.abs(a as number));
 
   const visibleRelationships = isExpanded ? allRelationships : allRelationships.slice(0, 3);
@@ -58,6 +58,8 @@ const CharacterCard: React.FC<Props> = ({ character, allCharacters, onDelete, on
   };
 
   const plannedLabel = getPlannedActionLabel(character.plannedAction);
+
+  const stats = character.stats || { str: 5, agi: 5, con: 5, int: 5, cha: 5 };
 
   return (
     <div className={`border p-4 rounded-lg shadow-sm hover:shadow-md transition-all ${getStatusColor()} relative overflow-hidden group`}>
@@ -162,11 +164,11 @@ const CharacterCard: React.FC<Props> = ({ character, allCharacters, onDelete, on
 
       <div className="grid grid-cols-5 gap-1 mb-4">
         {[
-          { label: 'STR', val: character.stats?.str ?? 5, icon: '💪' },
-          { label: 'AGI', val: character.stats?.agi ?? 5, icon: '🏃' },
-          { label: 'CON', val: character.stats?.con ?? 5, icon: '🛡️' },
-          { label: 'INT', val: character.stats?.int ?? 5, icon: '🧠' },
-          { label: 'CHA', val: character.stats?.cha ?? 5, icon: '✨' }
+          { label: 'STR', val: stats.str ?? 5, icon: '💪' },
+          { label: 'AGI', val: stats.agi ?? 5, icon: '🏃' },
+          { label: 'CON', val: stats.con ?? 5, icon: '🛡️' },
+          { label: 'INT', val: stats.int ?? 5, icon: '🧠' },
+          { label: 'CHA', val: stats.cha ?? 5, icon: '✨' }
         ].map(s => (
           <div key={s.label} className="bg-slate-100 dark:bg-slate-700/50 rounded p-1 flex flex-col items-center border border-slate-200 dark:border-slate-600" title={`${s.label}: ${s.val}`}>
             <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 leading-none mb-0.5">{s.label}</span>
@@ -280,7 +282,7 @@ const CharacterCard: React.FC<Props> = ({ character, allCharacters, onDelete, on
           <div className="space-y-1">
             <ul className="space-y-1 text-xs">
               {visibleRelationships.map(([id, score]) => {
-                const status = character.relationshipStatuses[id];
+                const status = (character.relationshipStatuses || {})[id];
                 return (
                   <li key={id} className="flex justify-between items-center animate-fade-in">
                     <span className="text-slate-700 dark:text-slate-300 flex items-center gap-1">
