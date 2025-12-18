@@ -151,7 +151,8 @@ export const MENTAL_ILLNESS_ACTIONS: Record<MentalState | string, (char: Charact
 };
 
 // 2. Interaction Events (When Actor has Mental Illness)
-export const MENTAL_INTERACTIONS = [
+// Fix: Explicitly typed the array to return ActionEffect to avoid union access errors in simulation.ts
+export const MENTAL_INTERACTIONS: ((actor: string, target: string) => ActionEffect)[] = [
     (actor: string, target: string) => ({
         text: `😨 ${actor}은(는) ${target}을(를) 좀비로 착각하고 공격했습니다!`,
         affinity: -20,
@@ -226,15 +227,15 @@ export const LOVER_MENTAL_EVENTS: Record<MentalState | string, ((actor: string, 
     ],
     'Anxiety': [ 
         (actor, target) => ({
-            text: `💔 [불안] ${actor}은(는) ${target}이(가) 음식에 독을 탔다고 의심하여 그릇을 엎었습니다.`,
+            text: `💔 [불안] ${actor}이(가) 음식에 독을 탔다고 의심하여 그릇을 엎었습니다.`,
             affinity: -25, targetSanity: -10
         }),
         (actor, target) => ({
-            text: `💔 [불안] ${actor}은(는) ${target}이(가) 잠든 사이 소지품을 뒤지며 증거를 찾으려 했습니다.`,
+            text: `💔 [불안] ${actor}이(가) 잠든 사이 소지품을 뒤지며 증거를 찾으려 했습니다.`,
             affinity: -15, targetSanity: -5
         }),
         (actor, target) => ({
-            text: `💔 [불안] ${actor}은(는) ${target}이(가) 다른 생존자와 바람을 피우고 음모를 꾸민다고 확신했습니다.`,
+            text: `💔 [불안] ${actor}이(가) 다른 생존자와 바람을 피우고 음모를 꾸민다고 확신했습니다.`,
             affinity: -20, targetSanity: -10
         })
     ],

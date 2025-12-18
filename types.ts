@@ -54,6 +54,7 @@ export interface Character {
   relationshipDurations: Record<string, number>; 
   killCount: number;
   plannedAction?: string | null; 
+  griefLogs: string[]; // 동료 사망에 대한 기억 로그 추가
 }
 
 export interface RelationshipUpdate {
@@ -77,9 +78,10 @@ export interface CharacterUpdate {
   hasMuzzle?: boolean;
   relationshipUpdates?: RelationshipUpdate[];
   plannedAction?: string | null; 
-  statChanges?: Partial<Stats>; // 스탯 변경 추가
-  skillsAdd?: Skill[]; // 스킬 추가 추가
-  skillsRemove?: string[]; // 스킬 삭제 (이름 기준) 추가
+  statChanges?: Partial<Stats>; 
+  skillsAdd?: Skill[]; 
+  skillsRemove?: string[]; 
+  griefLogAdd?: string; // 새로운 사망 기억 추가
 }
 
 export interface BabyEventData {
@@ -136,9 +138,9 @@ export interface ActionEffect {
     actorSanity?: number; 
     targetSanity?: number; 
     targetInfection?: number; 
-    statChanges?: Partial<Stats>; // 스탯 변경 추가
-    skillsAdd?: Skill[]; // 스킬 추가 추가
-    skillsRemove?: string[]; // 스킬 삭제 추가
+    statChanges?: Partial<Stats>; 
+    skillsAdd?: Skill[]; 
+    skillsRemove?: string[]; 
 }
 
 export interface GameSettings {
@@ -184,9 +186,9 @@ export interface StoryEffect {
     inventoryRemove?: string[]; 
     affinity?: number; 
     hunger?: number; 
-    statChanges?: Partial<Stats>; // 추가
-    skillsAdd?: Skill[]; // 추가
-    skillsRemove?: string[]; // 추가
+    statChanges?: Partial<Stats>; 
+    skillsAdd?: Skill[]; 
+    skillsRemove?: string[]; 
 }
 
 export interface StoryRequirement {

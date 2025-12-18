@@ -1,7 +1,7 @@
 
 import { 
     Character, SimulationResult, CharacterUpdate, GameSettings, ForcedEvent, 
-    RelationshipStatus, ActionEffect, BabyEventData, RelationshipUpdate, MBTI, Ending, MentalState 
+    RelationshipStatus, ActionEffect, BabyEventData, RelationshipUpdate, MBTI, Ending, MentalState, StoryEffect
 } from '../types';
 import { 
     MAX_HP, MAX_SANITY, MAX_FATIGUE, MAX_INFECTION, MAX_HUNGER, 
@@ -9,11 +9,12 @@ import {
 } from '../constants';
 import { getNextStoryNode } from './events/globalEvents';
 import { FATIGUE_EVENTS } from './events/fatigueEvents';
-import { MBTI_SPECIFIC_ACTIONS, MBTI_EVENT_POOL, ANALYSTS, DIPLOMATS, SENTINELS } from './events/mbtiEvents';
+import { MBTI_SPECIFIC_ACTIONS, MBTI_EVENT_POOL, ANALYSTS, DIPLOMATS, SENTINELS, EXPLORERS } from './events/mbtiEvents';
 import { 
     MENTAL_ILLNESS_ACTIONS, MENTAL_INTERACTIONS, LOVER_MENTAL_EVENTS 
 } from './events/mentalEvents';
-import { INTERACTION_POOL, INTERACTION_TEMPLATES, CONFESSION_EVENTS, BREAKUP_EVENTS, REUNION_EVENTS } from './events/interaction/index';
+/* Fix: InteractionFunction is imported from its correct location */
+import { INTERACTION_POOL, INTERACTION_TEMPLATES, CONFESSION_EVENTS, BREAKUP_EVENTS, REUNION_EVENTS, InteractionFunction } from './events/interaction/index';
 import { GHOST_EVENTS } from './events/ghostEvents';
 import { getJobMbtiEvent, ALL_JOB_MBTI_EVENTS } from './events/jobEvents/index';
 import { REST_EVENTS } from './events/restEvents';
@@ -21,37 +22,19 @@ import { STORY_NODES } from './events/storyNodes';
 
 // --- Helpers ---
 
-const getMBTIContext = (mbti: MBTI) => {
-    if (ANALYSTS.includes(mbti)) return 'ANALYST';
-    if (DIPLOMATS.includes(mbti)) return 'DIPLOMAT';
-    if (SENTINELS.includes(mbti)) return 'SENTINEL';
-    return 'EXPLORER';
-};
-
-const applyEffectToUpdate = (update: CharacterUpdate, effect: {
-    hp?: number;
-    sanity?: number;
-    fatigue?: number;
-    infection?: number;
-    hunger?: number;
-    kill?: number;
-    status?: any;
-    mentalState?: MentalState;
-    inventoryRemove?: string[];
-    statChanges?: Partial<any>;
-    skillsAdd?: any[];
-    skillsRemove?: string[];
-}) => {
-    if (effect.hp) update.hpChange = (update.hpChange || 0) + effect.hp;
-    if (effect.sanity) update.sanityChange = (update.sanityChange || 0) + effect.sanity;
-    if (effect.fatigue) update.fatigueChange = (update.fatigueChange || 0) + effect.fatigue;
+const applyEffectToUpdate = (update: CharacterUpdate, effect: ActionEffect, globalLoot: string[]) => {
+    if (effect.hp || effect.actorHp) update.hpChange = (update.hpChange || 0) + (effect.hp || effect.actorHp || 0);
+    if (effect.sanity || effect.actorSanity) update.sanityChange = (update.sanityChange || 0) + (effect.sanity || effect.actorSanity || 0);
+    if (effect.fatigue || effect.actorFatigue) update.fatigueChange = (update.fatigueChange || 0) + (effect.fatigue || effect.actorFatigue || 0);
     if (effect.infection) update.infectionChange = (update.infectionChange || 0) + effect.infection;
     if (effect.hunger) update.hungerChange = (update.hungerChange || 0) + effect.hunger;
     if (effect.kill) update.killCountChange = (update.killCountChange || 0) + effect.kill;
     if (effect.status) update.status = effect.status;
     if (effect.mentalState) update.mentalState = effect.mentalState;
-    if (effect.inventoryRemove) update.inventoryRemove = [...(update.inventoryRemove || []), ...effect.inventoryRemove];
+    if (effect.loot) globalLoot.push(...effect.loot);
     
+    if (effect.inventoryRemove) update.inventoryRemove = [...(update.inventoryRemove || []), ...effect.inventoryRemove];
+
     if (effect.statChanges) update.statChanges = { ...(update.statChanges || {}), ...effect.statChanges };
     if (effect.skillsAdd) update.skillsAdd = [...(update.skillsAdd || []), ...effect.skillsAdd];
     if (effect.skillsRemove) update.skillsRemove = [...(update.skillsRemove || []), ...effect.skillsRemove];
@@ -75,79 +58,91 @@ const sanitizeForMinors = (text: string, participants: Character[], settings: Ga
     return sanitized;
 };
 
-const generateEffectLog = (effect: ActionEffect, characters: Character[], showResources: boolean, targetId?: string, targetName?: string): string => {
-    const resourceParts: string[] = [];
-    const permanentParts: string[] = [];
-    if (effect.statChanges) Object.entries(effect.statChanges).forEach(([stat, val]) => permanentParts.push(`${stat.toUpperCase()}${val! > 0 ? '+' : ''}${val}`));
-    if (effect.skillsAdd) effect.skillsAdd.forEach(s => permanentParts.push(`✨스킬:${s.name}`));
-    if (effect.skillsRemove) effect.skillsRemove.forEach(s => permanentParts.push(`🚫상실:${s}`));
-    if (showResources) {
-        if (effect.hp) resourceParts.push(`❤️${effect.hp > 0 ? '+' : ''}${effect.hp}`);
-        if (effect.sanity) resourceParts.push(`🧠${effect.sanity > 0 ? '+' : ''}${effect.sanity}`);
-        if (effect.fatigue) resourceParts.push(`💤${effect.fatigue > 0 ? '+' : ''}${effect.fatigue}`);
-        if (effect.infection) resourceParts.push(`🦠${effect.infection > 0 ? '+' : ''}${effect.infection}`);
-        if (effect.hunger) resourceParts.push(`🍖${effect.hunger > 0 ? '+' : ''}${effect.hunger}`);
-        if (effect.actorHp) resourceParts.push(`(나)❤️${effect.actorHp > 0 ? '+' : ''}${effect.actorHp}`);
-        if (effect.targetHp) resourceParts.push(`(상대)❤️${effect.targetHp > 0 ? '+' : ''}${effect.targetHp}`);
-        const affinityVal = effect.affinity || effect.affinityChange;
-        if (affinityVal && targetId) {
-            const target = characters.find(c => c.id === targetId);
-            resourceParts.push(`💞 ${target?.name || '??'} ${affinityVal > 0 ? '+' : ''}${affinityVal}`);
-        }
+const generateEffectLog = (effect: ActionEffect, characters: Character[], showResources: boolean, targetId?: string): string => {
+    if (!showResources) return '';
+    const parts: string[] = [];
+    if (effect.hp || effect.actorHp) parts.push(`❤️${(effect.hp || effect.actorHp || 0) > 0 ? '+' : ''}${effect.hp || effect.actorHp}`);
+    if (effect.sanity || effect.actorSanity) parts.push(`🧠${(effect.sanity || effect.actorSanity || 0) > 0 ? '+' : ''}${effect.sanity || effect.actorSanity}`);
+    if (effect.fatigue || effect.actorFatigue) parts.push(`💤${(effect.fatigue || effect.actorFatigue || 0) > 0 ? '+' : ''}${effect.fatigue || effect.actorFatigue}`);
+    if (effect.infection) parts.push(`🦠${effect.infection > 0 ? '+' : ''}${effect.infection}`);
+    const affinityVal = (effect as any).affinity || (effect as any).affinityChange;
+    if (affinityVal && targetId) {
+        const target = characters.find(c => c.id === targetId);
+        parts.push(`💞${target?.name || '??'}${affinityVal > 0 ? '+' : ''}${affinityVal}`);
     }
-    const allParts = [...permanentParts, ...resourceParts];
-    if (allParts.length === 0) return '';
-    return ` [${targetName ? `${targetName}: ` : ''}${allParts.join(', ')}]`;
+    return parts.length > 0 ? ` [${parts.join(', ')}]` : '';
 };
 
-const processRelationshipEvolution = (characters: Character[], updates: CharacterUpdate[], events: string[], settings: GameSettings) => {
-    if (settings.friendshipMode) return;
-    const living = characters.filter(c => c.status !== 'Dead' && c.status !== 'Missing' && c.status !== 'Zombie');
+// --- Core Logic ---
 
-    const hasActivePartner = (c: Character) => {
-        const existingPartner = Object.entries(c.relationshipStatuses).some(([id, status]) => (status === 'Lover' || status === 'Spouse') && living.some(l => l.id === id));
-        if (existingPartner) return true;
-        return updates.some(u => u.id === c.id && u.relationshipUpdates?.some(ru => ru.newStatus === 'Lover' || ru.newStatus === 'Spouse'));
-    };
-
-    living.forEach(c1 => {
-        living.forEach(c2 => {
-            if (c1.id >= c2.id) return;
-            const currentStatus = c1.relationshipStatuses[c2.id] || 'None';
-            const affinity = c1.relationships[c2.id] || 0;
-            const isFamily = ['Parent', 'Child', 'Sibling', 'Family', 'Guardian', 'Ward'].includes(currentStatus);
-            if (!settings.allowIncest && isFamily) return;
-
-            const isSameSex = c1.gender === c2.gender;
-            if (isSameSex && !settings.allowSameSexCouples) return;
-            if (!isSameSex && !settings.allowOppositeSexCouples) return;
-
-            const isC1Student = ['초등학생', '중학생', '고등학생'].includes(c1.job);
-            const isC2Student = ['초등학생', '중학생', '고등학생'].includes(c2.job);
-            if (settings.restrictStudentDating && (isC1Student !== isC2Student)) return;
-
-            if (currentStatus !== 'Lover' && currentStatus !== 'Spouse' && affinity >= 75 && Math.random() < 0.15) {
-                if (settings.pureLoveMode && (hasActivePartner(c1) || hasActivePartner(c2))) return;
-                const u1 = getCharacterUpdate(updates, c1.id); const u2 = getCharacterUpdate(updates, c2.id);
-                const result = CONFESSION_EVENTS[Math.floor(Math.random() * CONFESSION_EVENTS.length)](c1.name, c2.name);
-                const text = typeof result === 'string' ? result : result.text;
-                u1.relationshipUpdates = [...(u1.relationshipUpdates || []), { targetId: c2.id, change: 10, newStatus: 'Lover' }];
-                u2.relationshipUpdates = [...(u2.relationshipUpdates || []), { targetId: c1.id, change: 10, newStatus: 'Lover' }];
-                events.push(`💘 [고백] ${sanitizeForMinors(text, [c1, c2], settings)}`);
+const processStatusChanges = (characters: Character[], updates: CharacterUpdate[], events: string[]) => {
+    characters.forEach(c => {
+        const u = getCharacterUpdate(updates, c.id);
+        
+        if (c.status === 'Zombie') {
+            u.hungerChange = (u.hungerChange || 0) - 2.0;
+            if (c.hunger <= 10) {
+                u.hpChange = (u.hpChange || 0) - 5;
+                events.push(`🦴 [굶주림] 좀비가 된 ${c.name}이(가) 심한 허기로 인해 신체 조직이 썩어갑니다.`);
             }
-            else if ((currentStatus === 'Lover' || currentStatus === 'Spouse') && affinity < 20 && Math.random() < 0.1) {
-                const u1 = getCharacterUpdate(updates, c1.id); const u2 = getCharacterUpdate(updates, c2.id);
-                const result = BREAKUP_EVENTS[Math.floor(Math.random() * BREAKUP_EVENTS.length)](c1.name, c2.name);
-                const text = typeof result === 'string' ? result : result.text;
-                u1.relationshipUpdates = [...(u1.relationshipUpdates || []), { targetId: c2.id, change: -15, newStatus: 'Ex' }];
-                u2.relationshipUpdates = [...(u2.relationshipUpdates || []), { targetId: c1.id, change: -15, newStatus: 'Ex' }];
-                events.push(`💔 [이별] ${sanitizeForMinors(text, [c1, c2], settings)}`);
+        }
+
+        if (c.status === 'Infected' || (c.infection > 0 && c.status === 'Alive')) {
+            const currentInfection = c.infection + (u.infectionChange || 0);
+            if (currentInfection >= MAX_INFECTION) {
+                let voteScore = 0;
+                const voters = characters.filter(v => v.id !== c.id && v.status === 'Alive');
+                
+                voters.forEach(v => {
+                    if (v.mbti.includes('F')) voteScore += 2; else voteScore -= 2;
+                    const affinity = v.relationships[c.id] || 0;
+                    if (affinity >= 50) voteScore += 4;
+                    if (affinity <= -20) voteScore -= 3;
+                    const rel = v.relationshipStatuses[c.id];
+                    if (['Lover', 'Spouse', 'Parent', 'Child', 'Sibling', 'Family', 'Savior', 'Guardian', 'Ward'].includes(rel || '')) {
+                        voteScore += 15;
+                    }
+                });
+
+                if (voteScore > 0 || voters.length === 0) {
+                    u.status = 'Zombie';
+                    events.push(`🧟 [전환 투표] ${c.name}이(가) 끝내 좀비로 변했습니다. 동료들은 차마 그를 버리지 못하고 구속하여 데리고 가기로 했습니다.`);
+                    voters.forEach(v => {
+                        const vu = getCharacterUpdate(updates, v.id);
+                        vu.griefLogAdd = `${c.name}이(가) 우리 곁을 떠나 괴물이 되었습니다. 그 눈빛을 잊을 수 없습니다.`;
+                    });
+                } else {
+                    u.status = 'Dead';
+                    u.hpChange = -999;
+                    events.push(`💀 [전환 투표] ${c.name}이(가) 좀비로 변하려 하자, 동료들이 안전을 위해 그를 안식에 들게 했습니다.`);
+                    voters.forEach(v => {
+                        const vu = getCharacterUpdate(updates, v.id);
+                        vu.griefLogAdd = `결국 우리 손으로 ${c.name}을(를) 보냈습니다. 이것이 최선이었을까요?`;
+                    });
+                }
             }
-        });
+        }
+
+        if (c.status === 'Missing') {
+            const rand = Math.random();
+            if (rand < 0.05) { u.status = 'Alive'; events.push(`✨ [귀환] 실종되었던 ${c.name}이(가) 기적적으로 돌아왔습니다!`); }
+            else if (rand < 0.08) { u.status = 'Dead'; events.push(`💀 [사망 확인] 실종된 ${c.name}의 유품이 발견되었습니다.`); }
+        }
+
+        if (c.status !== 'Dead' && c.status !== 'Missing' && c.hp + (u.hpChange || 0) <= 0) {
+            u.status = 'Dead';
+            events.push(`💀 [사망] ${c.name}이(가) 고통 끝에 숨을 거두었습니다.`);
+            characters.filter(v => v.id !== c.id && v.status !== 'Dead' && v.status !== 'Missing').forEach(v => {
+                const vu = getCharacterUpdate(updates, v.id);
+                const affinity = v.relationships[c.id] || 0;
+                if (affinity > 50) vu.griefLogAdd = `나의 소중한 친구 ${c.name}을(를) 잃었습니다. 가슴 한구석이 텅 빈 것 같습니다.`;
+                else vu.griefLogAdd = `동료였던 ${c.name}의 죽음을 목격했습니다. 죽음은 언제나 우리 곁에 있습니다.`;
+            });
+        }
     });
 };
 
-const processInteractionPhase = (characters: Character[], forcedEvents: ForcedEvent[], settings: GameSettings, updates: CharacterUpdate[], events: string[], globalLoot: string[]) => {
+const processInteractionPhase = (characters: Character[], settings: GameSettings, updates: CharacterUpdate[], events: string[], globalLoot: string[]) => {
     const living = characters.filter(c => c.status !== 'Dead' && c.status !== 'Missing');
     if (living.length < 2) return;
     
@@ -155,80 +150,248 @@ const processInteractionPhase = (characters: Character[], forcedEvents: ForcedEv
     for (let i = 0; i < shuffled.length - 1; i += 2) {
         const a = shuffled[i]; const b = shuffled[i+1];
         const uA = getCharacterUpdate(updates, a.id); const uB = getCharacterUpdate(updates, b.id);
-        
-        // 1. 좀비 특수 상호작용 및 물기 로직 (입마개 미착용 시 10% 확률)
+        const relStatus = a.relationshipStatuses[b.id] || 'None';
+
         if (a.status === 'Zombie') {
             if (!a.hasMuzzle && Math.random() < 0.1) {
-                events.push(`⚠️ [돌발] 입마개가 없는 좀비 ${a.name}이(가) ${b.name}을(를) 거칠게 물어뜯었습니다!`);
-                uB.hpChange = (uB.hpChange || 0) - 30;
-                uB.infectionChange = (uB.infectionChange || 0) + 40;
-                uB.sanityChange = (uB.sanityChange || 0) - 20;
-                uA.relationshipUpdates = [...(uA.relationshipUpdates || []), { targetId: b.id, change: -50 }];
-                uB.relationshipUpdates = [...(uB.relationshipUpdates || []), { targetId: a.id, change: -50 }];
+                events.push(`⚠️ [돌발] 입마개가 없는 좀비 ${a.name}이(가) ${b.name}을(를) 거칠게 물었습니다!`);
+                uB.hpChange = (uB.hpChange || 0) - 30; uB.infectionChange = (uB.infectionChange || 0) + 40;
             } else {
                 const pool = INTERACTION_POOL['ZOMBIE_HUMAN'];
-                const result = pool[Math.floor(Math.random() * pool.length)](a.name, b.name);
-                const text = typeof result === 'string' ? result : result.text;
-                if (typeof result !== 'string') {
-                    if (result.targetSanity) uB.sanityChange = (uB.sanityChange || 0) + result.targetSanity;
-                }
-                events.push(`🧟 ${text}`);
+                const effect = pool[Math.floor(Math.random() * pool.length)](a.name, b.name) as any;
+                applyEffectToUpdate(uB, { ...effect, hp: effect.targetHp, sanity: effect.targetSanity, fatigue: effect.targetFatigue } as any, globalLoot);
+                events.push(`🧟 ${effect.text}`);
             }
             continue;
         }
 
-        // 2. 인간 상호작용
-        const status = a.relationshipStatuses[b.id] || 'None';
-        const pool = INTERACTION_POOL[status] || INTERACTION_POOL['POSITIVE'];
-        const effectGen = pool[Math.floor(Math.random() * pool.length)];
-        const result = effectGen(a.name, b.name);
-        const text = typeof result === 'string' ? result : result.text;
-        
-        if (typeof result !== 'string') {
-            if (result.affinity) {
-                uA.relationshipUpdates = [...(uA.relationshipUpdates || []), { targetId: b.id, change: result.affinity }];
-                uB.relationshipUpdates = [...(uB.relationshipUpdates || []), { targetId: a.id, change: result.affinity }];
+        // --- 특수 상호작용 풀 결정 (정신 질환 및 피로도 고려) ---
+        let pool: InteractionFunction[];
+        if (a.mentalState !== 'Normal' && Math.random() < 0.3) {
+            // 주체가 정신 질환 상태인 경우
+            if ((relStatus === 'Lover' || relStatus === 'Spouse') && LOVER_MENTAL_EVENTS[a.mentalState]) {
+                pool = LOVER_MENTAL_EVENTS[a.mentalState];
+            } else {
+                pool = MENTAL_INTERACTIONS;
             }
-            if (result.targetHp) uB.hpChange = (uB.hpChange || 0) + result.targetHp;
-            if (result.actorHp) uA.hpChange = (uA.hpChange || 0) + result.actorHp;
+        } else if (b.fatigue >= 80 && Math.random() < 0.3) {
+            // 대상의 피로도가 매우 높을 때 (피로 회복 지원)
+            pool = INTERACTION_POOL['FATIGUE_RELIEF'];
+        } else {
+            // 일반 관계 기반 풀
+            pool = INTERACTION_POOL[relStatus] || INTERACTION_POOL['POSITIVE'];
         }
-        events.push(`💬 ${sanitizeForMinors(text, [a, b], settings)}${generateEffectLog(typeof result === 'string' ? {text} : result, characters, settings.showEventEffects)}`);
+
+        const effect = pool[Math.floor(Math.random() * pool.length)](a.name, b.name) as any;
+        
+        // Fix: correctly handle the case where InteractionFunction returns a string
+        if (typeof effect === 'string') {
+          events.push(`💬 ${sanitizeForMinors(effect, [a, b], settings)}`);
+        } else {
+          // Actor's stats
+          applyEffectToUpdate(uA, { ...effect, hp: effect.actorHp, sanity: effect.actorSanity, fatigue: effect.actorFatigue } as any, globalLoot);
+          // Target's stats
+          applyEffectToUpdate(uB, { ...effect, hp: effect.targetHp, sanity: effect.targetSanity, fatigue: effect.targetFatigue } as any, globalLoot);
+          
+          // 은인(Savior) 트리거
+          const isTargetCritical = b.hp <= 30;
+          if (isTargetCritical && (effect.targetHp || 0) >= 10 && relStatus !== 'Savior') {
+              uB.relationshipUpdates = [...(uB.relationshipUpdates || []), { targetId: a.id, change: 30, newStatus: 'Savior' }];
+              events.push(`🦸 [은인] ${b.name}은(는) 죽음의 문턱에서 자신을 살려낸 ${a.name}을(를) 평생의 은인으로 여기기로 했습니다!`);
+          } else if (effect.affinity) {
+              uA.relationshipUpdates = [...(uA.relationshipUpdates || []), { targetId: b.id, change: effect.affinity }];
+              uB.relationshipUpdates = [...(uB.relationshipUpdates || []), { targetId: a.id, change: effect.affinity }];
+          }
+          
+          events.push(`💬 ${sanitizeForMinors(effect.text, [a, b], settings)}${generateEffectLog(effect as ActionEffect, characters, settings.showEventEffects, b.id)}`);
+        }
     }
+};
+
+const processRelationshipEvolution = (characters: Character[], updates: CharacterUpdate[], events: string[], settings: GameSettings): BabyEventData | null => {
+    let newBaby: BabyEventData | null = null;
+    const living = characters.filter(c => c.status !== 'Dead' && c.status !== 'Missing' && c.status !== 'Zombie');
+
+    living.forEach(c1 => {
+        living.forEach(c2 => {
+            if (c1.id >= c2.id) return;
+            const currentStatus = c1.relationshipStatuses[c2.id] || 'None';
+            const affinity = c1.relationships[c2.id] || 0;
+            const duration = c1.relationshipDurations[c2.id] || 0;
+
+            if ((currentStatus === 'Lover' || currentStatus === 'Spouse') && affinity <= 10 && Math.random() < 0.2) {
+                const res = BREAKUP_EVENTS[Math.floor(Math.random() * BREAKUP_EVENTS.length)](c1.name, c2.name) as any;
+                const u1 = getCharacterUpdate(updates, c1.id); const u2 = getCharacterUpdate(updates, c2.id);
+                u1.relationshipUpdates = [...(u1.relationshipUpdates || []), { targetId: c2.id, change: -10, newStatus: 'Ex' }];
+                u2.relationshipUpdates = [...(u2.relationshipUpdates || []), { targetId: c1.id, change: -10, newStatus: 'Ex' }];
+                // Apply stats from breakup result
+                if (res.actorSanity) u1.sanityChange = (u1.sanityChange || 0) + res.actorSanity;
+                if (res.targetSanity) u2.sanityChange = (u2.sanityChange || 0) + res.targetSanity;
+                events.push(`💔 [이별] ${typeof res === 'string' ? res : res.text}`);
+            }
+            else if (currentStatus === 'Ex' && affinity >= 60 && Math.random() < 0.1) {
+                const res = REUNION_EVENTS[Math.floor(Math.random() * REUNION_EVENTS.length)](c1.name, c2.name) as any;
+                const u1 = getCharacterUpdate(updates, c1.id); const u2 = getCharacterUpdate(updates, c2.id);
+                u1.relationshipUpdates = [...(u1.relationshipUpdates || []), { targetId: c2.id, change: 15, newStatus: 'Lover' }];
+                u2.relationshipUpdates = [...(u2.relationshipUpdates || []), { targetId: c1.id, change: 15, newStatus: 'Lover' }];
+                // Apply stats from reunion result
+                if (res.actorSanity) u1.sanityChange = (u1.sanityChange || 0) + res.actorSanity;
+                if (res.targetSanity) u2.sanityChange = (u2.sanityChange || 0) + res.targetSanity;
+                events.push(`💖 [재결합] ${typeof res === 'string' ? res : res.text}`);
+            }
+            else if (currentStatus !== 'Lover' && currentStatus !== 'Spouse' && affinity >= 75 && Math.random() < 0.15) {
+                const res = CONFESSION_EVENTS[Math.floor(Math.random() * CONFESSION_EVENTS.length)](c1.name, c2.name) as any;
+                const u1 = getCharacterUpdate(updates, c1.id); const u2 = getCharacterUpdate(updates, c2.id);
+                u1.relationshipUpdates = [...(u1.relationshipUpdates || []), { targetId: c2.id, change: 10, newStatus: 'Lover' }];
+                u2.relationshipUpdates = [...(u2.relationshipUpdates || []), { targetId: c1.id, change: 10, newStatus: 'Lover' }];
+                // Apply stats from confession result
+                if (res.actorSanity) u1.sanityChange = (u1.sanityChange || 0) + res.actorSanity;
+                if (res.targetSanity) u2.sanityChange = (u2.sanityChange || 0) + res.targetSanity;
+                events.push(`💘 [고백] ${typeof res === 'string' ? res : res.text}`);
+            }
+            else if (currentStatus === 'Lover' && duration >= 7 && Math.random() < (0.01 + duration * 0.005)) {
+                const u1 = getCharacterUpdate(updates, c1.id); const u2 = getCharacterUpdate(updates, c2.id);
+                u1.relationshipUpdates = [...(u1.relationshipUpdates || []), { targetId: c2.id, change: 20, newStatus: 'Spouse' }];
+                u2.relationshipUpdates = [...(u2.relationshipUpdates || []), { targetId: c1.id, change: 20, newStatus: 'Spouse' }];
+                events.push(`💍 [결혼] ${c1.name}와(과) ${c2.name}은(는) 영원한 사랑을 맹세하며 부부가 되었습니다!`);
+            }
+            else if (settings.enablePregnancy && currentStatus === 'Spouse' && !newBaby && Math.random() < (settings.pregnancyChance / 100)) {
+                newBaby = { fatherId: c1.gender === 'Male' ? c1.id : c2.id, motherId: c1.gender === 'Female' ? c1.id : c2.id };
+            }
+        });
+    });
+    return newBaby;
 };
 
 export const simulateDay = async (day: number, characters: Character[], currentStoryNodeId: string | null, settings: GameSettings, forcedEvents: ForcedEvent[], userSelectedNodeId?: string): Promise<SimulationResult> => {
     const events: string[] = []; const updates: CharacterUpdate[] = []; const globalLoot: string[] = [];
-    
-    // 1. Story Event
+    const inventoryRemove: string[] = [];
+
     const storyNode = getNextStoryNode(currentStoryNodeId, userSelectedNodeId);
     let nextStoryNodeId = storyNode.id;
     events.push(`📖 [스토리] ${storyNode.text}`);
+    
+    // FIX: 특정 스토리 노드 도달 시 타로 이벤트 플래그 활성화
+    const tarotEvent = nextStoryNodeId === 'tarot_continue';
+
     if (storyNode.effect) {
-        characters.filter(c => c.status !== 'Dead').forEach(t => applyEffectToUpdate(getCharacterUpdate(updates, t.id), storyNode.effect as any));
+        const effect = storyNode.effect;
+        let targets: Character[] = [];
+        const living = characters.filter(c => c.status !== 'Dead' && c.status !== 'Missing');
+        
+        if (effect.target === 'ALL') targets = living;
+        else if (effect.target === 'RANDOM_1' && living.length > 0) targets = [living[Math.floor(Math.random() * living.length)]];
+        else if (effect.target === 'RANDOM_HALF' && living.length > 0) targets = [...living].sort(() => 0.5 - Math.random()).slice(0, Math.ceil(living.length / 2));
+        
+        targets.forEach(t => {
+            const u = getCharacterUpdate(updates, t.id);
+            applyEffectToUpdate(u, effect as any, globalLoot);
+        });
+
+        if (effect.inventoryRemove) inventoryRemove.push(...effect.inventoryRemove);
     }
 
-    // 2. Daily Behavior (좀비 격리)
-    characters.filter(c => c.status !== 'Dead').forEach(c => {
-        const u = getCharacterUpdate(updates, c.id);
-        u.hungerChange = (u.hungerChange || 0) - DAILY_HUNGER_LOSS;
-        
-        if (c.status === 'Zombie') {
-            if (c.hunger < 10) u.hpChange = (u.hpChange || 0) - 5;
-            // 좀비는 여기서 행동 종료 (인간용 이벤트 스킵)
-            return;
-        }
-        
-        // 인간 전용 행동
-        if (Math.random() < 0.5) {
-            const effect = getJobMbtiEvent(c.job, c.mbti, c.name);
-            applyEffectToUpdate(u, effect);
-            events.push(effect.text + generateEffectLog(effect, characters, settings.showEventEffects));
-        }
+    const processPlannedActions = (characters: Character[], updates: CharacterUpdate[], events: string[], globalLoot: string[]) => {
+        characters.filter(c => c.status === 'Alive' && c.plannedAction).forEach(c => {
+            const u = getCharacterUpdate(updates, c.id);
+            u.plannedAction = null; 
+            switch(c.plannedAction) {
+                case 'rest':
+                    const restEffect = REST_EVENTS[Math.floor(Math.random() * REST_EVENTS.length)](c.name);
+                    applyEffectToUpdate(u, restEffect, globalLoot);
+                    events.push(`🛌 [계획/휴식] ${restEffect.text}`);
+                    break;
+                case 'scavenge':
+                    const found = Math.random() < 0.7 ? '통조림' : '붕대';
+                    found && globalLoot.push(found); u.fatigueChange = (u.fatigueChange || 0) + 20;
+                    events.push(`🎒 [계획] ${c.name}은(는) 위험을 무릅쓰고 정찰을 나가 ${found}을(를) 찾아왔습니다.`);
+                    break;
+                case 'fortify':
+                    u.sanityChange = (u.sanityChange || 0) + 10; u.fatigueChange = (u.fatigueChange || 0) + 10;
+                    events.push(`🛡️ [계획] ${c.name}은(는) 은신처 주위를 보강하며 마음의 안정을 찾았습니다.`);
+                    break;
+                case 'meditate':
+                    u.sanityChange = (u.sanityChange || 0) + 25;
+                    events.push(`🧘 [계획] ${c.name}은(는) 조용히 명상을 하며 흐트러진 정신을 가다듬었습니다.`);
+                    break;
+                case 'patrol':
+                    u.killCountChange = (u.killCountChange || 0) + 3; u.fatigueChange = (u.fatigueChange || 0) + 30;
+                    events.push(`⚔️ [계획] ${c.name}은(는) 은신처 근처의 좀비들을 적극적으로 소탕했습니다.`);
+                    break;
+            }
+        });
+    };
+
+    const processPersonalEvents = (characters: Character[], updates: CharacterUpdate[], events: string[], settings: GameSettings, globalLoot: string[]) => {
+        characters.filter(c => c.status !== 'Dead' && c.status !== 'Missing' && !c.plannedAction).forEach(c => {
+            const u = getCharacterUpdate(updates, c.id);
+            if (PRODUCTION_JOBS.includes(c.job) && Math.random() < 0.3) {
+                const found = Math.random() < 0.5 ? '통조림' : '붕대';
+                found && globalLoot.push(found);
+                events.push(`🛠️ [직업 특기] ${c.job}인 ${c.name}이(가) 능숙한 솜씨로 ${found}을(를) 확보했습니다.`);
+            }
+            if (c.mentalState !== 'Normal' && Math.random() < 0.3) {
+                const effect = MENTAL_ILLNESS_ACTIONS[c.mentalState](c);
+                applyEffectToUpdate(u, effect, globalLoot);
+                events.push(effect.text + generateEffectLog(effect, characters, settings.showEventEffects));
+                return;
+            }
+            if (c.fatigue >= 80 && Math.random() < 0.4) {
+                const effect = FATIGUE_EVENTS[Math.floor(Math.random() * FATIGUE_EVENTS.length)](c.name);
+                applyEffectToUpdate(u, effect, globalLoot);
+                events.push(effect.text + generateEffectLog(effect, characters, settings.showEventEffects));
+                return;
+            }
+            const rand = Math.random();
+            if (rand < 0.5) {
+                const effect = getJobMbtiEvent(c.job, c.mbti, c.name);
+                applyEffectToUpdate(u, effect, globalLoot);
+                events.push(effect.text + generateEffectLog(effect, characters, settings.showEventEffects));
+            } else if (rand < 0.8) {
+                const pool = MBTI_EVENT_POOL[c.mbti];
+                const effect = pool[Math.floor(Math.random() * pool.length)](c.name, c.gender === 'Female' ? '그녀' : '그');
+                applyEffectToUpdate(u, effect, globalLoot);
+                events.push(`🧩 [${c.mbti}] ${effect.text}${generateEffectLog(effect, characters, settings.showEventEffects)}`);
+            }
+        });
+    };
+
+    processPlannedActions(characters, updates, events, globalLoot);
+    processPersonalEvents(characters, updates, events, settings, globalLoot);
+    processInteractionPhase(characters, settings, updates, events, globalLoot);
+    processStatusChanges(characters, updates, events);
+    const babyEvent = processRelationshipEvolution(characters, updates, events, settings);
+
+    characters.filter(c => c.status === 'Dead').forEach(d => {
+        characters.filter(l => l.status !== 'Dead' && l.status !== 'Missing' && (l.relationships[d.id] || 0) > 50).forEach(l => {
+            if (Math.random() < 0.2) {
+                const u = getCharacterUpdate(updates, l.id);
+                const ev = GHOST_EVENTS[Math.floor(Math.random() * GHOST_EVENTS.length)](d.name, l.name);
+                applyEffectToUpdate(u, ev, globalLoot); 
+                events.push(ev.text);
+            }
+        });
     });
 
-    // 3. Interactions & Evolution
-    processInteractionPhase(characters, forcedEvents, settings, updates, events, globalLoot);
-    processRelationshipEvolution(characters, updates, events, settings);
+    let triggeredEnding: Ending | null = null;
+    const finalLiving = characters.filter(c => c.status !== 'Dead' && c.status !== 'Missing').length;
+    if (finalLiving === 0 && characters.length > 0) {
+        triggeredEnding = { id: 'extinction', title: '인류의 황혼', description: '모든 생존자가 사망했습니다. 고요한 폐허 속에 인류의 흔적만이 바람에 흩날립니다.', icon: '💀', type: 'BAD' };
+    } else if (storyNode.id.includes('rescue')) {
+        triggeredEnding = { id: 'rescue_success', title: '안전 지대로', description: '극적인 구조 끝에 안전한 곳으로 이송되었습니다. 지옥 같던 날들은 이제 기억 속에만 남을 것입니다.', icon: '🚁', type: 'GOOD' };
+    }
 
-    return { narrative: `${day}일차의 기록입니다.`, events, updates, loot: globalLoot, nextStoryNodeId: storyNode.next ? nextStoryNodeId : null };
+    characters.filter(c => c.status !== 'Dead' && c.status !== 'Missing').forEach(c => {
+        getCharacterUpdate(updates, c.id).hungerChange = (getCharacterUpdate(updates, c.id).hungerChange || 0) - DAILY_HUNGER_LOSS;
+    });
+
+    return { 
+        narrative: `${day}일차의 기록입니다.`, events, updates, 
+        loot: globalLoot, 
+        inventoryRemove: [...inventoryRemove, ...(storyNode.effect?.inventoryRemove || [])],
+        nextStoryNodeId: storyNode.next ? nextStoryNodeId : null,
+        ending: triggeredEnding,
+        babyEvent,
+        tarotEvent
+    };
 };

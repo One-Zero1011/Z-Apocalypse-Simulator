@@ -10,9 +10,11 @@ interface Props {
   onEdit?: (character: Character) => void; 
   onPlan?: (character: Character) => void;
   onShowDetail?: (character: Character) => void; 
+  onShowGrief?: (character: Character) => void;
+  onShowSummary?: (character: Character) => void; 
 }
 
-const CharacterCard: React.FC<Props> = ({ character, allCharacters, onDelete, onEdit, onPlan, onShowDetail }) => {
+const CharacterCard: React.FC<Props> = ({ character, allCharacters, onDelete, onEdit, onPlan, onShowDetail, onShowGrief, onShowSummary }) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const [showSkills, setShowSkills] = useState(false);
   
@@ -58,7 +60,6 @@ const CharacterCard: React.FC<Props> = ({ character, allCharacters, onDelete, on
   };
 
   const plannedLabel = getPlannedActionLabel(character.plannedAction);
-
   const stats = character.stats || { str: 5, agi: 5, con: 5, int: 5, cha: 5 };
 
   return (
@@ -97,61 +98,48 @@ const CharacterCard: React.FC<Props> = ({ character, allCharacters, onDelete, on
         </div>
         <div className="text-right text-xs flex flex-col items-end gap-1 relative z-20">
             <div className="flex gap-1 items-center">
-                {onShowDetail && (
+                {onShowSummary && (
                     <button 
-                        onClick={(e) => {
-                            e.stopPropagation();
-                            onShowDetail(character);
-                        }}
-                        className="text-slate-400 hover:text-indigo-600 p-1.5 rounded-full hover:bg-indigo-50 dark:hover:bg-indigo-900/20 transition-all active:scale-90"
-                        title="생존 기록 및 정보"
+                        onClick={(e) => { e.stopPropagation(); onShowSummary(character); }}
+                        className="text-slate-400 hover:text-amber-500 p-1.5 rounded-full hover:bg-amber-50 dark:hover:bg-amber-900/20 transition-all active:scale-90"
+                        title="기록 요약"
                     >
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4">
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.042A8.967 8.967 0 0 0 6 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 0 1 6 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 0 1 6-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0 0 18 18c-2.305 0-4.408.867-6 2.292m0-14.25v14.25" />
-                        </svg>
+                        📊
+                    </button>
+                )}
+                {onShowGrief && !isZombie && !isDead && (
+                    <button 
+                        onClick={(e) => { e.stopPropagation(); onShowGrief(character); }}
+                        className="text-slate-400 hover:text-red-500 p-1.5 rounded-full hover:bg-red-50 dark:hover:bg-red-900/20 transition-all active:scale-90"
+                        title="동료의 죽음과 감정 기록"
+                    >
+                        🕯️
                     </button>
                 )}
                 {onPlan && !isDead && !isZombie && (
                     <button 
-                        onClick={(e) => {
-                            e.stopPropagation();
-                            onPlan(character);
-                        }}
+                        onClick={(e) => { e.stopPropagation(); onPlan(character); }}
                         className="text-slate-400 hover:text-zombie-green p-1.5 rounded-full hover:bg-lime-50 dark:hover:bg-lime-900/20 transition-colors"
                         title="행동 계획 설정"
                     >
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4">
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 0 0 2.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 0 0-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .415.139.797.373 1.1a2.25 2.25 0 0 0 1.833 1.258 2.25 2.25 0 0 0 1.833-1.258 2.25 2.25 0 0 0 .373-1.1c0-.231-.035-.454-.1-.664m-5.801 0a4.224 4.224 0 0 1 5.801 0M7.5 10.5h6.462c.969 0 1.885.474 2.448 1.272l1.322 1.872a.75.75 0 0 1-.165 1.05l-1.056.733a.75.75 0 0 1-1.05-.165l-1.322-1.872a.75.75 0 0 0-.612-.318H7.5V10.5Z" />
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 4.5h-.75A2.25 2.25 0 0 0 3.75 6.75v12A2.25 2.25 0 0 0 6 21h12a2.25 2.25 0 0 0 2.25-2.25v-12A2.25 2.25 0 0 0 18 4.5h-.75" />
-                        </svg>
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4"><path strokeLinecap="round" strokeLinejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 0 0 2.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 0 0-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .415.139.797.373 1.1a2.25 2.25 0 0 0 1.833 1.258 2.25 2.25 0 0 0 1.833-1.258 2.25 2.25 0 0 0 .373-1.1c0-.231-.035-.454-.1-.664m-5.801 0a4.224 4.224 0 0 1 5.801 0M7.5 10.5h6.462c.969 0 1.885.474 2.448 1.272l1.322 1.872a.75.75 0 0 1-.165 1.05l-1.056.733a.75.75 0 0 1-1.05-.165l-1.322-1.872a.75.75 0 0 0-.612-.318H7.5V10.5Z" /><path strokeLinecap="round" strokeLinejoin="round" d="M6.75 4.5h-.75A2.25 2.25 0 0 0 3.75 6.75v12A2.25 2.25 0 0 0 6 21h12a2.25 2.25 0 0 0 2.25-2.25v-12A2.25 2.25 0 0 0 18 4.5h-.75" /></svg>
                     </button>
                 )}
                 {onEdit && (
                     <button 
-                        onClick={(e) => {
-                            e.stopPropagation();
-                            onEdit(character);
-                        }}
+                        onClick={(e) => { e.stopPropagation(); onEdit(character); }}
                         className="text-slate-400 hover:text-blue-500 p-1.5 rounded-full hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors"
                         title="정보 수정"
                     >
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
-                            <path d="M5.433 13.917l1.262-3.155A4 4 0 017.58 9.42l6.92-6.918a2.121 2.121 0 013 3l-6.92 6.918c-.383.383-.84.685-1.343.886l-3.154 1.262a.5.5 0 01-.65-.65z" />
-                            <path d="M3.5 5.75c0-.69.56-1.25 1.25-1.25H10A.75.75 0 0010 3H4.75A2.75 2.75 0 002 5.75v9.5A2.75 2.75 0 004.75 18h9.5A2.75 2.75 0 0017 15.25V10a.75.75 0 00-1.5 0v5.25c0 .69-.56 1.25-1.25 1.25h-9.5c-.69 0-1.25-.56-1.25-1.25v-9.5z" />
-                        </svg>
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4"><path d="M5.433 13.917l1.262-3.155A4 4 0 017.58 9.42l6.92-6.918a2.121 2.121 0 013 3l-6.92 6.918c-.383.383-.84.685-1.343.886l-3.154 1.262a.5.5 0 01-.65-.65z" /><path d="M3.5 5.75c0-.69.56-1.25 1.25-1.25H10A.75.75 0 0010 3H4.75A2.75 2.75 0 002 5.75v9.5A2.75 2.75 0 004.75 18h9.5A2.75 2.75 0 0017 15.25V10a.75.75 0 00-1.5 0v5.25c0 .69-.56 1.25-1.25 1.25h-9.5c-.69 0-1.25-.56-1.25-1.25v-9.5z" /></svg>
                     </button>
                 )}
                 <button 
-                    onClick={(e) => {
-                        e.stopPropagation();
-                        onDelete(character.id);
-                    }}
+                    onClick={(e) => { e.stopPropagation(); onDelete(character.id); }}
                     className="text-slate-400 hover:text-red-500 p-1.5 rounded-full hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
                     title="생존자 삭제"
                 >
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
-                        <path fillRule="evenodd" d="M8.75 1A2.75 2.75 0 006 3.75v.443c-.795.077-1.584.176-2.365.298a.75.75 0 10.23 1.482l.149-.022.841 10.518A2.75 2.75 0 007.596 19h4.807a2.75 2.75 0 002.742-2.53l.841-10.52.149.023a.75.75 0 00.23-1.482A41.03 41.03 0 0014 4.193V3.75A2.75 2.75 0 0011.25 1h-2.5zM10 4c.84 0 1.673.025 2.5.075V3.75c0-.69-.56-1.25-1.25-1.25h-2.5c-.69 0-1.25.56-1.25 1.25v.325C8.327 4.025 9.16 4 10 4zM8.58 7.72a.75.75 0 00-1.5.06l.3 7.5a.75.75 0 101.5-.06l-.3-7.5zm4.34.06a.75.75 0 10-1.5-.06l-.3 7.5a.75.75 0 101.5.06l.3-7.5z" clipRule="evenodd" />
-                    </svg>
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4"><path fillRule="evenodd" d="M8.75 1A2.75 2.75 0 006 3.75v.443c-.795.077-1.584.176-2.365.298a.75.75 0 10.23 1.482l.149-.022.841 10.518A2.75 2.75 0 007.596 19h4.807a2.75 2.75 0 002.742-2.53l.841-10.52.149.023a.75.75 0 00.23-1.482A41.03 41.03 0 0014 4.193V3.75A2.75 2.75 0 0011.25 1h-2.5zM10 4c.84 0 1.673.025 2.5.075V3.75c0-.69-.56-1.25-1.25-1.25h-2.5c-.69 0-1.25.56-1.25 1.25v.325C8.327 4.025 9.16 4 10 4zM8.58 7.72a.75.75 0 00-1.5.06l.3 7.5a.75.10 1.5-.06l-.3-7.5zm4.34.06a.75.10 1.5-.06l-.3 7.5a.75.10 1.5.06l.3-7.5z" clipRule="evenodd" /></svg>
                 </button>
             </div>
             <div className="font-mono text-slate-600 dark:text-slate-400 mt-1 text-[10px]">ID: {character.id.split('-')[0]}...</div>
