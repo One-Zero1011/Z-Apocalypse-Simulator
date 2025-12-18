@@ -5,10 +5,11 @@ import { Ending } from '../types';
 interface Props {
     ending: Ending;
     onClose: () => void;
+    onRestart: () => void;
     day: number;
 }
 
-const EndingModal: React.FC<Props> = ({ ending, onClose, day }) => {
+const EndingModal: React.FC<Props> = ({ ending, onClose, onRestart, day }) => {
     const getTypeStyles = () => {
         switch (ending.type) {
             case 'GOOD': return 'from-green-500/20 to-blue-500/20 border-blue-400 text-blue-400';
@@ -56,7 +57,7 @@ const EndingModal: React.FC<Props> = ({ ending, onClose, day }) => {
                             기록 확인 및 계속하기
                         </button>
                         <button 
-                            onClick={() => window.location.reload()}
+                            onClick={onRestart}
                             className="px-10 py-4 bg-slate-800 text-white font-bold rounded-full border border-slate-700 hover:bg-slate-700 transition-all"
                         >
                             새 시뮬레이션 시작

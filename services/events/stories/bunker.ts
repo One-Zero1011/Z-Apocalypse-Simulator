@@ -60,7 +60,7 @@ export const BUNKER_NODES: Record<string, StoryNode> = {
         id: 'bunker_3_hack_expert',
         text: "💻 시스템 해킹에 성공했습니다! 정문이 부드럽게 열립니다. 체력을 아끼고 안전하게 진입합니다.",
         next: [{ id: 'bunker_4_lobby', weight: 1.0 }],
-        effect: { target: 'ALL', sanity: 10, skillsAdd: [S.HACKING] }
+        effect: { target: 'RANDOM_1', sanity: 10, skillsAdd: [S.HACKING] }
     },
     'bunker_3_vent': {
         id: 'bunker_3_vent',
@@ -107,7 +107,7 @@ export const BUNKER_NODES: Record<string, StoryNode> = {
         id: 'bunker_7_soldier',
         text: "🚩 전술 지휘를 통해 동료들을 사각지대로 이동시키고, 포탑의 탄약이 떨어질 때까지 유인하여 안전하게 통과했습니다.",
         next: [{ id: 'bunker_8_lab', weight: 1.0 }],
-        effect: { target: 'ALL', fatigue: 10, skillsAdd: [S.COMMAND] }
+        effect: { target: 'RANDOM_1', fatigue: 10, skillsAdd: [S.COMMAND] }
     },
     'bunker_7_sprint_fail': {
         id: 'bunker_7_sprint_fail',
@@ -151,6 +151,6 @@ export const BUNKER_NODES: Record<string, StoryNode> = {
     'bunker_11_success_engineer': {
         id: 'bunker_11_success_engineer',
         text: "🔧 기계 수리 실력으로 과열된 원자로를 식히고 전력을 복구했습니다. 완벽한 안전 가옥을 확보했습니다!",
-        effect: { target: 'ALL', sanity: 70, hp: 60, fatigue: -60, loot: ['백신', '안정제', '통조림', '무전기', '권총'], skillsAdd: [S.MECHANIC, S.ELECTRONICS], statChanges: { int: 1 } }
+        effect: { target: 'RANDOM_1', sanity: 70, hp: 60, fatigue: -60, loot: ['백신', '안정제', '통조림', '무전기', '권총'], skillsAdd: [S.MECHANIC, S.ELECTRONICS], statChanges: { int: 1 } }
     }
 };

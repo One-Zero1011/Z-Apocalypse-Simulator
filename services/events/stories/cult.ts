@@ -37,7 +37,7 @@ export const CULT_NODES: Record<string, StoryNode> = {
         id: 'cult_2_acting',
         text: "🎭 메소드 연기 스킬로 눈동자까지 뒤집으며 광신도인 척했습니다. 교주조차 속아 넘어가 우리에게 '성물'을 맡겼습니다.",
         next: [{ id: 'cult_3_inner', weight: 1.0 }],
-        effect: { target: 'ALL', loot: ['백신', '안정제'], sanity: 10, skillsAdd: [S.ACTING], statChanges: { cha: 1 } }
+        effect: { target: 'RANDOM_1', loot: ['백신', '안정제'], sanity: 10, skillsAdd: [S.ACTING], statChanges: { cha: 1 } }
     },
     'cult_2_ritual_pass': {
         id: 'cult_2_ritual_pass',
@@ -62,7 +62,7 @@ export const CULT_NODES: Record<string, StoryNode> = {
         id: 'cult_4_spirit',
         text: "🙏 종교적 신념으로 무장한 생존자가 성경(혹은 경전)을 들고 일갈했습니다. 광기에 찌든 신도들이 순간적으로 주춤하며 통제력을 잃었습니다.",
         next: [{ id: 'cult_5_victory_boss', weight: 1.0 }],
-        effect: { target: 'ALL', sanity: 30, skillsAdd: [S.SPIRIT] }
+        effect: { target: 'RANDOM_1', sanity: 30, skillsAdd: [S.SPIRIT] }
     },
     'cult_4_truth_gun': {
         id: 'cult_4_truth_gun',
@@ -74,7 +74,7 @@ export const CULT_NODES: Record<string, StoryNode> = {
         id: 'cult_4_truth_soldier',
         text: "⚔️ 전문적인 전술 지휘로 호위무사들을 순식간에 제압하고 교주를 인질로 잡았습니다. 상황 종료.",
         next: [{ id: 'cult_5_victory_boss', weight: 1.0 }],
-        effect: { target: 'ALL', sanity: 10, skillsAdd: [S.COMMAND] }
+        effect: { target: 'RANDOM_1', sanity: 10, skillsAdd: [S.COMMAND] }
     },
     'cult_4_truth_fight': {
         id: 'cult_4_truth_fight',
@@ -95,7 +95,7 @@ export const CULT_NODES: Record<string, StoryNode> = {
     'cult_5_victory_boss': {
         id: 'cult_5_victory_boss',
         text: "🗡️ 교주를 쓰러뜨렸습니다. 광신도들은 리더를 잃고 흩어집니다. 교주의 방에서 귀중한 물자들을 챙깁니다.",
-        effect: { target: 'ALL', sanity: 10, loot: ['권총', '안정제'], statChanges: { cha: 1 } }
+        effect: { target: 'RANDOM_1', sanity: 10, loot: ['권총', '안정제'], statChanges: { cha: 1 }, skillsAdd: [S.CARE] }
     },
     'cult_5_defeat_captive': {
         id: 'cult_5_defeat_captive',
@@ -105,7 +105,7 @@ export const CULT_NODES: Record<string, StoryNode> = {
     'cult_6_escape_run': {
         id: 'cult_6_escape_run',
         text: "🏃‍♂️ 불타는 사원을 뒤로하고 숲으로 도망쳤습니다. 뒤에서 들리는 비명소리가 밤새 우리를 괴롭힐 것입니다.",
-        effect: { target: 'ALL', fatigue: 20, sanity: -10, skillsAdd: [S.CARE] }
+        effect: { target: 'RANDOM_1', fatigue: 20, sanity: -10, skillsAdd: [S.CARE] }
     },
 
     'cult_2_ritual_fail': {
@@ -170,6 +170,6 @@ export const CULT_NODES: Record<string, StoryNode> = {
     'cult_5_loot': {
         id: 'cult_5_loot',
         text: "📦 그들이 모아둔 물자 속에서 귀중한 의약품을 다수 확보했습니다. 희생된 이들을 위해 잠시 묵념합니다.",
-        effect: { target: 'ALL', loot: ['안정제', '항생제', '통조림'], skillsAdd: [S.CARE] }
+        effect: { target: 'RANDOM_1', loot: ['안정제', '항생제', '통조림'], skillsAdd: [S.CARE] }
     }
 };

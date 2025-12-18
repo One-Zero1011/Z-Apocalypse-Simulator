@@ -33,7 +33,7 @@ export const SCHOOL_NODES: Record<string, StoryNode> = {
         id: 'school_2_acrobatic',
         text: "🤸 유연한 몸놀림 스킬로 날카로운 철사들 사이를 상처 하나 없이 미끄러지듯 통과했습니다.",
         next: [{ id: 'school_2_hallway', weight: 1.0 }],
-        effect: { target: 'ALL', sanity: 5, skillsAdd: [S.ACROBATIC], statChanges: { agi: 1 } }
+        effect: { target: 'RANDOM_1', sanity: 5, skillsAdd: [S.ACROBATIC], statChanges: { agi: 1 } }
     },
     'school_1_back_fence': {
         id: 'school_1_back_fence',
@@ -58,7 +58,7 @@ export const SCHOOL_NODES: Record<string, StoryNode> = {
         id: 'school_3_crafting',
         text: "⚒️ 부서진 사물함 경첩과 의자 다리를 조합해 튼튼한 무기와 보관함을 만들어냈습니다.",
         next: [{ id: 'school_4_broadcast', weight: 1.0 }],
-        effect: { target: 'ALL', loot: ['맥가이버 칼', '붕대'], sanity: 10, skillsAdd: [S.CRAFTING], statChanges: { int: 1 } }
+        effect: { target: 'RANDOM_1', loot: ['맥가이버 칼', '붕대'], sanity: 10, skillsAdd: [S.CRAFTING], statChanges: { int: 1 } }
     },
 
     'school_3_cafeteria': {
@@ -77,7 +77,7 @@ export const SCHOOL_NODES: Record<string, StoryNode> = {
         id: 'school_cafeteria_success',
         text: "🍽️ 판정 성공! 자물쇠를 부수고 들어가니 유통기한이 긴 통조림들이 남아있습니다!",
         next: [{ id: 'school_4_broadcast', weight: 1.0 }],
-        effect: { target: 'ALL', loot: ['통조림', '통조림', '고기'], statChanges: { str: 1 }, skillsAdd: [S.ATHLETICS] }
+        effect: { target: 'RANDOM_1', loot: ['통조림', '통조림', '고기'], statChanges: { str: 1 }, skillsAdd: [S.ATHLETICS] }
     },
     'school_cafeteria_fail': {
         id: 'school_cafeteria_fail',
@@ -89,7 +89,7 @@ export const SCHOOL_NODES: Record<string, StoryNode> = {
         id: 'school_3_library',
         text: "📚 도서관은 난장판이지만, 생존자들이 남긴 '주변 지역 안전 지도'를 발견했습니다. 귀중한 정보입니다.",
         next: [{ id: 'school_4_broadcast', weight: 1.0 }],
-        effect: { target: 'ALL', sanity: 10, loot: ['지도'], skillsAdd: [S.TEACHING], statChanges: { int: 1 } }
+        effect: { target: 'RANDOM_1', sanity: 10, loot: ['지도'], skillsAdd: [S.TEACHING], statChanges: { int: 1 } }
     },
     'school_3_science_lab': {
         id: 'school_3_science_lab',
@@ -134,7 +134,7 @@ export const SCHOOL_NODES: Record<string, StoryNode> = {
         id: 'school_6_pr',
         text: "😎 이미지 메이킹 기술로 우리가 아주 믿음직하고 정의로운 어른들이라는 인상을 심어주었습니다. 아이들은 울며 우리에게 매달립니다.",
         next: [{ id: 'school_8_bus_escape', weight: 1.0 }],
-        effect: { target: 'ALL', sanity: 30, loot: ['초콜릿'], skillsAdd: [S.PR], statChanges: { cha: 1 } }
+        effect: { target: 'RANDOM_1', sanity: 30, loot: ['초콜릿'], skillsAdd: [S.PR], statChanges: { cha: 1 } }
     },
     'school_5_trap': {
         id: 'school_5_trap',

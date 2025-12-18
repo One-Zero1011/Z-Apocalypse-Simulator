@@ -22,7 +22,7 @@ export const PRISON_NODES: Record<string, StoryNode> = {
         id: 'prison_1_infiltration',
         text: "🗝️ 잠입 기술을 활용해 감시탑의 사각지대를 완벽히 타고 올라가 통제실로 직행했습니다.",
         next: [{ id: 'prison_3_control_room', weight: 1.0 }],
-        effect: { target: 'ALL', sanity: 15, fatigue: 15, skillsAdd: [S.INFIL], statChanges: { agi: 1 } }
+        effect: { target: 'RANDOM_1', sanity: 15, fatigue: 15, skillsAdd: [S.INFIL], statChanges: { agi: 1 } }
     },
     'prison_1_front_assault': {
         id: 'prison_1_front_assault',
@@ -37,7 +37,7 @@ export const PRISON_NODES: Record<string, StoryNode> = {
         id: 'prison_2_marksmanship',
         text: "🔫 전술 사격 스킬로 위병소의 좀비들을 소음 없이 정확히 제거했습니다. 탄약 소모를 최소화했습니다.",
         next: [{ id: 'prison_2_block_c', weight: 1.0 }],
-        effect: { target: 'ALL', kill: 5, sanity: 5, skillsAdd: [S.MARKSMANSHIP], statChanges: { agi: 1 } }
+        effect: { target: 'RANDOM_1', kill: 5, sanity: 5, skillsAdd: [S.MARKSMANSHIP], statChanges: { agi: 1 } }
     },
     'prison_1_sewer_sneak': {
         id: 'prison_1_sewer_sneak',
@@ -79,7 +79,7 @@ export const PRISON_NODES: Record<string, StoryNode> = {
         id: 'prison_3_control_room',
         text: "🖥️ 질서 유지 능력을 발휘해 보안 매뉴얼을 찾아내 통제실을 장악했습니다. 전자식 문을 열어 무기를 챙깁니다.",
         next: [{ id: 'prison_4_warden', weight: 1.0 }],
-        effect: { target: 'ALL', loot: ['권총', '무전기'], sanity: 10, skillsAdd: [S.LAW], statChanges: { int: 1 } }
+        effect: { target: 'RANDOM_1', loot: ['권총', '무전기'], sanity: 10, skillsAdd: [S.LAW], statChanges: { int: 1 } }
     },
     'prison_3_control_room_dev': { 
         id: 'prison_3_control_room_dev', 
@@ -101,7 +101,7 @@ export const PRISON_NODES: Record<string, StoryNode> = {
         id: 'prison_5_melee',
         text: "✊ 근접 제압 스킬로 다가오는 죄수들의 리더를 단숨에 메치고 무기를 빼앗았습니다. 적들은 전의를 상실했습니다.",
         next: [{ id: 'prison_7_yard', weight: 1.0 }],
-        effect: { target: 'ALL', sanity: 15, kill: 2, skillsAdd: [S.MELEE], statChanges: { str: 1 } }
+        effect: { target: 'RANDOM_1', sanity: 15, kill: 2, skillsAdd: [S.MELEE], statChanges: { str: 1 } }
     },
     'prison_5_ambush': {
         id: 'prison_5_ambush',

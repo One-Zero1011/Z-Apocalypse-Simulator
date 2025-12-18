@@ -109,9 +109,9 @@ const CharacterForm: React.FC<Props> = ({ onAdd, disabled, existingCharacters = 
   const livingCharacters = existingCharacters.filter(c => c.status !== 'Dead' && c.status !== 'Missing');
   const availableTargets = livingCharacters.filter(c => !pendingRelations.some(r => r.targetId === c.id));
 
-  // 초등학생, 중학생 결혼 제한 로직
+  // 초등학생, 중학생, 아기 결혼 제한 로직
   const targetJob = livingCharacters.find(c => c.id === tempTargetId)?.job || '';
-  const isMarriageForbidden = ['초등학생', '중학생'].includes(job) || ['초등학생', '중학생'].includes(targetJob);
+  const isMarriageForbidden = ['초등학생', '중학생', '아기'].includes(job) || ['초등학생', '중학생', '아기'].includes(targetJob);
 
   return (
     <form onSubmit={handleSubmit} className="bg-white dark:bg-slate-800 p-4 rounded-lg border border-slate-200 dark:border-slate-700 shadow-md">

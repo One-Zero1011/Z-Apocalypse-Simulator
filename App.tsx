@@ -60,6 +60,19 @@ const INVERSE_RELATIONS: Record<string, RelationshipStatus> = {
     'Family': 'Family'
 };
 
+const INITIAL_AFFINITY: Record<string, number> = {
+    'Spouse': 90,
+    'Lover': 80, 'Parent': 80, 'Child': 80, 'Guardian': 80, 'Ward': 80,
+    'Sibling': 70,
+    'Family': 60, 'BestFriend': 60,
+    'Savior': 50,
+    'Friend': 30,
+    'Colleague': 15,
+    'Rival': -15,
+    'Ex': -20,
+    'Enemy': -50
+};
+
 const DEV_ITEM_LIST = Array.from(new Set([...Object.keys(ITEM_EFFECTS), '생수 500ml', '맥가이버 칼', '권총', '지도', '무전기'])).sort();
 
 interface ConfirmState { title: string; message: string; action: () => void; isDangerous?: boolean; }
@@ -154,14 +167,39 @@ const App: React.FC = () => {
   const closeTutorial = (neverShowAgain: boolean) => { setShowTutorial(false); if (neverShowAgain) localStorage.setItem('z-sim-tutorial-complete', 'true'); };
   const openTutorial = () => { setShowSystemMenu(false); setShowTutorial(true); };
   
-  const handleNewGame = () => {
-      const executeReset = () => { 
-          setDay(0); setCharacters([]); setLogs([]); setInventory(INITIAL_INVENTORY); setSelectedItem(null); setStoryNodeId(null); setForcedEvents([]); setStorySelection(null); setPendingBaby(null); setEditingCharacter(null); setPlanningCharacter(null); setDetailCharacter(null); setActiveTarot(false); setActiveEnding(null); setError(null); setConfirmState(null); setGriefCharacter(null);
-          localStorage.removeItem('z_sim_autosave');
-      };
+  // Soft Reset Function
+  const resetGame = useCallback(() => {
+      localStorage.removeItem('z_sim_autosave');
+      setDay(0);
+      setCharacters([]);
+      setLogs([]);
+      setInventory(INITIAL_INVENTORY);
+      setStoryNodeId(null);
+      setForcedEvents([]);
+      setStorySelection(null);
+      setPendingBaby(null);
+      setActiveTarot(false);
+      setActiveEnding(null);
+      setEditingCharacter(null);
+      setPlanningCharacter(null);
+      setDetailCharacter(null);
+      setGriefCharacter(null);
+      setSummaryCharacter(null);
       setShowSystemMenu(false);
-      if (characters.length > 0 || day > 0) setConfirmState({ title: "새 게임 시작", message: "모든 데이터가 초기화됩니다.", action: executeReset, isDangerous: true });
-      else executeReset();
+  }, []);
+
+  const handleNewGame = () => {
+      setShowSystemMenu(false);
+      if (characters.length > 0 || day > 0) {
+          setConfirmState({ 
+              title: "새 게임 시작", 
+              message: "모든 데이터가 초기화됩니다.", 
+              action: resetGame, 
+              isDangerous: true 
+          });
+      } else {
+          resetGame();
+      }
   };
   
   const handleSaveGame = () => {
@@ -244,7 +282,7 @@ const App: React.FC = () => {
         const updatedPrev = prev.map(existingChar => {
             const relDef = initialRelations.find(r => r.targetId === existingChar.id);
             if (relDef) {
-                const affinity = 0; 
+                const affinity = INITIAL_AFFINITY[relDef.type] || 0; 
                 const statusForNew = relDef.type as RelationshipStatus;
                 const statusForExisting = INVERSE_RELATIONS[relDef.type] || relDef.type as RelationshipStatus;
 
@@ -522,7 +560,8 @@ const App: React.FC = () => {
       {currentStoryHasChoices && !activeEnding && storyNodeId && STORY_NODES[storyNodeId] && <StoryChoiceModal node={STORY_NODES[storyNodeId]} onSelect={handleStoryChoiceSelected} currentSelection={storySelection} characters={characters} inventory={inventory} />}
       {pendingBaby && <BabyNamingModal father={characters.find(c => c.id === pendingBaby.fatherId)!} mother={characters.find(c => c.id === pendingBaby.motherId)!} onConfirm={handleBabyBorn} onCancel={() => setPendingBaby(null)} />}
       {activeTarot && <TarotModal livingCharIds={livingSurvivors.map(c => c.id)} onResult={handleTarotResult} />}
-      {activeEnding && <EndingModal ending={activeEnding} day={day} onClose={() => setActiveEnding(null)} />}
+      {activeEnding && <EndingModal ending={activeEnding} day={day} onClose={() => setActiveEnding(null)} onRestart={resetGame} />}
+      {confirmState && <ConfirmationModal title={confirmState.title} message={confirmState.message} onConfirm={() => { confirmState.action(); setConfirmState(null); }} onCancel={() => setConfirmState(null)} isDangerous={confirmState.isDangerous} />}
       <ItemUseModal selectedItem={selectedItem} onClose={() => setSelectedItem(null)} onUseItem={handleUseItem} survivors={characters.filter(c => c.status === 'Alive' || c.status === 'Infected' || c.status === 'Zombie')} itemEffects={ITEM_EFFECTS} />
       {showRelationshipMap && <RelationshipMap characters={characters} onClose={() => setShowRelationshipMap(false)} />}
       {editingCharacter && <EditCharacterModal character={editingCharacter} allCharacters={characters} onSave={handleSaveEditedCharacter} onClose={() => setEditingCharacter(null)} />}
@@ -532,6 +571,7 @@ const App: React.FC = () => {
       {summaryCharacter && <CharacterSummaryModal character={summaryCharacter} onClose={() => setSummaryCharacter(null)} />}
       {showSystemMenu && <SystemMenu onClose={() => setShowSystemMenu(false)} onNewGame={handleNewGame} onSaveRoster={handleSaveRoster} onLoadRoster={handleLoadRosterTrigger} onSaveGame={handleSaveGame} onLoadGame={handleLoadGameTrigger} settings={gameSettings} onUpdateSettings={(newSettings) => setGameSettings(prev => ({...prev, ...newSettings}))} onShowTutorial={openTutorial} />}
       {showDevMenu && <DeveloperMenu onClose={() => setShowDevMenu(false)} forcedEvents={forcedEvents} setForcedEvents={setForcedEvents} characters={characters} onUpdateCharacter={handleUpdateCharacter} onAddInventory={(item, count) => setInventory(prev => [...prev, ...Array(count).fill(item)])} availableItems={DEV_ITEM_LIST} />}
+      {showTutorial && <TutorialModal onClose={(neverShowAgain) => closeTutorial(neverShowAgain)} />}
       <input type="file" ref={rosterInputRef} style={{ display: 'none' }} onChange={handleLoadRosterFile} />
       <input type="file" ref={gameSaveInputRef} style={{ display: 'none' }} onChange={handleLoadGameFile} />
     </div>

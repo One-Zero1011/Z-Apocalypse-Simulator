@@ -23,15 +23,17 @@ const ToggleSwitch: React.FC<{
     onChange: () => void;
     colorClass?: string;
 }> = ({ label, desc, checked, onChange, colorClass = "bg-blue-500" }) => (
-    <div className="flex flex-col p-4 bg-gray-50 dark:bg-slate-800/40 rounded-xl border border-gray-100 dark:border-slate-700/50">
+    <div 
+        onClick={onChange}
+        className="flex flex-col p-4 bg-gray-50 dark:bg-slate-800/40 rounded-xl border border-gray-100 dark:border-slate-700/50 cursor-pointer hover:bg-gray-100 dark:hover:bg-slate-800 transition-colors select-none group"
+    >
         <div className="flex items-center justify-between mb-1">
-            <span className="text-sm font-bold text-slate-800 dark:text-slate-200">{label}</span>
-            <button 
-                onClick={onChange}
-                className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors focus:outline-none ${checked ? colorClass : 'bg-slate-300 dark:bg-slate-600'}`}
+            <span className="text-sm font-bold text-slate-800 dark:text-slate-200 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">{label}</span>
+            <div 
+                className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors ${checked ? colorClass : 'bg-slate-300 dark:bg-slate-600'}`}
             >
                 <span className={`inline-block h-4 w-4 transform rounded-full bg-white shadow-md transition-transform duration-200 ease-in-out ${checked ? 'translate-x-6' : 'translate-x-1'}`} />
-            </button>
+            </div>
         </div>
         <p className="text-[10px] text-slate-500 dark:text-slate-400 leading-tight">{desc}</p>
     </div>
@@ -48,15 +50,15 @@ const SystemMenu: React.FC<Props> = ({
   const [activeTab, setActiveTab] = useState<TabType>('SETTINGS');
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fade-in">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fade-in">
       <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl max-w-2xl w-full h-[85vh] md:h-auto md:max-h-[85vh] overflow-hidden flex flex-col border border-slate-200 dark:border-slate-700">
         
         {/* Header */}
         <div className="px-6 py-4 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center">
             <h2 className="text-lg font-bold text-slate-800 dark:text-white flex items-center gap-2">
-                💾 시스템 메뉴
+                💾 시스템 설정 (System Config)
             </h2>
-            <button onClick={onClose} className="text-slate-400 hover:text-slate-600 dark:hover:text-white transition-colors">
+            <button onClick={onClose} className="text-slate-400 hover:text-slate-600 dark:hover:text-white transition-colors p-1 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-5 h-5">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
                 </svg>
@@ -66,9 +68,9 @@ const SystemMenu: React.FC<Props> = ({
         {/* Tab Navigation */}
         <div className="flex border-b border-slate-100 dark:border-slate-800">
             {[
-                { id: 'SETTINGS', label: '⚙️ 설정 (Settings)' },
-                { id: 'DATA', label: '💾 데이터 (Data)' },
-                { id: 'INFO', label: 'ℹ️ 정보 (Info)' }
+                { id: 'SETTINGS', label: '⚙️ 게임 설정' },
+                { id: 'DATA', label: '💾 데이터 관리' },
+                { id: 'INFO', label: 'ℹ️ 정보' }
             ].map((tab) => (
                 <button
                     key={tab.id}
@@ -76,7 +78,7 @@ const SystemMenu: React.FC<Props> = ({
                     className={`flex-1 py-3 text-sm font-bold transition-all relative ${
                         activeTab === tab.id 
                         ? 'text-blue-600 dark:text-blue-400 border-b-2 border-blue-500 bg-blue-50/50 dark:bg-blue-900/10' 
-                        : 'text-slate-400 hover:text-slate-600 dark:text-slate-500'
+                        : 'text-slate-400 hover:text-slate-600 dark:text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800/50'
                     }`}
                 >
                     {tab.label}
@@ -85,116 +87,116 @@ const SystemMenu: React.FC<Props> = ({
         </div>
 
         {/* Content Container */}
-        <div className="flex-1 overflow-y-auto p-6 custom-scrollbar">
+        <div className="flex-1 overflow-y-auto p-6 custom-scrollbar bg-white dark:bg-slate-900">
             
             {activeTab === 'SETTINGS' && (
                 <div className="space-y-8 animate-fade-in">
                     {/* Section 1: Relationships */}
                     <section>
-                        <div className="flex items-center gap-2 mb-4">
-                            <span className="text-pink-500">💞</span>
-                            <h3 className="text-sm font-bold text-pink-600 dark:text-pink-400 uppercase tracking-tight">관계 및 연애 설정</h3>
+                        <div className="flex items-center gap-2 mb-4 pb-2 border-b border-slate-100 dark:border-slate-800">
+                            <span className="text-pink-500 text-lg">💞</span>
+                            <h3 className="text-sm font-bold text-slate-800 dark:text-white uppercase tracking-tight">관계 및 연애</h3>
                         </div>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                             <ToggleSwitch 
                                 label="우정 모드 (No Romance)" 
-                                desc="ON 설정 시 모든 캐릭터가 연애를 하지 않습니다." 
+                                desc="ON: 연애 관련 이벤트(고백, 이별, 결혼 등)가 발생하지 않습니다." 
                                 checked={settings.friendshipMode} 
                                 onChange={() => onUpdateSettings({ friendshipMode: !settings.friendshipMode })}
-                                colorClass="bg-slate-400"
+                                colorClass="bg-slate-500"
                             />
                             <ToggleSwitch 
-                                label="학생 연애 제한 (Age Restriction)" 
-                                desc="초/중/고등학생은 학생끼리만 연인이 됩니다." 
+                                label="순애 모드 (Pure Love)" 
+                                desc="ON: 양다리, 불륜, 환승 이별 등 복잡한 관계를 방지합니다." 
+                                checked={settings.pureLoveMode} 
+                                onChange={() => onUpdateSettings({ pureLoveMode: !settings.pureLoveMode })}
+                                colorClass="bg-pink-400"
+                            />
+                            <ToggleSwitch 
+                                label="학생 연애 제한 (School Life)" 
+                                desc="ON: 학생(초/중/고)은 학생끼리만 연인이 됩니다." 
                                 checked={settings.restrictStudentDating} 
                                 onChange={() => onUpdateSettings({ restrictStudentDating: !settings.restrictStudentDating })}
                                 colorClass="bg-zombie-green"
                             />
                             <ToggleSwitch 
                                 label="이성 커플 허용" 
-                                desc="남성-여성간 연인이 됨." 
+                                desc="ON: 남성-여성 간의 고백 이벤트를 허용합니다." 
                                 checked={settings.allowOppositeSexCouples} 
                                 onChange={() => onUpdateSettings({ allowOppositeSexCouples: !settings.allowOppositeSexCouples })}
                                 colorClass="bg-blue-600"
                             />
                             <ToggleSwitch 
                                 label="동성 커플 허용" 
-                                desc="성별 무관 연인이 됨." 
+                                desc="ON: 동성 간의 고백 이벤트를 허용합니다." 
                                 checked={settings.allowSameSexCouples} 
                                 onChange={() => onUpdateSettings({ allowSameSexCouples: !settings.allowSameSexCouples })}
-                                colorClass="bg-blue-500"
+                                colorClass="bg-purple-500"
                             />
                             <ToggleSwitch 
-                                label="순애 모드" 
-                                desc="양다리/바람 방지." 
-                                checked={settings.pureLoveMode} 
-                                onChange={() => onUpdateSettings({ pureLoveMode: !settings.pureLoveMode })}
-                                colorClass="bg-blue-400"
+                                label="근친(가족간 연애)" 
+                                desc="ON: 가족 관계에서도 연인이 될 수 있습니다. (주의)" 
+                                checked={settings.allowIncest} 
+                                onChange={() => onUpdateSettings({ allowIncest: !settings.allowIncest })}
+                                colorClass="bg-red-500"
                             />
-                            <div className="space-y-2">
+                            <div className="sm:col-span-2 space-y-2 pt-2">
                                 <ToggleSwitch 
                                     label="임신/출산 시스템" 
-                                    desc="부부 사이 아기 탄생." 
+                                    desc="ON: 부부 관계에서 확률적으로 아기가 태어납니다." 
                                     checked={settings.enablePregnancy} 
                                     onChange={() => onUpdateSettings({ enablePregnancy: !settings.enablePregnancy })}
                                     colorClass="bg-pink-500"
                                 />
                                 {settings.enablePregnancy && (
-                                    <div className="px-4 py-2 bg-pink-50 dark:bg-pink-900/10 rounded-lg border border-pink-100 dark:border-pink-900/30 animate-fade-in">
-                                        <div className="flex justify-between text-[10px] font-bold text-pink-600 dark:text-pink-400 mb-1">
-                                            <span>일일 임신 확률</span>
+                                    <div className="ml-2 px-4 py-3 bg-pink-50 dark:bg-pink-900/10 rounded-xl border border-pink-100 dark:border-pink-900/30 animate-fade-in">
+                                        <div className="flex justify-between text-xs font-bold text-pink-600 dark:text-pink-400 mb-2">
+                                            <span>일일 임신 확률 설정</span>
                                             <span>{settings.pregnancyChance}%</span>
                                         </div>
                                         <input 
                                             type="range" min="0" max="100" step="1"
                                             value={settings.pregnancyChance}
                                             onChange={(e) => onUpdateSettings({ pregnancyChance: parseInt(e.target.value) })}
-                                            className="w-full h-1 bg-pink-200 dark:bg-pink-900/50 rounded-lg appearance-none cursor-pointer accent-pink-500"
+                                            className="w-full h-2 bg-pink-200 dark:bg-pink-900/50 rounded-lg appearance-none cursor-pointer accent-pink-500"
                                         />
                                     </div>
                                 )}
                             </div>
-                            <ToggleSwitch 
-                                label="근친(가족간 연애)" 
-                                desc="가족 관계 무시하고 연애." 
-                                checked={settings.allowIncest} 
-                                onChange={() => onUpdateSettings({ allowIncest: !settings.allowIncest })}
-                                colorClass="bg-slate-400"
-                            />
                         </div>
                     </section>
 
                     {/* Section 2: Gameplay */}
                     <section>
-                        <div className="flex items-center gap-2 mb-4">
-                            <span className="text-slate-600 dark:text-slate-400">🎮</span>
-                            <h3 className="text-sm font-bold text-slate-700 dark:text-slate-300 uppercase tracking-tight">게임 플레이 시스템</h3>
+                        <div className="flex items-center gap-2 mb-4 pb-2 border-b border-slate-100 dark:border-slate-800">
+                            <span className="text-slate-600 dark:text-slate-400 text-lg">🎮</span>
+                            <h3 className="text-sm font-bold text-slate-800 dark:text-white uppercase tracking-tight">게임 플레이</h3>
                         </div>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                             <ToggleSwitch 
-                                label="미성년자 부적절 행위 제한" 
-                                desc="초/중/고등학생의 술/담배 관련 묘사를 순화합니다." 
+                                label="미성년자 보호 모드" 
+                                desc="ON: 미성년자의 음주/흡연 묘사를 순화합니다." 
                                 checked={settings.restrictMinorAdultActions} 
                                 onChange={() => onUpdateSettings({ restrictMinorAdultActions: !settings.restrictMinorAdultActions })}
                                 colorClass="bg-orange-500"
                             />
                             <ToggleSwitch 
-                                label="정신 상태 시스템" 
-                                desc="트라우마, 광기 등 상태이상." 
+                                label="정신 상태(Sanity) 시스템" 
+                                desc="ON: 정신력 저하 시 트라우마, 광기 등 상태이상이 발생합니다." 
                                 checked={settings.useMentalStates} 
                                 onChange={() => onUpdateSettings({ useMentalStates: !settings.useMentalStates })}
                                 colorClass="bg-purple-600"
                             />
                             <ToggleSwitch 
                                 label="스토리 선택지" 
-                                desc="중요 분기점 직접 선택." 
+                                desc="ON: 중요 분기점에서 유저가 행동을 직접 선택합니다." 
                                 checked={settings.enableStoryChoices} 
                                 onChange={() => onUpdateSettings({ enableStoryChoices: !settings.enableStoryChoices })}
                                 colorClass="bg-amber-500"
                             />
                             <ToggleSwitch 
                                 label="생존자 상호작용" 
-                                desc="대화, 다툼 등 소설 이벤트." 
+                                desc="ON: 생존자들 간의 대화, 다툼 등 상호작용 이벤트가 발생합니다." 
                                 checked={settings.enableInteractions} 
                                 onChange={() => onUpdateSettings({ enableInteractions: !settings.enableInteractions })}
                                 colorClass="bg-green-600"
@@ -204,24 +206,24 @@ const SystemMenu: React.FC<Props> = ({
 
                     {/* Section 3: Misc */}
                     <section>
-                        <div className="flex items-center gap-2 mb-4">
-                            <span className="text-slate-600 dark:text-slate-400">👁️</span>
-                            <h3 className="text-sm font-bold text-slate-700 dark:text-slate-300 uppercase tracking-tight">표시 및 기타</h3>
+                        <div className="flex items-center gap-2 mb-4 pb-2 border-b border-slate-100 dark:border-slate-800">
+                            <span className="text-slate-600 dark:text-slate-400 text-lg">👁️</span>
+                            <h3 className="text-sm font-bold text-slate-800 dark:text-white uppercase tracking-tight">기타 설정</h3>
                         </div>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                             <ToggleSwitch 
                                 label="이벤트 효과 수치 표시" 
-                                desc="텍스트 뒤에 (❤️+10) 등 표시." 
+                                desc="ON: 텍스트 뒤에 (❤️+10, 🧠-5) 등의 수치를 표시합니다." 
                                 checked={settings.showEventEffects} 
                                 onChange={() => onUpdateSettings({ showEventEffects: !settings.showEventEffects })}
                                 colorClass="bg-blue-400"
                             />
                             <ToggleSwitch 
-                                label="개발자 모드" 
-                                desc="디버그 메뉴 및 치트 활성화." 
+                                label="개발자 모드 (Cheat)" 
+                                desc="ON: 강제 이벤트 실행, 스탯 조작 등이 가능한 메뉴를 활성화합니다." 
                                 checked={settings.developerMode} 
                                 onChange={() => onUpdateSettings({ developerMode: !settings.developerMode })}
-                                colorClass="bg-slate-400"
+                                colorClass="bg-red-600"
                             />
                         </div>
                     </section>
@@ -232,7 +234,7 @@ const SystemMenu: React.FC<Props> = ({
                 <div className="space-y-6 animate-fade-in">
                     <div className="p-5 bg-blue-50/50 dark:bg-blue-900/10 rounded-2xl border border-blue-100 dark:border-blue-900/30">
                         <h4 className="text-sm font-bold text-blue-700 dark:text-blue-400 mb-1">전체 게임 상태 (Full Save)</h4>
-                        <p className="text-xs text-slate-500 dark:text-slate-400 mb-4">현재 진행 중인 날짜, 인벤토리, 모든 캐릭터 상태를 저장합니다.</p>
+                        <p className="text-xs text-slate-500 dark:text-slate-400 mb-4">현재 진행 중인 날짜, 인벤토리, 모든 캐릭터 상태를 파일로 저장하거나 불러옵니다.</p>
                         <div className="grid grid-cols-2 gap-3">
                             <button onClick={onSaveGame} className="flex items-center justify-center gap-2 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-bold transition-all shadow-md active:scale-95">
                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-4 h-4"><path strokeLinecap="round" strokeLinejoin="round" d="M12 16.5V9.75m0 0l3 3m-3-3l-3 3M6.75 19.5a4.5 4.5 0 0 1-1.41-8.775 5.25 5.25 0 0 1 10.233-2.33 3 3 0 0 1 3.758 3.848A3.752 3.752 0 0 1 18 19.5H6.75z" /></svg>
@@ -247,7 +249,7 @@ const SystemMenu: React.FC<Props> = ({
 
                     <div className="p-5 bg-gray-50 dark:bg-slate-800/50 rounded-2xl border border-gray-100 dark:border-slate-700">
                         <div className="flex items-center gap-2 mb-1">
-                            <h4 className="text-sm font-bold text-slate-700 dark:text-slate-200">생존자 명단 관리</h4>
+                            <h4 className="text-sm font-bold text-slate-700 dark:text-slate-200">생존자 명단 관리 (Roster)</h4>
                             <span className="text-[10px] bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 px-1.5 py-0.5 rounded font-bold uppercase">초기화됨</span>
                         </div>
                         <p className="text-xs text-slate-500 dark:text-slate-400 mb-4">현재 캐릭터들의 이름과 관계만 저장합니다. 불러올 때 1일차로 초기화됩니다.</p>

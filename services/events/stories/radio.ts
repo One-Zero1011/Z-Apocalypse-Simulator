@@ -78,7 +78,7 @@ export const RADIO_NODES: Record<string, StoryNode> = {
         id: 'radio_6_pr',
         text: "😎 신뢰감 있는 목소리로 거짓 섞인 희망찬 미래를 발표했습니다. 도시 곳곳의 생존자들이 우리를 '구원자'로 믿기 시작했습니다.",
         next: [{ id: 'radio_9_rescue', weight: 1.0 }],
-        effect: { target: 'ALL', sanity: 40, affinity: 10, skillsAdd: [S.PR], statChanges: { cha: 1 } }
+        effect: { target: 'RANDOM_1', sanity: 40, affinity: 10, skillsAdd: [S.PR], statChanges: { cha: 1 } }
     },
     'radio_6_help': {
         id: 'radio_6_help',
@@ -90,13 +90,13 @@ export const RADIO_NODES: Record<string, StoryNode> = {
         id: 'radio_6_singer',
         text: "🎤 마이크를 잡고 호소력 짙은 노래를 불렀습니다. 거리에 울려 퍼지는 목소리에 좀비들의 움직임이 일시적으로 멈추고, 생존자들은 희망을 얻습니다.",
         next: [{ id: 'radio_9_rescue', weight: 1.0 }], 
-        effect: { target: 'ALL', sanity: 30, fatigue: -10, skillsAdd: [S.MUSIC] }
+        effect: { target: 'RANDOM_1', sanity: 30, fatigue: -10, skillsAdd: [S.MUSIC] }
     },
     'radio_6_dev': {
         id: 'radio_6_dev',
         text: "💻 방송 장비의 주파수를 조작해 암호화된 군용 채널에 접속했습니다. 정확한 좌표를 전송하여 구조 헬기를 불렀습니다!",
         next: [{ id: 'radio_9_rescue', weight: 1.0 }], 
-        effect: { target: 'ALL', sanity: 20, skillsAdd: [S.HACKING], statChanges: { int: 1 } }
+        effect: { target: 'RANDOM_1', sanity: 20, skillsAdd: [S.HACKING], statChanges: { int: 1 } }
     },
     'radio_6_music': {
         id: 'radio_6_music',
@@ -119,7 +119,7 @@ export const RADIO_NODES: Record<string, StoryNode> = {
         id: 'radio_8_leader',
         text: "🗣️ 강력한 카리스마로 동료들을 지휘해 한 치의 오차도 없이 입구를 막아냈습니다. 피해 없이 좀비들을 따돌립니다.",
         next: [{ id: 'radio_9_rescue', weight: 1.0 }],
-        effect: { target: 'ALL', sanity: 15, skillsAdd: [S.LEADERSHIP], statChanges: { cha: 1 } }
+        effect: { target: 'RANDOM_1', sanity: 15, skillsAdd: [S.LEADERSHIP], statChanges: { cha: 1 } }
     },
     'radio_8_performance': {
         id: 'radio_8_performance',

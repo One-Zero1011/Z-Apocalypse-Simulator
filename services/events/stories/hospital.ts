@@ -65,7 +65,7 @@ export const HOSPITAL_NODES: Record<string, StoryNode> = {
         id: 'hospital_3_morgue_anatomy',
         text: "🦴 해부학 지식을 활용해 시체들 중 감염되지 않은 깨끗한 부위에서 의료용 부품을 추출하고, 좀비화 징후가 있는 시체들을 미리 처리했습니다.",
         next: [{ id: 'hospital_3_nurse_station', weight: 1.0 }],
-        effect: { target: 'ALL', loot: ['붕대', '비타민'], sanity: 10, skillsAdd: [S.ANATOMY] }
+        effect: { target: 'RANDOM_1', loot: ['붕대', '비타민'], sanity: 10, skillsAdd: [S.ANATOMY] }
     },
     'hospital_3_morgue_loot': {
         id: 'hospital_3_morgue_loot',
@@ -77,7 +77,7 @@ export const HOSPITAL_NODES: Record<string, StoryNode> = {
         id: 'hospital_3_morgue_wake',
         text: "🧟 시체인 줄 알았던 것들이 일제히 일어납니다! 좁은 영안실에 갇혔습니다!",
         next: [{ id: 'hospital_2a_stairs', weight: 1.0 }],
-        effect: { target: 'RANDOM_HALF', hp: -20, infection: 10, skillsRemove: ["정밀 수술"] }
+        effect: { target: 'RANDOM_1', hp: -20, infection: 10, skillsRemove: ["정밀 수술"] }
     },
 
     'hospital_2a_stairs': {
@@ -101,13 +101,13 @@ export const HOSPITAL_NODES: Record<string, StoryNode> = {
         id: 'hospital_4_pharma',
         text: "🧪 스테이션 뒤편 약제실에서 남은 약품을 조합해 고농축 항생제를 만들어냈습니다.",
         next: [{ id: 'hospital_5_boss', weight: 1.0 }],
-        effect: { target: 'ALL', loot: ['항생제', '항생제'], sanity: 10, skillsAdd: [S.PHARMA] }
+        effect: { target: 'RANDOM_1', loot: ['항생제', '항생제'], sanity: 10, skillsAdd: [S.PHARMA] }
     },
     'hospital_4_hygiene': {
         id: 'hospital_4_hygiene',
         text: "🧼 위생 관리 스킬을 발휘해 주변 좀비 혈흔을 지우고 방역 처리를 하여 동료들의 감염 위험을 획기적으로 낮췄습니다.",
         next: [{ id: 'hospital_5_boss', weight: 1.0 }],
-        effect: { target: 'ALL', infection: -20, sanity: 10, skillsAdd: [S.HYGIENE] }
+        effect: { target: 'RANDOM_1', infection: -20, sanity: 10, skillsAdd: [S.HYGIENE] }
     },
     'hospital_4_surgery': {
         id: 'hospital_4_surgery',
@@ -174,11 +174,11 @@ export const HOSPITAL_NODES: Record<string, StoryNode> = {
     'hospital_6_run': {
         id: 'hospital_6_run',
         text: "🏃‍♂️ 우리는 창문을 깨고 뛰어내려 탈출했습니다. 뒤에서 '더 서전'의 기괴한 웃음소리가 들려옵니다.",
-        effect: { target: 'ALL', hp: -10, fatigue: 10, skillsRemove: ["정밀 수술", "해부학 지식"] }
+        effect: { target: 'RANDOM_1', hp: -10, fatigue: 10, skillsRemove: ["정밀 수술", "해부학 지식"] }
     },
     'hospital_6_win': {
         id: 'hospital_6_win',
         text: "💊 판정 성공! 치열한 사투 끝에 변종을 쓰러뜨렸습니다! 놈의 가슴에 칼을 꽂아 넣자 기괴한 경련과 함께 무너집니다. 약제실은 보물창고였습니다. 희귀한 약품과 백신을 확보합니다.",
-        effect: { target: 'ALL', sanity: 35, loot: ['항생제', '안정제', '비타민', '백신'], kill: 10, skillsAdd: [S.SURGERY], statChanges: { int: 1, str: 1 } }
+        effect: { target: 'RANDOM_1', sanity: 35, loot: ['항생제', '안정제', '비타민', '백신'], kill: 10, skillsAdd: [S.SURGERY], statChanges: { int: 1, str: 1 } }
     }
 };

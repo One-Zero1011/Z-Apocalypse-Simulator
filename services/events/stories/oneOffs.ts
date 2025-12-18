@@ -78,7 +78,7 @@ export const ONE_OFF_NODES: Record<string, StoryNode> = {
     'tarot_divination': {
         id: 'tarot_divination',
         text: "🔮 예지력 스킬로 불길한 카드를 미리 골라내고 가장 행운이 가득한 결과를 확정지었습니다.",
-        effect: { target: 'ALL', hp: 50, sanity: 50, fatigue: -50, skillsAdd: [S.POTENTIAL] }
+        effect: { target: 'RANDOM_1', hp: 50, sanity: 50, fatigue: -50, skillsAdd: [S.POTENTIAL] }
     },
     'tarot_continue': {
         id: 'tarot_continue',
@@ -147,51 +147,51 @@ export const ONE_OFF_NODES: Record<string, StoryNode> = {
         text: "🧘 명상법을 통해 모두가 극심한 트라우마에서 잠시 벗어나 내면의 평화를 찾았습니다.",
         effect: { target: 'RANDOM_1', statChanges: { int: 1, agi: -1 }, skillsAdd: [S.MEDITATION], skillsRemove: ["폭발적 근력"] }
     },
-    'sunny_rest': { id: 'sunny_rest', text: "☀️ 평화로운 하루를 보냈습니다.", effect: { target: 'ALL', skillsRemove: ["매력 발산"] } },
+    'sunny_rest': { id: 'sunny_rest', text: "☀️ 평화로운 하루를 보냈습니다.", effect: { target: 'RANDOM_1', skillsRemove: ["매력 발산"] } },
     'foggy_day': { 
         id: 'foggy_day', 
         text: "🌫️ 한 치 앞도 보이지 않는 짙은 안개가 꼈습니다. 좀비의 기습에 대비해야 합니다.", 
-        effect: { target: 'ALL', fatigue: 5, skillsRemove: ["전략 수립"] } 
+        effect: { target: 'RANDOM_1', fatigue: 5, skillsRemove: ["전략 수립"] } 
     },
     'heavy_rain': { 
         id: 'heavy_rain', 
         text: "🌧️ 장대비가 쏟아져 내립니다. 몸은 젖었지만, 덕분에 좀비들의 냄새 추적을 따돌렸습니다.", 
-        effect: { target: 'ALL', fatigue: -5, sanity: 5, skillsRemove: ["이미지 메이킹"] } 
+        effect: { target: 'RANDOM_1', fatigue: -5, sanity: 5, skillsRemove: ["이미지 메이킹"] } 
     },
     'heatwave': {
         id: 'heatwave',
         text: "🔥 숨이 턱턱 막히는 폭염이 찾아왔습니다. 가만히 있어도 땀이 흐르고 체력이 떨어집니다.",
-        effect: { target: 'ALL', hp: -2, fatigue: 10, statChanges: { con: -1 }, skillsRemove: ["해독술", "산야초 채집", "명상법"] }
+        effect: { target: 'RANDOM_1', hp: -2, fatigue: 10, statChanges: { con: -1 }, skillsRemove: ["해독술", "산야초 채집", "명상법"] }
     },
     'thunderstorm': {
         id: 'thunderstorm',
         text: "⛈️ 천둥번개가 요란하게 치는 밤입니다. 굉음 때문에 불안에 떱니다.",
-        effect: { target: 'ALL', sanity: -5, fatigue: 5, skillsRemove: ["정보 수집"] }
+        effect: { target: 'RANDOM_1', sanity: -5, fatigue: 5, skillsRemove: ["정보 수집"] }
     },
     'full_moon': {
         id: 'full_moon',
         text: "🌕 유난히 밝은 보름달이 떴습니다. 달빛 아래서 좀비들의 그림자가 기괴함을 자아냅니다.",
-        effect: { target: 'ALL', sanity: -5, skillsRemove: ["잠입 기술"] }
+        effect: { target: 'RANDOM_1', sanity: -5, skillsRemove: ["잠입 기술"] }
     },
     'starry_night': {
         id: 'starry_night',
         text: "🌠 밤하늘에 별똥별이 떨어집니다. 잠시나마 지옥 같은 현실을 잊고 소원을 빌어봅니다.",
-        effect: { target: 'ALL', sanity: 10, statChanges: { cha: 1 }, skillsAdd: [S.SPIRITUALITY] }
+        effect: { target: 'RANDOM_1', sanity: 10, statChanges: { cha: 1 }, skillsAdd: [S.SPIRITUALITY] }
     },
     'quiet_day': { 
         id: 'quiet_day', 
         text: "🤫 기묘할 정도로 고요한 하루입니다. 폭풍전야일까요?", 
-        effect: { target: 'ALL', fatigue: -5, skillsRemove: ["전술 지휘"] } 
+        effect: { target: 'RANDOM_1', fatigue: -5, skillsRemove: ["전술 지휘"] } 
     },
     'horde_pass': { 
         id: 'horde_pass', 
         text: "🧟‍♂️ 수천 마리의 좀비 떼가 이동하는 것을 목격했습니다. 숨죽여 그들이 지나가길 기다립니다.", 
-        effect: { target: 'ALL', fatigue: 15, sanity: -5, skillsAdd: [S.AMBUSH], skillsRemove: ["매복 습격"] } 
+        effect: { target: 'RANDOM_1', fatigue: 15, sanity: -5, skillsAdd: [S.AMBUSH], skillsRemove: ["매복 습격"] } 
     },
     'helicopter': { 
         id: 'helicopter', 
         text: "🚁 머리 위로 헬리콥터가 지나갔지만, 우리를 보지 못했습니다. 구조의 희망과 절망이 동시에 교차합니다.", 
-        effect: { target: 'ALL', sanity: -5, skillsRemove: ["희망의 노래"] } 
+        effect: { target: 'RANDOM_1', sanity: -5, skillsRemove: ["희망의 노래"] } 
     },
     'nightmare_shared': {
         id: 'nightmare_shared',
@@ -200,23 +200,23 @@ export const ONE_OFF_NODES: Record<string, StoryNode> = {
           { id: 'nightmare_mental', weight: 0.0, choiceText: "동료 심리 케어 (심리 상담 필요)", req: { skill: '심리 상담' } },
           { id: 'nightmare_continue', weight: 1.0 }
         ],
-        effect: { target: 'ALL', sanity: -5, fatigue: 10, skillsRemove: ["협상 기술"] }
+        effect: { target: 'RANDOM_1', sanity: -5, fatigue: 10, skillsRemove: ["협상 기술"] }
     },
     'nightmare_mental': {
         id: 'nightmare_mental',
         text: " Couch 심리 상담 스킬로 공포에 질린 동료들을 진정시키고 악몽의 원인을 분석해 안심시켰습니다.",
-        effect: { target: 'ALL', sanity: 15, fatigue: -5, statChanges: { cha: 1 }, skillsAdd: [S.MENTAL_CARE] }
+        effect: { target: 'RANDOM_1', sanity: 15, fatigue: -5, statChanges: { cha: 1 }, skillsAdd: [S.MENTAL_CARE] }
     },
-    'nightmare_continue': { id: 'nightmare_continue', text: "😱 힘든 밤이었습니다.", effect: { target: 'ALL', skillsRemove: ["심리 상담", "희망의 노래"] } },
+    'nightmare_continue': { id: 'nightmare_continue', text: "😱 힘든 밤이었습니다.", effect: { target: 'RANDOM_1', skillsRemove: ["심리 상담", "희망의 노래"] } },
     'old_music': {
         id: 'old_music',
         text: "🎵 배터리가 남은 낡은 MP3 플레이어를 발견했습니다. 흘러나오는 옛 노래가 모두의 마음을 적십니다.",
-        effect: { target: 'ALL', sanity: 10, skillsAdd: [S.MUSIC] }
+        effect: { target: 'RANDOM_1', sanity: 10, skillsAdd: [S.MUSIC] }
     },
     'board_game': {
         id: 'board_game',
         text: "🎲 먼지 쌓인 보드게임을 발견했습니다. 잠시 웃음을 되찾습니다.",
-        effect: { target: 'ALL', sanity: 15, fatigue: -5, statChanges: { int: 1 }, skillsAdd: [S.LOGISTICS] }
+        effect: { target: 'RANDOM_1', sanity: 15, fatigue: -5, statChanges: { int: 1 }, skillsAdd: [S.LOGISTICS] }
     },
     'stray_dog': {
         id: 'stray_dog',
@@ -230,13 +230,13 @@ export const ONE_OFF_NODES: Record<string, StoryNode> = {
     'dog_livestock': {
         id: 'dog_livestock',
         text: "🐄 가축 사육 지식을 이용해 떠돌이 개를 훌륭한 파수견으로 길들였습니다. 이제 밤길이 더 든든합니다.",
-        effect: { target: 'ALL', sanity: 15, fatigue: -10, skillsAdd: [S.LIVESTOCK] }
+        effect: { target: 'RANDOM_1', sanity: 15, fatigue: -10, skillsAdd: [S.LIVESTOCK] }
     },
     'dog_friend': { id: 'dog_friend', text: "🐕 개는 꼬리를 흔들며 잠시 머물다 갑니다.", effect: { target: 'ALL', sanity: 5 } },
     'rat_swarm': {
         id: 'rat_swarm',
         text: "🐀 쥐 떼가 식량 창고를 습격했습니다!",
-        effect: { target: 'ALL', sanity: -5, inventoryRemove: ['통조림'], skillsRemove: ["위생 관리", "식량 생산"] }
+        effect: { target: 'RANDOM_1', sanity: -5, inventoryRemove: ['통조림'], skillsRemove: ["위생 관리", "식량 생산"] }
     },
     'abandoned_truck': {
         id: 'abandoned_truck',
@@ -252,17 +252,17 @@ export const ONE_OFF_NODES: Record<string, StoryNode> = {
     'truck_scavenge': {
         id: 'truck_scavenge',
         text: "📦 폐지 줍기 달인의 감각으로 트럭 구석에서 아무도 발견하지 못한 '귀중품 상자'를 찾아냈습니다.",
-        effect: { target: 'ALL', loot: ['백신', '통조림', '비타민'], sanity: 10, skillsAdd: [S.SCAVENGING, S.INVESTIGATION] }
+        effect: { target: 'RANDOM_1', loot: ['백신', '통조림', '비타민'], sanity: 10, skillsAdd: [S.SCAVENGING, S.INVESTIGATION] }
     },
     'truck_lockpick': {
         id: 'truck_lockpick',
         text: "🔧 전문 기술을 발휘해 소리 없이 문을 열었습니다. 안에는 유용한 물건들이 가득합니다!",
-        effect: { target: 'ALL', loot: ['통조림', '통조림', '붕대'], sanity: 5, skillsAdd: [S.ELECTRONICS] }
+        effect: { target: 'RANDOM_1', loot: ['통조림', '통조림', '붕대'], sanity: 5, skillsAdd: [S.ELECTRONICS] }
     },
     'truck_lockpick_mech': { 
         id: 'truck_lockpick_mech', 
         text: "🔧 기계 수리 실력으로 잠긴 뒷문을 손상 없이 열었습니다. 유용한 물건들이 가득합니다!", 
-        effect: { target: 'ALL', loot: ['통조림', '통조림', '붕대'], sanity: 5, skillsAdd: [S.MECHANIC] } 
+        effect: { target: 'RANDOM_1', loot: ['통조림', '통조림', '붕대'], sanity: 5, skillsAdd: [S.MECHANIC] } 
     },
     'truck_force': {
         id: 'truck_force',
@@ -281,18 +281,18 @@ export const ONE_OFF_NODES: Record<string, StoryNode> = {
     'pharmacy_detox': {
         id: 'pharmacy_detox',
         text: "🧪 해독술 스킬로 남아있는 약품들을 배합해 강력한 세정액과 해독제를 만들었습니다.",
-        effect: { target: 'ALL', loot: ['백신', '항생제', '붕대'], infection: -30, skillsAdd: [S.HYGIENE_CONTROL, S.DETOX] }
+        effect: { target: 'RANDOM_1', loot: ['백신', '항생제', '붕대'], infection: -30, skillsAdd: [S.HYGIENE_CONTROL, S.DETOX] }
     },
     'pharmacy_loot': { id: 'pharmacy_loot', text: "💊 물자를 챙겼습니다.", effect: { target: 'ALL', loot: ['붕대', '항생제', '비타민', '백신'] } },
     'creepy_doll': {
         id: 'creepy_doll',
         text: "🧸 목이 잘린 곰 인형이 길 한복판에 놓여 있습니다. 기분이 나쁩니다.",
-        effect: { target: 'ALL', sanity: -5, skillsRemove: ["예술적 통찰", "종교적 신념"] }
+        effect: { target: 'RANDOM_1', sanity: -5, skillsRemove: ["예술적 통찰", "종교적 신념"] }
     },
     'flower_field': {
         id: 'flower_field',
         text: "🌸 폐허 속에 기적처럼 피어난 꽃밭을 발견했습니다.",
-        effect: { target: 'ALL', sanity: 5, statChanges: { cha: 1 }, skillsAdd: [S.ARTISTIC, S.FORAGING] }
+        effect: { target: 'RANDOM_1', sanity: 5, statChanges: { cha: 1 }, skillsAdd: [S.ARTISTIC, S.FORAGING] }
     },
     'weapon_maintenance': {
         id: 'weapon_maintenance',
@@ -301,14 +301,14 @@ export const ONE_OFF_NODES: Record<string, StoryNode> = {
           { id: 'weapon_expert', weight: 0.0, choiceText: "병기 관리 전문가의 정비 (병기 관리 필요)", req: { skill: '병기 관리' } },
           { id: 'weapon_basic', weight: 1.0 }
         ],
-        effect: { target: 'ALL', fatigue: 5, sanity: 5, skillsAdd: [S.WEAPON_MAINTENANCE] }
+        effect: { target: 'RANDOM_1', fatigue: 5, sanity: 5, skillsAdd: [S.WEAPON_MAINTENANCE] }
     },
     'weapon_expert': {
         id: 'weapon_expert',
         text: "🔧 병기 관리 스킬로 모든 무기를 완벽하게 튜닝했습니다. 다음 전투에서 훨씬 더 효율적으로 싸울 수 있습니다.",
-        effect: { target: 'ALL', sanity: 15, kill: 2, fatigue: -5, skillsAdd: [S.WEAPON_MAINTENANCE] }
+        effect: { target: 'RANDOM_1', sanity: 15, kill: 2, fatigue: -5, skillsAdd: [S.WEAPON_MAINTENANCE] }
     },
-    'weapon_basic': { id: 'weapon_basic', text: "🔫 정비를 마쳤습니다.", effect: { target: 'ALL', skillsRemove: ["병기 관리"] } },
+    'weapon_basic': { id: 'weapon_basic', text: "🔫 정비를 마쳤습니다.", effect: { target: 'RANDOM_1', skillsRemove: ["병기 관리"] } },
     'cannibal_meal': {
         id: 'cannibal_meal',
         text: "🍖 충격적인 광경을 목격했습니다. 누군가가 남기고 간 '고기'가 있습니다. 사람이었던 것 같습니다...",
@@ -317,19 +317,19 @@ export const ONE_OFF_NODES: Record<string, StoryNode> = {
           { id: 'cannibal_eat', weight: 0.5, choiceText: "눈을 감고 먹기" },
           { id: 'cannibal_ignore', weight: 0.5 }
         ],
-        effect: { target: 'ALL', sanity: -20, skillsRemove: ["카리스마"] }
+        effect: { target: 'RANDOM_1', sanity: -20, skillsRemove: ["카리스마"] }
     },
     'cannibal_cook': {
         id: 'cannibal_cook',
         text: "🍳 요리 마스터 스킬로 이것이 무엇이었는지 알 수 없게 완벽한 보존 식품으로 가공했습니다. 죄책감은 사라지고 포만감만 남습니다.",
-        effect: { target: 'ALL', loot: ['통조림', '통조림'], sanity: 10, skillsAdd: [S.COOKING] }
+        effect: { target: 'RANDOM_1', loot: ['통조림', '통조림'], sanity: 10, skillsAdd: [S.COOKING] }
     },
-    'cannibal_eat': { id: 'cannibal_eat', text: "🍖 끔찍한 맛이었습니다.", effect: { target: 'ALL', hp: 20, sanity: -30, statChanges: { con: -1 }, skillsRemove: ["요리 마스터"] } },
-    'cannibal_ignore': { id: 'cannibal_ignore', text: "🚫 우리는 그것을 지나쳤습니다.", effect: { target: 'ALL', skillsRemove: ["보좌술"] } },
+    'cannibal_eat': { id: 'cannibal_eat', text: "🍖 끔찍한 맛이었습니다.", effect: { target: 'RANDOM_1', hp: 20, sanity: -30, statChanges: { con: -1 }, skillsRemove: ["요리 마스터"] } },
+    'cannibal_ignore': { id: 'cannibal_ignore', text: "🚫 우리는 그것을 지나쳤습니다.", effect: { target: 'RANDOM_1', skillsRemove: ["보좌술"] } },
     'vaccine_drop': {
         id: 'vaccine_drop',
         text: "🚁 추락한 군용 드론의 잔해를 발견했습니다. 'Z-백신'이라고 적힌 앰플이 보입니다!",
-        effect: { target: 'ALL', sanity: 15, loot: ['백신'], skillsRemove: ["행정 처리"] }
+        effect: { target: 'RANDOM_1', sanity: 15, loot: ['백신'], skillsRemove: ["행정 처리"] }
     },
     'military_convoy': {
         id: 'military_convoy',
@@ -344,12 +344,12 @@ export const ONE_OFF_NODES: Record<string, StoryNode> = {
     'convoy_accounting': {
         id: 'convoy_accounting',
         text: "📈 가치 평가 스킬로 수많은 상자 중 가장 값비싼 약품이 든 상자만을 골라내어 신속하게 챙겼습니다.",
-        effect: { target: 'ALL', loot: ['백신', '백신', '항생제'], sanity: 10, skillsAdd: [S.LOGISTICS] }
+        effect: { target: 'RANDOM_1', loot: ['백신', '백신', '항생제'], sanity: 10, skillsAdd: [S.LOGISTICS] }
     },
     'convoy_loot': {
         id: 'convoy_loot',
         text: "📦 위험을 무릅쓰고 상자를 엽니다. 안에서 백신과 무기를 확보했지만, 매복해있던 군인 좀비가 튀어나옵니다!",
-        effect: { target: 'ALL', sanity: 5, hp: -10, loot: ['백신', '권총', '통조림'], statChanges: { str: 1 }, skillsRemove: ["자원 관리"] }
+        effect: { target: 'RANDOM_1', sanity: 5, hp: -10, loot: ['백신', '권총', '통조림'], statChanges: { str: 1 }, skillsRemove: ["자원 관리"] }
     },
     'convoy_ignore': {
         id: 'convoy_ignore',
@@ -368,7 +368,7 @@ export const ONE_OFF_NODES: Record<string, StoryNode> = {
     'box_crafting': {
         id: 'box_crafting',
         text: "⚒️ 도구 제작 스킬로 주변 나뭇가지를 깎아 완벽한 지렛대를 만들어 상자를 열었습니다.",
-        effect: { target: 'ALL', loot: ['권총', '비타민'], sanity: 5, skillsAdd: [S.CRAFTING] }
+        effect: { target: 'RANDOM_1', loot: ['권총', '비타민'], sanity: 5, skillsAdd: [S.CRAFTING] }
     },
     'box_knife': {
         id: 'box_knife',
@@ -392,7 +392,7 @@ export const ONE_OFF_NODES: Record<string, StoryNode> = {
     'path_planning': {
         id: 'path_planning',
         text: "📊 전략 수립 스킬로 안개의 흐름과 바람의 방향을 분석해 최적의 경로를 도출했습니다.",
-        effect: { target: 'ALL', fatigue: -10, sanity: 10, statChanges: { int: 1 }, skillsAdd: [S.PLANNING] }
+        effect: { target: 'RANDOM_1', fatigue: -10, sanity: 10, statChanges: { int: 1 }, skillsAdd: [S.PLANNING] }
     },
     'path_map': {
         id: 'path_map',
@@ -416,7 +416,7 @@ export const ONE_OFF_NODES: Record<string, StoryNode> = {
     'dog_animal': {
         id: 'dog_animal',
         text: "🏹 야생 추적 스킬을 응용해 상위 포식자의 기세를 흉내 냈습니다. 좀비견들은 겁을 먹고 도망갔습니다.",
-        effect: { target: 'ALL', sanity: 15, statChanges: { cha: 1 }, skillsAdd: [S.HUNTING] }
+        effect: { target: 'RANDOM_1', sanity: 15, statChanges: { cha: 1 }, skillsAdd: [S.HUNTING] }
     },
     'dog_shoot': {
         id: 'dog_shoot',
@@ -440,7 +440,7 @@ export const ONE_OFF_NODES: Record<string, StoryNode> = {
     'signal_reporting': {
         id: 'signal_reporting',
         text: "📰 정보 수집 능력을 발휘해 잡음 속에 섞인 군용 암호를 해석했습니다. 공습 지역을 미리 알고 피할 수 있었습니다.",
-        effect: { target: 'ALL', sanity: 20, fatigue: -10, statChanges: { int: 1 }, skillsAdd: [S.REPORTING] }
+        effect: { target: 'RANDOM_1', sanity: 20, fatigue: -10, statChanges: { int: 1 }, skillsAdd: [S.REPORTING] }
     },
     'signal_radio': {
         id: 'signal_radio',
@@ -450,7 +450,7 @@ export const ONE_OFF_NODES: Record<string, StoryNode> = {
     'signal_ignore': {
         id: 'signal_ignore',
         text: "🔇 바람 소리겠거니 하고 지나쳤습니다.",
-        effect: { target: 'ALL', fatigue: 5, skillsRemove: ["정보 수집"] }
+        effect: { target: 'RANDOM_1', fatigue: 5, skillsRemove: ["정보 수집"] }
     },
     'oneoff_broken_bridge': {
         id: 'oneoff_broken_bridge',
@@ -475,7 +475,7 @@ export const ONE_OFF_NODES: Record<string, StoryNode> = {
     'bridge_tech': {
         id: 'bridge_tech',
         text: "🔧 주변의 자재를 모아 임시 다리를 뚝딱 만들어냈습니다. 모두가 안전하고 편하게 건넜습니다.",
-        effect: { target: 'ALL', fatigue: -15, sanity: 5, skillsAdd: [S.CRAFTING] }
+        effect: { target: 'RANDOM_1', fatigue: -15, sanity: 5, skillsAdd: [S.CRAFTING] }
     },
     'bridge_detour': {
         id: 'bridge_detour',
@@ -503,7 +503,7 @@ export const ONE_OFF_NODES: Record<string, StoryNode> = {
     'dice_tripwire_success': {
         id: 'dice_tripwire_success',
         text: "🤸 성공입니다! 가벼운 몸놀림으로 함정을 뛰어넘었습니다. 뒤를 돌아보니 날카로운 화살들이 벽에 박혀있습니다.",
-        effect: { target: 'ALL', sanity: 5, statChanges: { agi: 1 }, skillsAdd: [S.AGILITY, S.TRAP_SETTING] }
+        effect: { target: 'RANDOM_1', sanity: 5, statChanges: { agi: 1 }, skillsAdd: [S.AGILITY, S.TRAP_SETTING] }
     },
     'dice_tripwire_fail': {
         id: 'dice_tripwire_fail',
@@ -531,7 +531,7 @@ export const ONE_OFF_NODES: Record<string, StoryNode> = {
     'dice_pharmacy_fail': {
         id: 'dice_pharmacy_fail',
         text: "🔇 실패했습니다. 자물쇠 안에서 핀이 부러져버렸습니다. 이제는 부수지 않는 한 열 수 없습니다.",
-        effect: { target: 'ALL', fatigue: 5, skillsRemove: ["잠입 기술"] }
+        effect: { target: 'RANDOM_1', fatigue: 5, skillsRemove: ["잠입 기술"] }
     },
 
     'dice_sleeping_horde': {
@@ -550,7 +550,7 @@ export const ONE_OFF_NODES: Record<string, StoryNode> = {
     'dice_horde_success': {
         id: 'dice_horde_success',
         text: "🤫 성공! 유령처럼 조용히 주차장을 가로질렀습니다. 심장이 터질 것 같지만 무사합니다.",
-        effect: { target: 'ALL', sanity: 15, fatigue: 10, skillsAdd: [S.STEALTH] }
+        effect: { target: 'RANDOM_1', sanity: 15, fatigue: 10, skillsAdd: [S.STEALTH] }
     },
     'dice_horde_fail': {
         id: 'dice_horde_fail',
@@ -568,13 +568,12 @@ export const ONE_OFF_NODES: Record<string, StoryNode> = {
                 choiceText: "철문 들어 올리기 (힘 기반)",
                 dice: { threshold: 80, stat: 'str', successId: 'dice_gate_success', failId: 'dice_gate_fail', hpPenalty: -10 }
             }
-        ],
-        effect: { target: 'RANDOM_1', skillsRemove: ["구조물 강화"] }
+        ]
     },
     'dice_gate_success': {
         id: 'dice_gate_success',
         text: "💪 성공! 근육이 비명을 지르지만 문을 충분히 들어 올렸습니다. 모두가 신속히 반대편으로 빠져나갑니다.",
-        effect: { target: 'ALL', fatigue: 15, sanity: 5, statChanges: { str: 1 }, skillsAdd: [S.CARPENTRY] }
+        effect: { target: 'RANDOM_1', fatigue: 15, sanity: 5, statChanges: { str: 1 }, skillsAdd: [S.CARPENTRY] }
     },
     'dice_gate_fail': {
         id: 'dice_gate_fail',
@@ -597,12 +596,12 @@ export const ONE_OFF_NODES: Record<string, StoryNode> = {
     'dice_trader_success': {
         id: 'dice_trader_success',
         text: "🤝 성공! 화려한 말솜씨로 상대의 경계심을 풀고 저렴한 가격에 물건을 교환했습니다.",
-        effect: { target: 'ALL', loot: ['통조림', '안정제'], inventoryRemove: ['붕대'], statChanges: { cha: 1 }, skillsAdd: [S.NEGOTIATION, S.ACCOUNTING] }
+        effect: { target: 'RANDOM_1', loot: ['통조림', '안정제'], inventoryRemove: ['붕대'], statChanges: { cha: 1 }, skillsAdd: [S.NEGOTIATION, S.ACCOUNTING] }
     },
     'dice_trader_fail': {
         id: 'dice_trader_fail',
         text: "💢 실패했습니다. 상대는 우리가 자신을 속이려 한다고 생각하고 오히려 위협을 가했습니다.",
-        effect: { target: 'ALL', sanity: -15, statChanges: { cha: -1 }, skillsRemove: ["협상 기술", "가치 평가"] }
+        effect: { target: 'RANDOM_1', sanity: -15, statChanges: { cha: -1 }, skillsRemove: ["협상 기술", "가치 평가"] }
     },
 
     'dice_broken_generator': {
@@ -620,12 +619,12 @@ export const ONE_OFF_NODES: Record<string, StoryNode> = {
     'dice_gen_success': {
         id: 'dice_gen_success',
         text: "💡 성공! 발전기가 요란한 소리를 내며 돌아갑니다. 전등이 켜지자 모두의 표정도 밝아집니다.",
-        effect: { target: 'ALL', sanity: 20, fatigue: -10, skillsAdd: [S.MECHANIC, S.ELECTRONICS] }
+        effect: { target: 'RANDOM_1', sanity: 20, fatigue: -10, skillsAdd: [S.MECHANIC, S.ELECTRONICS] }
     },
     'dice_gen_fail': {
         id: 'dice_gen_fail',
         text: "💥 실패! 엔진 내부에서 불꽃이 튀더니 매연만 뿜어져 나옵니다. 발전기는 이제 고철덩어리입니다.",
-        effect: { target: 'ALL', fatigue: 10, skillsRemove: ["기계 수리", "전자 공학"] }
+        effect: { target: 'RANDOM_1', fatigue: 10, skillsRemove: ["기계 수리", "전자 공학"] }
     },
 
     'dice_precarious_bridge': {
@@ -643,7 +642,7 @@ export const ONE_OFF_NODES: Record<string, StoryNode> = {
     'dice_bridge_success': {
         id: 'dice_bridge_success',
         text: "🧗 성공! 아슬아슬하게 다리를 건넜습니다. 시간을 대폭 단축했습니다.",
-        effect: { target: 'ALL', fatigue: -15, sanity: 5, statChanges: { agi: 1 }, skillsAdd: [S.AGILITY] }
+        effect: { target: 'RANDOM_1', fatigue: -15, sanity: 5, statChanges: { agi: 1 }, skillsAdd: [S.AGILITY] }
     },
     'dice_bridge_fail': {
         id: 'dice_bridge_fail',
@@ -666,7 +665,7 @@ export const ONE_OFF_NODES: Record<string, StoryNode> = {
     'dice_crate_success': {
         id: 'dice_crate_success',
         text: "🔓 성공! 콰직 하는 소리와 함께 뚜껑이 열렸습니다. 안에는 통조림 몇 개가 굴러다닙니다.",
-        effect: { target: 'ALL', loot: ['통조림', '통조림'], statChanges: { str: 1 }, skillsAdd: [S.RECYCLING] }
+        effect: { target: 'RANDOM_1', loot: ['통조림', '통조림'], statChanges: { str: 1 }, skillsAdd: [S.RECYCLING] }
     },
     'dice_crate_fail': {
         id: 'dice_crate_fail',
@@ -712,12 +711,12 @@ export const ONE_OFF_NODES: Record<string, StoryNode> = {
     'dice_crawl_success': {
         id: 'dice_crawl_success',
         text: "🏃 성공! 미로 같은 배수구를 빠져나와 안전한 공터에 도착했습니다.",
-        effect: { target: 'ALL', fatigue: -10, sanity: 5, statChanges: { int: 1 }, skillsAdd: [S.INFILTRATION] }
+        effect: { target: 'RANDOM_1', fatigue: -10, sanity: 5, statChanges: { int: 1 }, skillsAdd: [S.INFILTRATION] }
     },
     'dice_crawl_fail': {
         id: 'dice_crawl_fail',
         text: "🌀 실패... 막힌 길로 들어가 한참을 헤매다 돌아왔습니다. 밀폐 공포증이 도질 것 같습니다.",
-        effect: { target: 'ALL', sanity: -20, fatigue: 20, skillsRemove: ["잠입 기술"] }
+        effect: { target: 'RANDOM_1', sanity: -20, fatigue: 20, skillsRemove: ["잠입 기술"] }
     },
 
     'dice_bracing_wall': {
@@ -735,7 +734,7 @@ export const ONE_OFF_NODES: Record<string, StoryNode> = {
     'dice_bracing_wall_success': {
         id: 'dice_bracing_wall_success',
         text: "🏛️ 성공! 폭풍이 지나갈 때까지 온몸으로 벽을 지탱했습니다. 은신처를 지켜냈습니다.",
-        effect: { target: 'ALL', sanity: 15, fatigue: 25, statChanges: { str: 1, con: 1 }, skillsAdd: [S.DEFENSE_STANCE] }
+        effect: { target: 'RANDOM_1', sanity: 15, fatigue: 25, statChanges: { str: 1, con: 1 }, skillsAdd: [S.DEFENSE_STANCE] }
     },
     'dice_bracing_wall_fail': {
         id: 'dice_bracing_wall_fail',
@@ -804,12 +803,12 @@ export const ONE_OFF_NODES: Record<string, StoryNode> = {
     'dice_radio_success': {
         id: 'dice_radio_success',
         text: "📻 성공! 지지직거리는 소리 너머로 구조대의 교신 내용이 들립니다. 희망이 보입니다!",
-        effect: { target: 'ALL', sanity: 30, loot: ['무전기'], statChanges: { int: 1 }, skillsAdd: [S.HACKING, S.SENSORY] }
+        effect: { target: 'RANDOM_1', sanity: 30, loot: ['무전기'], statChanges: { int: 1 }, skillsAdd: [S.HACKING, S.SENSORY] }
     },
     'dice_radio_fail': {
         id: 'dice_radio_fail',
         text: "💨 실패... 안테나가 강풍에 꺾여버렸습니다. 더 이상 통신 시도는 불가능합니다.",
-        effect: { target: 'ALL', fatigue: 10, sanity: -10, skillsRemove: ["시스템 해킹", "절대 감각"] }
+        effect: { target: 'RANDOM_1', fatigue: 10, sanity: -10, skillsRemove: ["시스템 해킹", "절대 감각"] }
     },
 
     'dice_patch_leak': {
@@ -827,7 +826,7 @@ export const ONE_OFF_NODES: Record<string, StoryNode> = {
     'dice_leak_success': {
         id: 'dice_leak_success',
         text: "✅ 성공! 가스가 더 퍼지기 전에 밸브를 잠그고 구멍을 막았습니다.",
-        effect: { target: 'ALL', fatigue: 5, sanity: 5, skillsAdd: [S.PLUMBING] }
+        effect: { target: 'RANDOM_1', fatigue: 5, sanity: 5, skillsAdd: [S.PLUMBING] }
     },
     'dice_leak_fail': {
         id: 'dice_leak_fail',
@@ -850,7 +849,7 @@ export const ONE_OFF_NODES: Record<string, StoryNode> = {
     'dice_mine_success': {
         id: 'dice_mine_success',
         text: "✨ 대성공! 식은땀을 흘리며 공이를 고정하고 지뢰를 무력화했습니다. 심장이 멈추는 줄 알았습니다.",
-        effect: { target: 'ALL', sanity: 20, fatigue: 20, statChanges: { int: 1 }, skillsAdd: [S.BOMBER] }
+        effect: { target: 'RANDOM_1', sanity: 20, fatigue: 20, statChanges: { int: 1 }, skillsAdd: [S.BOMBER] }
     },
     'dice_mine_fail': {
         id: 'dice_mine_fail',
@@ -896,7 +895,7 @@ export const ONE_OFF_NODES: Record<string, StoryNode> = {
     'dice_wolf_success': {
         id: 'dice_wolf_success',
         text: "👹 성공! 압도적인 위압감을 뿜어내자 늑대들이 꼬리를 내리고 물러납니다.",
-        effect: { target: 'ALL', sanity: 15, statChanges: { cha: 1 }, skillsAdd: [S.LEADERSHIP] }
+        effect: { target: 'RANDOM_1', sanity: 15, statChanges: { cha: 1 }, skillsAdd: [S.LEADERSHIP] }
     },
     'dice_wolf_fail': {
         id: 'dice_wolf_fail',
@@ -919,12 +918,12 @@ export const ONE_OFF_NODES: Record<string, StoryNode> = {
     'dice_bandit_success': {
         id: 'dice_bandit_success',
         text: "😎 성공! 뒤쪽에 군부대가 오고 있다고 속여 그들을 도망치게 했습니다. 비웃으며 길을 지나갑니다.",
-        effect: { target: 'ALL', sanity: 10, skillsAdd: [S.PUBLIC_RELATIONS] }
+        effect: { target: 'RANDOM_1', sanity: 10, skillsAdd: [S.PUBLIC_RELATIONS] }
     },
     'dice_bandit_fail': {
         id: 'dice_bandit_fail',
         text: "🧨 실패! 거짓말이 들통나자 그들이 총을 쏘기 시작했습니다. 소중한 물자를 버리고 도망칩니다.",
-        effect: { target: 'ALL', hp: -10, inventoryRemove: ['통조림'], fatigue: 15, statChanges: { cha: -1 }, skillsRemove: ["이미지 메이킹"] }
+        effect: { target: 'RANDOM_1', hp: -10, inventoryRemove: ['통조림'], fatigue: 15, statChanges: { cha: -1 }, skillsRemove: ["이미지 메이킹"] }
     },
 
     'dice_rusty_fire_escape': {
@@ -970,8 +969,8 @@ export const ONE_OFF_NODES: Record<string, StoryNode> = {
             dice: { threshold: 70, stat: 'str', successId: 'dice_pump_success', failId: 'dice_pump_fail', hpPenalty: -10 }
         }]
     },
-    'dice_pump_success': { id: 'dice_pump_success', text: "💧 성공! 맑은 물이 쏟아져 나옵니다. 모두가 갈증을 해소하고 활기를 되찾습니다.", effect: { target: 'ALL', hp: 10, fatigue: -20, skillsAdd: [S.PLUMBING] } },
-    'dice_pump_fail': { id: 'dice_pump_fail', text: "🔩 실패! 무리하게 힘을 주다 펌프 축이 완전히 부러졌습니다.", effect: { target: 'ALL', fatigue: 15, statChanges: { str: -1 }, skillsRemove: ["수원 확보"] } },
+    'dice_pump_success': { id: 'dice_pump_success', text: "💧 성공! 맑은 물이 쏟아져 나옵니다. 모두가 갈증을 해소하고 활기를 되찾습니다.", effect: { target: 'RANDOM_1', hp: 10, fatigue: -20, skillsAdd: [S.PLUMBING] } },
+    'dice_pump_fail': { id: 'dice_pump_fail', text: "🔩 실패! 무리하게 힘을 주다 펌프 축이 완전히 부러졌습니다.", effect: { target: 'RANDOM_1', fatigue: 15, statChanges: { str: -1 }, skillsRemove: ["수원 확보"] } },
 
     'dice_bully_scare': {
         id: 'dice_bully_scare',
@@ -981,8 +980,8 @@ export const ONE_OFF_NODES: Record<string, StoryNode> = {
             dice: { threshold: 85, stat: 'cha', successId: 'dice_bully_success', failId: 'dice_bully_fail', sanityPenalty: -20 }
         }]
     },
-    'dice_bully_success': { id: 'dice_bully_success', text: "👹 성공! 냉혹한 눈빛과 위압감에 약탈자들은 겁을 먹고 도망쳤습니다.", effect: { target: 'ALL', sanity: 15, statChanges: { cha: 1 }, skillsAdd: [S.LAW_ENFORCEMENT] } },
-    'dice_bully_fail': { id: 'dice_bully_fail', text: "💢 실패! 허세인 것이 들통나 비웃음을 샀고, 물자 일부를 빼앗겼습니다.", effect: { target: 'ALL', inventoryRemove: ['통조림'], sanity: -15, skillsRemove: ["질서 유지"] } },
+    'dice_bully_success': { id: 'dice_bully_success', text: "👹 성공! 냉혹한 눈빛과 위압감에 약탈자들은 겁을 먹고 도망쳤습니다.", effect: { target: 'RANDOM_1', sanity: 15, statChanges: { cha: 1 }, skillsAdd: [S.LAW_ENFORCEMENT] } },
+    'dice_bully_fail': { id: 'dice_bully_fail', text: "💢 실패! 허세인 것이 들통나 비웃음을 샀고, 물자 일부를 빼앗겼습니다.", effect: { target: 'RANDOM_1', inventoryRemove: ['통조림'], sanity: -15, skillsRemove: ["질서 유지"] } },
 
     'dice_logic_puzzle': {
         id: 'dice_logic_puzzle',
@@ -992,8 +991,8 @@ export const ONE_OFF_NODES: Record<string, StoryNode> = {
             dice: { threshold: 80, stat: 'int', successId: 'dice_logic_success', failId: 'dice_logic_fail', sanityPenalty: -10 }
         }]
     },
-    'dice_logic_success': { id: 'dice_logic_success', text: "🔓 성공! 금고가 열리고 유통기한이 남은 비타민과 지도가 나옵니다.", effect: { target: 'ALL', loot: ['비타민', '지도'], statChanges: { int: 1 }, skillsAdd: [S.LUCK] } },
-    'dice_logic_fail': { id: 'dice_logic_fail', text: "😵 실패! 머리만 아프고 금고는 굳게 잠긴 채입니다.", effect: { target: 'ALL', sanity: -5, fatigue: 10, skillsRemove: ["도박사의 운", "지식 전수"] } },
+    'dice_logic_success': { id: 'dice_logic_success', text: "🔓 성공! 금고가 열리고 유통기한이 남은 비타민과 지도가 나옵니다.", effect: { target: 'RANDOM_1', loot: ['비타민', '지도'], statChanges: { int: 1 }, skillsAdd: [S.LUCK] } },
+    'dice_logic_fail': { id: 'dice_logic_fail', text: "😵 실패! 머리만 아프고 금고는 굳게 잠긴 채입니다.", effect: { target: 'RANDOM_1', sanity: -5, fatigue: 10, skillsRemove: ["도박사의 운", "지식 전수"] } },
 
     'dice_tightrope': {
         id: 'dice_tightrope',
@@ -1003,7 +1002,7 @@ export const ONE_OFF_NODES: Record<string, StoryNode> = {
             dice: { threshold: 75, stat: 'agi', successId: 'dice_tightrope_success', failId: 'dice_tightrope_fail', hpPenalty: -25 }
         }]
     },
-    'dice_tightrope_success': { id: 'dice_tightrope_success', text: "🤸 성공! 서커스 단원처럼 가볍게 철골을 타고 건넜습니다.", effect: { target: 'ALL', fatigue: 5, statChanges: { agi: 1 }, skillsAdd: [S.ACROBATIC] } },
+    'dice_tightrope_success': { id: 'dice_tightrope_success', text: "🤸 성공! 서커스 단원처럼 가볍게 철골을 타고 건넜습니다.", effect: { target: 'RANDOM_1', fatigue: 5, statChanges: { agi: 1 }, skillsAdd: [S.ACROBATIC] } },
     'dice_tightrope_fail': { id: 'dice_tightrope_fail', text: "😱 실패! 발을 헛디뎌 추락할 뻔했습니다. 간신히 매달려 올라왔지만 온몸이 멍투성입니다.", effect: { target: 'RANDOM_1', hp: -35, fatigue: 20, statChanges: { con: -1 }, skillsRemove: ["유연한 몸놀림"] } },
 
     'dice_wall_push': {
@@ -1014,7 +1013,7 @@ export const ONE_OFF_NODES: Record<string, StoryNode> = {
             dice: { threshold: 80, stat: 'str', successId: 'dice_push_success', failId: 'dice_push_fail', hpPenalty: -15 }
         }]
     },
-    'dice_push_success': { id: 'dice_push_success', text: "💪 성공! 파편을 들어 올리고 가방 안에서 항생제를 찾았습니다.", effect: { target: 'ALL', loot: ['항생제'], statChanges: { str: 1 }, skillsAdd: [S.ATHLETICS] } },
+    'dice_push_success': { id: 'dice_push_success', text: "💪 성공! 파편을 들어 올리고 가방 안에서 항생제를 찾았습니다.", effect: { target: 'RANDOM_1', loot: ['항생제'], statChanges: { str: 1 }, skillsAdd: [S.ATHLETICS] } },
     'dice_push_fail': { id: 'dice_push_fail', text: "🩸 실패! 파편이 미끄러져 발을 찧었습니다. 엄청난 고통이 밀려옵니다.", effect: { target: 'RANDOM_1', hp: -20, fatigue: 15, statChanges: { con: -1 }, skillsRemove: ["폭발적 근력"] } },
 
     'dice_old_lock': {
@@ -1025,7 +1024,7 @@ export const ONE_OFF_NODES: Record<string, StoryNode> = {
             dice: { threshold: 85, stat: 'int', successId: 'dice_lock_success', failId: 'dice_lock_fail', sanityPenalty: -5 }
         }]
     },
-    'dice_lock_success': { id: 'dice_lock_success', text: "🔓 성공! 딸칵 소리와 함께 유리장이 열렸습니다. 최상급 붕대를 확보했습니다.", effect: { target: 'ALL', loot: ['붕대', '붕대'], statChanges: { int: 1 } } },
+    'dice_lock_success': { id: 'dice_lock_success', text: "🔓 성공! 딸칵 소리와 함께 유리장이 열렸습니다. 최상급 붕대를 확보했습니다.", effect: { target: 'RANDOM_1', loot: ['붕대','붕대'], statChanges: { int: 1 } } },
     'dice_lock_fail': { id: 'dice_lock_fail', text: "🔇 실패! 자물쇠 내부가 엉켜버려 영영 열 수 없게 되었습니다.", effect: { target: 'ALL', fatigue: 5 } },
 
     'dice_honey_tongue': {
@@ -1036,8 +1035,8 @@ export const ONE_OFF_NODES: Record<string, StoryNode> = {
             dice: { threshold: 75, stat: 'cha', successId: 'dice_honey_success', failId: 'dice_honey_fail', sanityPenalty: -15 }
         }]
     },
-    'dice_honey_success': { id: 'dice_honey_success', text: "🤝 성공! 그들은 경계를 풀고 우리에게 여분의 초콜릿을 나누어 주었습니다.", effect: { target: 'ALL', loot: ['초콜릿'], statChanges: { cha: 1 }, skillsAdd: [S.ADMINISTRATION, S.SECRETARY, S.ACTING] } },
-    'dice_honey_fail': { id: 'dice_honey_fail', text: "💢 실패! 오해를 불러일으켜 심한 말다툼이 벌어졌습니다. 기분만 상했습니다.", effect: { target: 'ALL', sanity: -15, statChanges: { cha: -1 }, skillsRemove: ["행정 처리", "보좌술", "메소드 연기"] } },
+    'dice_honey_success': { id: 'dice_honey_success', text: "🤝 성공! 그들은 경계를 풀고 우리에게 여분의 초콜릿을 나누어 주었습니다.", effect: { target: 'RANDOM_1', loot: ['초콜릿'], statChanges: { cha: 1 }, skillsAdd: [S.ADMINISTRATION, S.SECRETARY, S.ACTING] } },
+    'dice_honey_fail': { id: 'dice_honey_fail', text: "💢 실패! 오해를 불러일으켜 심한 말다툼이 벌어졌습니다. 기분만 상했습니다.", effect: { target: 'RANDOM_1', sanity: -15, statChanges: { cha: -1 }, skillsRemove: ["행정 처리", "보좌술", "메소드 연기"] } },
 
     'dice_cluttered_attic': {
         id: 'dice_cluttered_attic',
@@ -1047,7 +1046,7 @@ export const ONE_OFF_NODES: Record<string, StoryNode> = {
             dice: { threshold: 70, stat: 'agi', successId: 'dice_attic_success', failId: 'dice_attic_fail', hpPenalty: -20 }
         }]
     },
-    'dice_attic_success': { id: 'dice_attic_success', text: "📦 성공! 조심스럽게 올라가서 먼지 쌓인 통조림 두 통을 찾아냈습니다.", effect: { target: 'ALL', loot: ['통조림', '통조림'], sanity: 5, skillsAdd: [S.GAMER_REFLEX] } },
+    'dice_attic_success': { id: 'dice_attic_success', text: "📦 성공! 조심스럽게 올라가서 먼지 쌓인 통조림 두 통을 찾아냈습니다.", effect: { target: 'RANDOM_1', loot: ['통조림', '통조림'], sanity: 5, skillsAdd: [S.GAMER_REFLEX] } },
     'dice_attic_fail': { id: 'dice_attic_fail', text: "💥 실패! 계단이 무너지며 바닥으로 추락했습니다. 비명을 지르며 좀비들에게 위치를 알리고 말았습니다.", effect: { target: 'RANDOM_1', hp: -25, fatigue: 15, statChanges: { agi: -1 }, skillsRemove: ["반사 신경"] } },
 
     'dice_heavy_debris': {
@@ -1058,7 +1057,7 @@ export const ONE_OFF_NODES: Record<string, StoryNode> = {
             dice: { threshold: 85, stat: 'str', successId: 'dice_debris_success', failId: 'dice_debris_fail', hpPenalty: -10 }
         }]
     },
-    'dice_debris_success': { id: 'dice_debris_success', text: "💪 성공! 전신 근육을 사용해 차를 밀어내고 길을 뚫었습니다. 이동 시간을 단축했습니다.", effect: { target: 'ALL', fatigue: -15, statChanges: { str: 1 }, skillsAdd: [S.DRIVING] } },
+    'dice_debris_success': { id: 'dice_debris_success', text: "💪 성공! 전신 근육을 사용해 차를 밀어내고 길을 뚫었습니다. 이동 시간을 단축했습니다.", effect: { target: 'RANDOM_1', fatigue: -15, statChanges: { str: 1 }, skillsAdd: [S.DRIVING] } },
     'dice_debris_fail': { id: 'dice_debris_fail', text: "🥵 실패! 차는 꿈쩍도 하지 않고 허리 근육만 놀랐습니다.", effect: { target: 'RANDOM_1', hp: -10, fatigue: 30, statChanges: { con: -1 }, skillsRemove: ["숙련된 운전"] } },
 
     'dice_circuit_board': {
@@ -1069,7 +1068,7 @@ export const ONE_OFF_NODES: Record<string, StoryNode> = {
             dice: { threshold: 80, stat: 'int', successId: 'dice_circuit_success', failId: 'dice_circuit_fail', sanityPenalty: -5 }
         }]
     },
-    'dice_circuit_success': { id: 'dice_circuit_success', text: "💡 성공! 단말기가 켜지며 숨겨진 비상 통로가 열렸습니다. 안전 가옥에 진입합니다.", effect: { target: 'ALL', sanity: 15, fatigue: -10, skillsAdd: [S.ELECTRONICS] } },
+    'dice_circuit_success': { id: 'dice_circuit_success', text: "💡 성공! 단말기가 켜지며 숨겨진 비상 통로가 열렸습니다. 안전 가옥에 진입합니다.", effect: { target: 'RANDOM_1', sanity: 15, fatigue: -10, skillsAdd: [S.ELECTRONICS] } },
     'dice_circuit_fail': { id: 'dice_circuit_fail', text: "⚡ 실패! 전기 충격을 입고 단말기가 완전히 타버렸습니다.", effect: { target: 'RANDOM_1', hp: -15, fatigue: 10, skillsRemove: ["전자 공학"] } },
 
     'dice_emotional_plea': {
@@ -1091,7 +1090,7 @@ export const ONE_OFF_NODES: Record<string, StoryNode> = {
             dice: { threshold: 85, stat: 'agi', successId: 'dice_leap_success', failId: 'dice_leap_fail', hpPenalty: -30 }
         }]
     },
-    'dice_leap_success': { id: 'dice_leap_success', text: "🏃 성공! 완벽한 도약으로 강을 건넜습니다. 오염 지역을 빠르게 벗어납니다.", effect: { target: 'ALL', fatigue: 5, statChanges: { agi: 1 }, skillsAdd: [S.FISHING] } },
+    'dice_leap_success': { id: 'dice_leap_success', text: "🏃 성공! 완벽한 도약으로 강을 건넜습니다. 오염 지역을 빠르게 벗어납니다.", effect: { target: 'RANDOM_1', fatigue: 5, statChanges: { agi: 1 }, skillsAdd: [S.FISHING] } },
     'dice_leap_fail': { id: 'dice_leap_fail', text: "💧 실패! 강물에 빠져 허우적댔습니다. 옷은 젖었고 감염의 위협이 느껴집니다.", effect: { target: 'RANDOM_HALF', hp: -10, infection: 25, fatigue: 30, skillsRemove: ["그물 낚시"] } },
 
     'dice_iron_door': {
@@ -1113,8 +1112,8 @@ export const ONE_OFF_NODES: Record<string, StoryNode> = {
             dice: { threshold: 90, stat: 'int', successId: 'dice_chem_success', failId: 'dice_chem_fail', sanityPenalty: -5 }
         }]
     },
-    'dice_chem_success': { id: 'dice_chem_success', text: "🧪 성공! 강력한 살균 소독제를 만들어냈습니다. 감염 예방에 큰 도움이 될 것입니다.", effect: { target: 'ALL', infection: -30, skillsAdd: [S.PHARMACOLOGY] } },
-    'dice_chem_fail': { id: 'dice_chem_fail', text: "🤢 실패! 유독 가스가 발생해 모두가 기침을 하며 도망쳐야 했습니다.", effect: { target: 'ALL', hp: -5, fatigue: 20, skillsRemove: ["약물 조제"] } },
+    'dice_chem_success': { id: 'dice_chem_success', text: "🧪 성공! 강력한 살균 소독제를 만들어냈습니다. 감염 예방에 큰 도움이 될 것입니다.", effect: { target: 'RANDOM_1', infection: -30, skillsAdd: [S.PHARMACOLOGY] } },
+    'dice_chem_fail': { id: 'dice_chem_fail', text: "🤢 실패! 유독 가스가 발생해 모두가 기침을 하며 도망쳐야 했습니다.", effect: { target: 'RANDOM_1', hp: -5, fatigue: 20, skillsRemove: ["약물 조제"] } },
 
     'dice_street_performance': {
         id: 'dice_street_performance',
@@ -1124,7 +1123,7 @@ export const ONE_OFF_NODES: Record<string, StoryNode> = {
             dice: { threshold: 85, stat: 'cha', successId: 'dice_perf_success', failId: 'dice_perf_fail', hpPenalty: -30 }
         }]
     },
-    'dice_perf_success': { id: 'dice_perf_success', text: "✨ 성공! 화려한 연주와 퍼포먼스에 좀비들이 넋을 잃었습니다. 동료들은 피해 없이 광장을 지났습니다.", effect: { target: 'ALL', sanity: 15, skillsAdd: [S.PERFORMANCE] } },
+    'dice_perf_success': { id: 'dice_perf_success', text: "✨ 성공! 화려한 연주와 퍼포먼스에 좀비들이 넋을 잃었습니다. 동료들은 피해 없이 광장을 지났습니다.", effect: { target: 'RANDOM_1', sanity: 15, skillsAdd: [S.PERFORMANCE] } },
     'dice_perf_fail': { id: 'dice_perf_fail', text: "📢 실패! 소리만 지르다 좀비들에게 포위당했습니다. 난전이 벌어집니다.", effect: { target: 'RANDOM_HALF', hp: -25, kill: 3, fatigue: 20, skillsRemove: ["매력 발산"] } },
 
     'dice_slippery_ledge': {
@@ -1146,8 +1145,8 @@ export const ONE_OFF_NODES: Record<string, StoryNode> = {
             dice: { threshold: 90, stat: 'str', successId: 'dice_boulder_success', failId: 'dice_boulder_fail', hpPenalty: -50 }
         }]
     },
-    'dice_boulder_success': { id: 'dice_boulder_success', text: "💪 성공! 초인적인 힘으로 바위의 궤적을 바꿨습니다. 모두가 안전합니다.", effect: { target: 'ALL', sanity: 10, fatigue: 40, statChanges: { str: 2 }, skillsAdd: [S.SURVIVAL_INSTINCT] } },
-    'dice_boulder_fail': { id: 'dice_boulder_fail', text: "🚑 실패! 바위에 휩쓸려 큰 부상을 입었습니다. 뼈가 으스러지는 소리가 들립니다.", effect: { target: 'RANDOM_HALF', hp: -50, fatigue: 30, statChanges: { con: -2 }, skillsRemove: ["생존 본능"] } },
+    'dice_boulder_success': { id: 'dice_boulder_success', text: "💪 성공! 초인적인 힘으로 바위의 궤적을 바꿨습니다. 모두가 안전합니다.", effect: { target: 'RANDOM_1', sanity: 10, fatigue: 40, statChanges: { str: 2 }, skillsAdd: [S.SURVIVAL_INSTINCT] } },
+    'dice_boulder_fail': { id: 'dice_boulder_fail', text: "🚑 실패! 바위에 휩쓸려 큰 부상을 입었습니다. 뼈가 으스러지는 소리가 들립니다.", effect: { target: 'RANDOM_1', hp: -50, fatigue: 30, statChanges: { con: -2 }, skillsRemove: ["생존 본능"] } },
 
     'dice_ancient_script': {
         id: 'dice_ancient_script',
@@ -1157,8 +1156,8 @@ export const ONE_OFF_NODES: Record<string, StoryNode> = {
             dice: { threshold: 95, stat: 'int', successId: 'dice_script_success', failId: 'dice_script_fail', sanityPenalty: -20 }
         }]
     },
-    'dice_script_success': { id: 'dice_script_success', text: "📖 성공! 면역 체계를 강화하는 고대 지식을 습득했습니다. 이제 좀비가 두렵지 않습니다.", effect: { target: 'ALL', infection: -50, sanity: 30, skillsAdd: [S.DIVINATION] } },
-    'dice_script_fail': { id: 'dice_script_fail', text: "🌀 실패! 기괴한 문양을 읽다 심한 현기증과 정신적 혼란을 겪었습니다.", effect: { target: 'ALL', sanity: -30, mentalState: 'Delusion', skillsRemove: ["예지력"] } },
+    'dice_script_success': { id: 'dice_script_success', text: "📖 성공! 면역 체계를 강화하는 고대 지식을 습득했습니다. 이제 좀비가 두렵지 않습니다.", effect: { target: 'RANDOM_1', infection: -50, sanity: 30, skillsAdd: [S.DIVINATION] } },
+    'dice_script_fail': { id: 'dice_script_fail', text: "🌀 실패! 기괴한 문양을 읽다 심한 현기증과 정신적 혼란을 겪었습니다.", effect: { target: 'RANDOM_1', sanity: -30, mentalState: 'Delusion', skillsRemove: ["예지력"] } },
 
     'dice_group_cheer': {
         id: 'dice_group_cheer',
@@ -1168,6 +1167,6 @@ export const ONE_OFF_NODES: Record<string, StoryNode> = {
             dice: { threshold: 85, stat: 'cha', successId: 'dice_cheer_success', failId: 'dice_cheer_fail', sanityPenalty: -30 }
         }]
     },
-    'dice_cheer_success': { id: 'dice_cheer_success', text: "🔥 성공! 뜨거운 연설에 모두가 눈물을 흘리며 일어섰습니다. 기적적인 회복입니다.", effect: { target: 'ALL', hp: 20, sanity: 40, fatigue: -50, skillsAdd: [S.TACTICAL_COMMAND] } },
-    'dice_cheer_fail': { id: 'dice_cheer_fail', text: "🔇 실패... 공허한 외침은 비웃음만 샀습니다. 그룹의 결속력이 무너집니다.", effect: { target: 'ALL', sanity: -20, affinity: -10, skillsRemove: ["전술 지휘"] } }
+    'dice_cheer_success': { id: 'dice_cheer_success', text: "🔥 성공! 뜨거운 연설에 모두가 눈물을 흘리며 일어섰습니다. 기적적인 회복입니다.", effect: { target: 'RANDOM_1', hp: 20, sanity: 40, fatigue: -50, skillsAdd: [S.TACTICAL_COMMAND] } },
+    'dice_cheer_fail': { id: 'dice_cheer_fail', text: "🔇 실패... 공허한 외침은 비웃음만 샀습니다. 그룹의 결속력이 무너집니다.", effect: { target: 'RANDOM_1', sanity: -20, affinity: -10, skillsRemove: ["전술 지휘"] } }
 };

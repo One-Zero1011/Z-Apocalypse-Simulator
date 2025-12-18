@@ -31,7 +31,7 @@ export const AMUSEMENT_NODES: Record<string, StoryNode> = {
         id: 'amusement_2_art',
         text: "🎨 예술적 통찰로 놀이공원의 복잡한 조형물들을 이용해 좀비들의 시야를 완전히 차단하는 경로를 찾아냈습니다.",
         next: [{ id: 'amusement_3_rollercoaster', weight: 1.0 }],
-        effect: { target: 'ALL', sanity: 15, skillsAdd: [S.ART], statChanges: { cha: 1 } }
+        effect: { target: 'RANDOM_1', sanity: 15, skillsAdd: [S.ART], statChanges: { cha: 1 } }
     },
 
     'amusement_2_haunted': {
@@ -103,13 +103,13 @@ export const AMUSEMENT_NODES: Record<string, StoryNode> = {
         id: 'amusement_6_bomber',
         text: "💣 폭발 전문가 스킬로 매점의 가스통을 개조해 화려한 폭죽쇼를 만들었습니다. 광대들이 흔적도 없이 사라졌습니다.",
         next: [{ id: 'amusement_7_mascot_boss', weight: 1.0 }],
-        effect: { target: 'ALL', kill: 10, sanity: 15, skillsAdd: [S.BOMBER], statChanges: { int: 1 } }
+        effect: { target: 'RANDOM_1', kill: 10, sanity: 15, skillsAdd: [S.BOMBER], statChanges: { int: 1 } }
     },
     'amusement_6_trap': {
         id: 'amusement_6_trap',
         text: "🪤 함정 설치 스킬로 회전목마의 말들을 이용해 광대들을 묶어버렸습니다. 탄약 하나 쓰지 않고 해결했습니다.",
         next: [{ id: 'amusement_7_mascot_boss', weight: 1.0 }],
-        effect: { target: 'ALL', kill: 5, sanity: 10, skillsAdd: [S.TRAP], statChanges: { int: 1 } }
+        effect: { target: 'RANDOM_1', kill: 5, sanity: 10, skillsAdd: [S.TRAP], statChanges: { int: 1 } }
     },
 
     'amusement_6_fight': {

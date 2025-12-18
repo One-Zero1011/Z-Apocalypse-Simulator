@@ -30,7 +30,7 @@ export const WINTER_NODES: Record<string, StoryNode> = {
         id: 'winter_2_hunting',
         text: "🏹 야생 추적 기술을 통해 눈보라 속에서도 짐승의 대피 경로를 찾아냈습니다. 안전한 산장으로 직행하며 식량까지 확보합니다.",
         next: [{ id: 'winter_5_thaw', weight: 1.0 }],
-        effect: { target: 'ALL', loot: ['고기'], sanity: 15, fatigue: -10, skillsAdd: [S.HUNTING] }
+        effect: { target: 'RANDOM_1', loot: ['고기'], sanity: 15, fatigue: -10, skillsAdd: [S.HUNTING] }
     },
     
     'winter_2_lake': {
@@ -85,7 +85,7 @@ export const WINTER_NODES: Record<string, StoryNode> = {
         id: 'winter_3_bear_fight',
         text: "⚔️ 곰이 깨어났습니다! 좁은 동굴 안에서 사생결단을 냅니다. 치열한 사투 끝에 고기와 가죽을 얻었습니다.",
         next: [{ id: 'winter_5_thaw', weight: 1.0 }],
-        effect: { target: 'RANDOM_HALF', hp: -20, loot: ['고기', '고기'], statChanges: { str: 1 }, skillsAdd: [S.SURVIVAL] }
+        effect: { target: 'RANDOM_1', hp: -20, loot: ['고기', '고기'], statChanges: { str: 1 }, skillsAdd: [S.SURVIVAL] }
     },
     'winter_3_bear_sneak': {
         id: 'winter_3_bear_sneak',
@@ -113,13 +113,13 @@ export const WINTER_NODES: Record<string, StoryNode> = {
         id: 'winter_4_hunt_fail',
         text: "🩸 짐승들의 이빨에 물리고 뜯겼습니다. 우리는 식량 일부를 미끼로 던져주며 간신히 도망쳤습니다.",
         next: [{ id: 'winter_5_thaw', weight: 1.0 }],
-        effect: { target: 'RANDOM_HALF', hp: -20, sanity: -10, skillsRemove: ["야생 추적"] }
+        effect: { target: 'RANDOM_1', hp: -20, sanity: -10, skillsRemove: ["야생 추적"] }
     },
     'winter_4_hunt_success': {
         id: 'winter_4_hunt_success',
         text: "🍖 위기는 기회가 되었습니다. 습격해온 짐승들을 사냥하여 신선한 고기를 얻었습니다.",
         next: [{ id: 'winter_5_thaw', weight: 1.0 }],
-        effect: { target: 'ALL', loot: ['고기', '고기'], skillsAdd: [S.HUNTING] }
+        effect: { target: 'RANDOM_1', loot: ['고기', '고기'], skillsAdd: [S.HUNTING] }
     },
     'winter_5_thaw': {
         id: 'winter_5_thaw',
@@ -133,7 +133,7 @@ export const WINTER_NODES: Record<string, StoryNode> = {
     'winter_6_forage': {
         id: 'winter_6_forage',
         text: "🌿 눈 녹은 습지에서 기적적으로 비타민이 풍부한 약초들을 찾아냈습니다.",
-        effect: { target: 'ALL', loot: ['비타민', '비타민'], sanity: 10, skillsAdd: [S.FORAGING] }
+        effect: { target: 'RANDOM_1', loot: ['비타민', '비타민'], sanity: 10, skillsAdd: [S.FORAGING] }
     },
     'winter_6_end': {
       id: 'winter_6_end',

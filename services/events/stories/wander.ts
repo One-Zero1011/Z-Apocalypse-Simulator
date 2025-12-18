@@ -22,7 +22,7 @@ export const WANDER_NODES: Record<string, StoryNode> = {
     'wander_1_charisma': {
         id: 'wander_1_charisma',
         text: "🗣️ 카리스마에 압도된 상대 그룹은 우리를 진정한 생존자로 인정하고, 자신들의 캠프에서 가장 좋은 물자를 선물했습니다.",
-        effect: { target: 'ALL', loot: ['권총', '항생제', '통조림'], sanity: 20, skillsAdd: [S.LEADERSHIP], statChanges: { cha: 1 } }
+        effect: { target: 'RANDOM_1', loot: ['권총', '항생제', '통조림'], sanity: 20, skillsAdd: [S.LEADERSHIP], statChanges: { cha: 1 } }
     },
     
     'wander_1_trade': {
@@ -44,12 +44,12 @@ export const WANDER_NODES: Record<string, StoryNode> = {
     'wander_2_trade_expert': {
         id: 'wander_2_trade_expert',
         text: "🗣️ 화려한 언변과 협상 기술로 상대를 구워삶았습니다. 쓸모없는 잡동사니를 주고 귀한 항생제를 잔뜩 얻어냅니다.",
-        effect: { target: 'ALL', loot: ['항생제', '항생제', '고기'], sanity: 5, skillsAdd: [S.NEGOTIATION], statChanges: { int: 1 } }
+        effect: { target: 'RANDOM_1', loot: ['항생제', '항생제', '고기'], sanity: 5, skillsAdd: [S.NEGOTIATION], statChanges: { int: 1 } }
     },
     'wander_2_trade_expert_acc': { 
         id: 'wander_2_trade_expert_acc',
         text: "🧮 물자의 가치를 정확히 계산하여 우리에게 유리한 조건으로 거래를 성사시켰습니다.",
-        effect: { target: 'ALL', loot: ['항생제', '고기', '붕대'], sanity: 5, skillsAdd: [S.ACCOUNTING], statChanges: { int: 1 } }
+        effect: { target: 'RANDOM_1', loot: ['항생제', '고기', '붕대'], sanity: 5, skillsAdd: [S.ACCOUNTING], statChanges: { int: 1 } }
     },
     'wander_2_trade_good': {
         id: 'wander_2_trade_good',
@@ -59,7 +59,7 @@ export const WANDER_NODES: Record<string, StoryNode> = {
     'wander_2_trade_bad': {
         id: 'wander_2_trade_bad',
         text: "💢 그들은 터무니없는 대가를 요구하다가 우리가 거절하자 위협을 가했습니다. 빈손으로 물러납니다.",
-        effect: { target: 'ALL', sanity: -5, skillsRemove: ["협상 기술"] }
+        effect: { target: 'RANDOM_1', sanity: -5, skillsRemove: ["협상 기술"] }
     },
 
     'wander_1_approach': {
@@ -99,7 +99,7 @@ export const WANDER_NODES: Record<string, StoryNode> = {
     'wander_3_success': {
         id: 'wander_3_success',
         text: "🎒 판정 성공! 그들의 식량과 약품을 훔쳐 달아났습니다. 양심의 가책이 느껴지지만 배는 부릅니다.",
-        effect: { target: 'ALL', sanity: -5, loot: ['통조림', '항생제'], skillsAdd: [S.STEALTH], statChanges: { agi: 1 } }
+        effect: { target: 'RANDOM_1', sanity: -5, loot: ['통조림', '항생제'], skillsAdd: [S.STEALTH], statChanges: { agi: 1 } }
     },
     'wander_3_caught': {
         id: 'wander_3_caught',
