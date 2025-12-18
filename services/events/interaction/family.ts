@@ -27,28 +27,28 @@ export const SIBLING_EVENTS: InteractionFunction[] = [
 
 // 부모 -> 자식 (Parent Actor -> Child Target)
 export const PARENT_TO_CHILD_EVENTS: InteractionFunction[] = [
-    (a: string, b: string) => ({ text: `${a}은(는) ${b}의 신발 끈을 고쳐 매주며 "조심해야 한다"고 당부했습니다.`, affinity: 10, targetSanity: 2 }),
-    (a: string, b: string) => ({ text: `${a}은(는) 끔찍한 광경으로부터 ${b}의 눈을 가려주었습니다.`, affinity: 10, targetSanity: 5 }),
-    (a: string, b: string) => ({ text: `${a}은(는) 자신의 몫을 덜어 ${b}에게 주며 배가 부르다고 거짓말을 했습니다.`, affinity: 15, targetHp: 5, actorHp: -2 }), // 희생
-    (a: string, b: string) => ({ text: `${a}은(는) 악몽을 꾸는 ${b}를 품에 안고 자장가를 불러주었습니다.`, affinity: 10, targetSanity: 10 }),
-    (a: string, b: string) => ({ text: `${a}은(는) ${b}에게 세상이 망하기 전의 아름다웠던 이야기를 들려주었습니다.`, affinity: 5, targetSanity: 5 }),
-    (a: string, b: string) => ({ text: `${a}은(는) ${b}가 훌쩍 자란 것을 보고 대견함과 안쓰러움을 동시에 느꼈습니다.`, affinity: 5 }),
-    (a: string, b: string) => ({ text: `${a}은(는) ${b}에게 생존을 위한 사냥법을 엄격하게 가르쳤습니다.`, affinity: 5, targetFatigue: 5 }),
-    (a: string, b: string) => ({ text: `${a}은(는) ${b}를 업고 걷느라 허리가 아프지만 내색하지 않았습니다.`, affinity: 15, actorFatigue: 10, targetFatigue: -5 }),
-    (a: string, b: string) => ({ text: `${a}은(는) ${b}의 머리를 빗겨주며 "사랑한다, 우리 아가"라고 속삭였습니다.`, affinity: 10, targetSanity: 10 })
+    (a: string, b: string) => ({ text: `${b}은(는) ${a}의 신발 끈을 고쳐 매주며 "조심해야 한다"고 당부했습니다.`, affinity: 10, targetSanity: 2 }),
+    (a: string, b: string) => ({ text: `${b}은(는) 끔찍한 광경으로부터 ${a}의 눈을 가려주었습니다.`, affinity: 10, targetSanity: 5 }),
+    (a: string, b: string) => ({ text: `${b}은(는) 자신의 몫을 덜어 ${a}에게 주며 배가 부르다고 거짓말을 했습니다.`, affinity: 15, targetHp: 5, actorHp: -2 }), // 희생
+    (a: string, b: string) => ({ text: `${b}은(는) 악몽을 꾸는 ${a}를 품에 안고 자장가를 불러주었습니다.`, affinity: 10, targetSanity: 10 }),
+    (a: string, b: string) => ({ text: `${b}은(는) ${a}에게 세상이 망하기 전의 아름다웠던 이야기를 들려주었습니다.`, affinity: 5, targetSanity: 5 }),
+    (a: string, b: string) => ({ text: `${b}은(는) ${a}가 훌쩍 자란 것을 보고 대견함과 안쓰러움을 동시에 느꼈습니다.`, affinity: 5 }),
+    (a: string, b: string) => ({ text: `${b}은(는) ${a}에게 생존을 위한 사냥법을 엄격하게 가르쳤습니다.`, affinity: 5, targetFatigue: 5 }),
+    (a: string, b: string) => ({ text: `${b}은(는) ${a}를 업고 걷느라 허리가 아프지만 내색하지 않았습니다.`, affinity: 15, actorFatigue: 10, targetFatigue: -5 }),
+    (a: string, b: string) => ({ text: `${b}은(는) ${a}의 머리를 빗겨주며 "사랑한다, 우리 아가"라고 속삭였습니다.`, affinity: 10, targetSanity: 10 })
 ];
 
 // 자식 -> 부모 (Child Actor -> Parent Target)
 export const CHILD_TO_PARENT_EVENTS: InteractionFunction[] = [
-    (a: string, b: string) => ({ text: `${a}은(는) 무서운 꿈을 꿨다며 ${b}의 품에 파고들었습니다.`, affinity: 10, actorSanity: 5 }),
-    (a: string, b: string) => ({ text: `${a}은(는) 고사리 같은 손으로 ${b}의 어깨를 주물러 주었습니다.`, affinity: 10, targetFatigue: -5 }),
-    (a: string, b: string) => ({ text: `${a}은(는) ${b}에게 "옛날 세상은 어땠어?"라고 호기심 어린 눈으로 물었습니다.`, affinity: 5 }),
-    (a: string, b: string) => ({ text: `${a}은(는) 예쁜 조약돌을 주워 ${b}에게 선물했습니다.`, affinity: 5, targetSanity: 5 }),
-    (a: string, b: string) => ({ text: `${a}은(는) ${b}를 돕겠다며 짐을 들려다 비틀거렸습니다.`, affinity: 5, actorFatigue: 5 }),
-    (a: string, b: string) => ({ text: `${a}은(는) ${b}에게 "나도 커서 엄마/아빠처럼 강해질 거야"라고 말했습니다.`, affinity: 10, targetSanity: 5 }),
-    (a: string, b: string) => ({ text: `${a}은(는) 맛있는 간식을 발견하고 ${b}의 입에 넣어주었습니다.`, affinity: 10, targetHp: 2 }),
-    (a: string, b: string) => ({ text: `${a}은(는) ${b}의 손을 꼭 잡고 "우린 절대 안 헤어질 거지?"라고 확인했습니다.`, affinity: 5, actorSanity: 2 }),
-    (a: string, b: string) => ({ text: `${a}은(는) ${b}가 지쳐 보이자 조용히 옆에 앉아 곁을 지켰습니다.`, affinity: 10, targetSanity: 5 })
+    (a: string, b: string) => ({ text: `${b}은(는) 무서운 꿈을 꿨다며 ${a}의 품에 파고들었습니다.`, affinity: 10, actorSanity: 5 }),
+    (a: string, b: string) => ({ text: `${b}은(는) 고사리 같은 손으로 ${a}의 어깨를 주물러 주었습니다.`, affinity: 10, targetFatigue: -5 }),
+    (a: string, b: string) => ({ text: `${b}은(는) ${a}에게 "옛날 세상은 어땠어?"라고 호기심 어린 눈으로 물었습니다.`, affinity: 5 }),
+    (a: string, b: string) => ({ text: `${b}은(는) 예쁜 조약돌을 주워 ${a}에게 선물했습니다.`, affinity: 5, targetSanity: 5 }),
+    (a: string, b: string) => ({ text: `${b}은(는) ${a}를 돕겠다며 짐을 들려다 비틀거렸습니다.`, affinity: 5, actorFatigue: 5 }),
+    (a: string, b: string) => ({ text: `${b}은(는) ${a}에게 "나도 커서 엄마/아빠처럼 강해질 거야"라고 말했습니다.`, affinity: 10, targetSanity: 5 }),
+    (a: string, b: string) => ({ text: `${b}은(는) 맛있는 간식을 발견하고 ${a}의 입에 넣어주었습니다.`, affinity: 10, targetHp: 2 }),
+    (a: string, b: string) => ({ text: `${b}은(는) ${a}의 손을 꼭 잡고 "우린 절대 안 헤어질 거지?"라고 확인했습니다.`, affinity: 5, actorSanity: 2 }),
+    (a: string, b: string) => ({ text: `${b}은(는) ${a}가 지쳐 보이자 조용히 옆에 앉아 곁을 지켰습니다.`, affinity: 10, targetSanity: 5 })
 ];
 
 // 보호자 -> 피보호자 (Guardian Actor -> Ward Target)

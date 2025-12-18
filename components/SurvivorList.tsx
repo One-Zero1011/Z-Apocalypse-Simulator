@@ -9,11 +9,10 @@ interface Props {
     onEdit?: (character: Character) => void; 
     onPlan?: (character: Character) => void;
     onShowDetail?: (character: Character) => void; 
-    onShowGrief?: (character: Character) => void;
     onShowSummary?: (character: Character) => void; 
 }
 
-const SurvivorList: React.FC<Props> = ({ characters, onDelete, onEdit, onPlan, onShowDetail, onShowGrief, onShowSummary }) => {
+const SurvivorList: React.FC<Props> = ({ characters, onDelete, onEdit, onPlan, onShowDetail, onShowSummary }) => {
     return (
         <div>
             <h2 className="text-2xl font-bold mb-4 text-slate-800 dark:text-slate-200 flex items-center gap-2">
@@ -29,7 +28,6 @@ const SurvivorList: React.FC<Props> = ({ characters, onDelete, onEdit, onPlan, o
                         onEdit={onEdit}
                         onPlan={onPlan}
                         onShowDetail={onShowDetail}
-                        onShowGrief={onShowGrief}
                         onShowSummary={onShowSummary}
                     />
                 ))}

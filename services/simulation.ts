@@ -114,7 +114,7 @@ const processStatusChanges = (characters: Character[], updates: CharacterUpdate[
         // 1. Mental State System Logic
         if (settings.useMentalStates) {
             // 정신력 30 이하일 때 확률적으로 정신 질환 발생
-            if (c.mentalState === 'Normal' && c.sanity <= 30 && Math.random() < 0.3) {
+            if (c.mentalState === 'Normal' && c.sanity <= 50 && Math.random() < 0.4) {
                 const possibleStates: MentalState[] = ['Trauma', 'Despair', 'Delusion', 'Anxiety', 'Madness'];
                 const newState = possibleStates[Math.floor(Math.random() * possibleStates.length)];
                 u.mentalState = newState;
@@ -140,6 +140,7 @@ const processStatusChanges = (characters: Character[], updates: CharacterUpdate[
             }
         }
 
+        // Infection Logic
         if (c.status === 'Infected' || (c.infection > 0 && c.status === 'Alive')) {
             const currentInfection = c.infection + (u.infectionChange || 0);
             if (currentInfection >= MAX_INFECTION) {
@@ -166,7 +167,7 @@ const processStatusChanges = (characters: Character[], updates: CharacterUpdate[
                     });
                 } else {
                     u.status = 'Dead';
-                    u.hpChange = -999;
+                    u.hpChange = -999; // Marker for vote death
                     events.push(`💀 [전환 투표] ${c.name}이(가) 좀비로 변하려 하자, 동료들이 안전을 위해 그를 안식에 들게 했습니다.`);
                     voters.forEach(v => {
                         const vu = getCharacterUpdate(updates, v.id);
@@ -176,20 +177,33 @@ const processStatusChanges = (characters: Character[], updates: CharacterUpdate[
             }
         }
 
+        // Missing Logic
         if (c.status === 'Missing') {
             const rand = Math.random();
             if (rand < 0.05) { u.status = 'Alive'; events.push(`✨ [귀환] 실종되었던 ${c.name}이(가) 기적적으로 돌아왔습니다!`); }
             else if (rand < 0.08) { u.status = 'Dead'; events.push(`💀 [사망 확인] 실종된 ${c.name}의 유품이 발견되었습니다.`); }
         }
 
-        if (c.status !== 'Dead' && c.status !== 'Missing' && c.hp + (u.hpChange || 0) <= 0) {
+        // General Death Logic (HP Depletion or Instant Death Event)
+        // FIX: Check for explicit status change to 'Dead' in current update
+        const currentHp = c.hp + (u.hpChange || 0);
+        const isDeadAlready = c.status === 'Dead' || c.status === 'Missing';
+        const isInstantDeath = u.status === 'Dead'; // Event set status to Dead explicitly
+        const isVoteDeath = u.hpChange === -999; // Infection vote marker (handled above)
+        const isTurningZombie = u.status === 'Zombie'; // Turning into zombie (handled above)
+
+        if (!isDeadAlready && (currentHp <= 0 || isInstantDeath) && !isTurningZombie && !isVoteDeath) {
             u.status = 'Dead';
             events.push(`💀 [사망] ${c.name}이(가) 고통 끝에 숨을 거두었습니다.`);
+            
             characters.filter(v => v.id !== c.id && v.status !== 'Dead' && v.status !== 'Missing').forEach(v => {
                 const vu = getCharacterUpdate(updates, v.id);
-                const affinity = v.relationships[c.id] || 0;
-                if (affinity > 50) vu.griefLogAdd = `나의 소중한 친구 ${c.name}을(를) 잃었습니다. 가슴 한구석이 텅 빈 것 같습니다.`;
-                else vu.griefLogAdd = `동료였던 ${c.name}의 죽음을 목격했습니다. 죽음은 언제나 우리 곁에 있습니다.`;
+                // Prevent overwriting existing grief logs (e.g. if specific event already added one)
+                if (!vu.griefLogAdd) {
+                    const affinity = v.relationships[c.id] || 0;
+                    if (affinity > 50) vu.griefLogAdd = `나의 소중한 친구 ${c.name}을(를) 잃었습니다. 가슴 한구석이 텅 빈 것 같습니다.`;
+                    else vu.griefLogAdd = `동료였던 ${c.name}의 죽음을 목격했습니다. 죽음은 언제나 우리 곁에 있습니다.`;
+                }
             });
         }
     });
@@ -271,6 +285,9 @@ const processInteractionPhase = (characters: Character[], settings: GameSettings
 const processRelationshipEvolution = (characters: Character[], updates: CharacterUpdate[], events: string[], settings: GameSettings): BabyEventData | null => {
     let newBaby: BabyEventData | null = null;
     const living = characters.filter(c => c.status !== 'Dead' && c.status !== 'Missing' && c.status !== 'Zombie');
+    
+    // FIX: 오늘 새롭게 맺어진 커플을 추적하는 Set (동일 틱 내 중복 고백 방지)
+    const newlyCoupledIds = new Set<string>();
 
     const isStudent = (job: string) => ['초등학생', '중학생', '고등학생', '아기'].includes(job);
 
@@ -302,7 +319,8 @@ const processRelationshipEvolution = (characters: Character[], updates: Characte
                 if (settings.pureLoveMode) {
                     const c1HasLover = Object.values(c1.relationshipStatuses).some(s => s === 'Lover' || s === 'Spouse');
                     const c2HasLover = Object.values(c2.relationshipStatuses).some(s => s === 'Lover' || s === 'Spouse');
-                    if (c1HasLover || c2HasLover) return;
+                    // FIX: 기존 연인 상태 + 오늘 새롭게 맺어진 상태 체크
+                    if (c1HasLover || c2HasLover || newlyCoupledIds.has(c1.id) || newlyCoupledIds.has(c2.id)) return;
                 }
 
                 const res = REUNION_EVENTS[Math.floor(Math.random() * REUNION_EVENTS.length)](c1.name, c2.name) as any;
@@ -312,6 +330,10 @@ const processRelationshipEvolution = (characters: Character[], updates: Characte
                 if (res.actorSanity) u1.sanityChange = (u1.sanityChange || 0) + res.actorSanity;
                 if (res.targetSanity) u2.sanityChange = (u2.sanityChange || 0) + res.targetSanity;
                 events.push(`💖 [재결합] ${typeof res === 'string' ? res : res.text}`);
+                
+                // FIX: 명부 등록
+                newlyCoupledIds.add(c1.id);
+                newlyCoupledIds.add(c2.id);
             }
             
             // 3. Confession Logic
@@ -336,7 +358,8 @@ const processRelationshipEvolution = (characters: Character[], updates: Characte
                 if (settings.pureLoveMode) {
                     const c1HasLover = Object.values(c1.relationshipStatuses).some(s => s === 'Lover' || s === 'Spouse');
                     const c2HasLover = Object.values(c2.relationshipStatuses).some(s => s === 'Lover' || s === 'Spouse');
-                    if (c1HasLover || c2HasLover) return;
+                    // FIX: 기존 연인 상태 + 오늘 새롭게 맺어진 상태 체크
+                    if (c1HasLover || c2HasLover || newlyCoupledIds.has(c1.id) || newlyCoupledIds.has(c2.id)) return;
                 }
 
                 const res = CONFESSION_EVENTS[Math.floor(Math.random() * CONFESSION_EVENTS.length)](c1.name, c2.name) as any;
@@ -346,6 +369,10 @@ const processRelationshipEvolution = (characters: Character[], updates: Characte
                 if (res.actorSanity) u1.sanityChange = (u1.sanityChange || 0) + res.actorSanity;
                 if (res.targetSanity) u2.sanityChange = (u2.sanityChange || 0) + res.targetSanity;
                 events.push(`💘 [고백] ${typeof res === 'string' ? res : res.text}`);
+                
+                // FIX: 명부 등록
+                newlyCoupledIds.add(c1.id);
+                newlyCoupledIds.add(c2.id);
             }
             
             // 4. Marriage Logic
@@ -491,6 +518,8 @@ export const simulateDay = async (day: number, characters: Character[], currentS
     const finalLiving = characters.filter(c => c.status !== 'Dead' && c.status !== 'Missing').length;
     if (finalLiving === 0 && characters.length > 0) {
         triggeredEnding = { id: 'extinction', title: '인류의 황혼', description: '모든 생존자가 사망했습니다. 고요한 폐허 속에 인류의 흔적만이 바람에 흩날립니다.', icon: '💀', type: 'BAD' };
+    } else if (day >= 365) {
+        triggeredEnding = { id: 'survival_1year', title: '새로운 시작', description: '1년이라는 긴 시간 동안 지옥에서 살아남았습니다. 당신들은 이제 단순한 생존자가 아닌, 새로운 세계의 개척자입니다.', icon: '🌅', type: 'GOOD' };
     } else if (storyNode.id.includes('rescue')) {
         triggeredEnding = { id: 'rescue_success', title: '안전 지대로', description: '극적인 구조 끝에 안전한 곳으로 이송되었습니다. 지옥 같던 날들은 이제 기억 속에만 남을 것입니다.', icon: '🚁', type: 'GOOD' };
     }

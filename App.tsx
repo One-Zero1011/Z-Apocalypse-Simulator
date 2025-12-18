@@ -88,6 +88,7 @@ const App: React.FC = () => {
   const [showRelationshipMap, setShowRelationshipMap] = useState(false);
   const [showSystemMenu, setShowSystemMenu] = useState(false);
   const [showDevMenu, setShowDevMenu] = useState(false);
+  const [showGriefList, setShowGriefList] = useState(false); // Global Grief List State
   const [showTutorial, setShowTutorial] = useState(false); 
   const [confirmState, setConfirmState] = useState<ConfirmState | null>(null);
   const [inventory, setInventory] = useState<string[]>(INITIAL_INVENTORY); 
@@ -106,7 +107,6 @@ const App: React.FC = () => {
   const [editingCharacter, setEditingCharacter] = useState<Character | null>(null);
   const [planningCharacter, setPlanningCharacter] = useState<Character | null>(null);
   const [detailCharacter, setDetailCharacter] = useState<Character | null>(null);
-  const [griefCharacter, setGriefCharacter] = useState<Character | null>(null);
   const [summaryCharacter, setSummaryCharacter] = useState<Character | null>(null);
   const [activeMobileTab, setActiveMobileTab] = useState<MobileTab>('logs');
   const rosterInputRef = useRef<HTMLInputElement>(null);
@@ -183,7 +183,6 @@ const App: React.FC = () => {
       setEditingCharacter(null);
       setPlanningCharacter(null);
       setDetailCharacter(null);
-      setGriefCharacter(null);
       setSummaryCharacter(null);
       setShowSystemMenu(false);
   }, []);
@@ -521,6 +520,10 @@ const App: React.FC = () => {
       
       <div className="flex flex-wrap justify-end gap-2 mb-4">
             {gameSettings.developerMode && <button onClick={() => setShowDevMenu(true)} className="px-3 py-1.5 rounded font-bold text-xs border border-zombie-green text-zombie-green hover:bg-zombie-green hover:text-white transition-colors">디버그</button>}
+            
+            {/* Added Grief/Mental Button */}
+            <button onClick={() => setShowGriefList(true)} disabled={characters.length === 0} className="px-3 py-1.5 rounded font-bold text-xs border border-purple-500 text-purple-600 dark:text-purple-400 hover:bg-purple-500 hover:text-white transition-colors disabled:opacity-30">추모 및 감정</button>
+            
             <button onClick={() => setShowRelationshipMap(true)} disabled={livingSurvivors.length < 2} className="px-3 py-1.5 rounded font-bold text-xs border border-blue-500 text-blue-600 dark:text-blue-400 hover:bg-blue-500 hover:text-white transition-colors disabled:opacity-30">인물 관계도</button>
             <button onClick={() => setShowSystemMenu(true)} className="px-3 py-1.5 rounded font-bold text-xs border border-slate-300 dark:border-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">시스템 설정</button>
       </div>
@@ -540,7 +543,7 @@ const App: React.FC = () => {
              />
              <InventoryPanel inventory={inventory} onSelectItem={setSelectedItem} />
           </div>
-          <div className={`${activeMobileTab === 'survivors' ? 'block' : 'hidden'} md:block`}><SurvivorList characters={characters} onDelete={deleteCharacter} onEdit={setEditingCharacter} onPlan={setPlanningCharacter} onShowDetail={setDetailCharacter} onShowGrief={setGriefCharacter} onShowSummary={setSummaryCharacter} /></div>
+          <div className={`${activeMobileTab === 'survivors' ? 'block' : 'hidden'} md:block`}><SurvivorList characters={characters} onDelete={deleteCharacter} onEdit={setEditingCharacter} onPlan={setPlanningCharacter} onShowDetail={setDetailCharacter} onShowSummary={setSummaryCharacter} /></div>
         </div>
       </main>
 
@@ -567,7 +570,7 @@ const App: React.FC = () => {
       {editingCharacter && <EditCharacterModal character={editingCharacter} allCharacters={characters} onSave={handleSaveEditedCharacter} onClose={() => setEditingCharacter(null)} />}
       {planningCharacter && <PlannedActionModal character={planningCharacter} onSelect={(actionId) => handleSetPlannedAction(planningCharacter.id, actionId)} onClose={() => setPlanningCharacter(null)} />}
       {detailCharacter && <CharacterDetailModal character={detailCharacter} allCharacters={characters} onClose={() => setDetailCharacter(null)} />}
-      {griefCharacter && <GriefModal character={griefCharacter} onClose={() => setGriefCharacter(null)} />}
+      {showGriefList && <GriefModal characters={characters} onClose={() => setShowGriefList(false)} />}
       {summaryCharacter && <CharacterSummaryModal character={summaryCharacter} onClose={() => setSummaryCharacter(null)} />}
       {showSystemMenu && <SystemMenu onClose={() => setShowSystemMenu(false)} onNewGame={handleNewGame} onSaveRoster={handleSaveRoster} onLoadRoster={handleLoadRosterTrigger} onSaveGame={handleSaveGame} onLoadGame={handleLoadGameTrigger} settings={gameSettings} onUpdateSettings={(newSettings) => setGameSettings(prev => ({...prev, ...newSettings}))} onShowTutorial={openTutorial} />}
       {showDevMenu && <DeveloperMenu onClose={() => setShowDevMenu(false)} forcedEvents={forcedEvents} setForcedEvents={setForcedEvents} characters={characters} onUpdateCharacter={handleUpdateCharacter} onAddInventory={(item, count) => setInventory(prev => [...prev, ...Array(count).fill(item)])} availableItems={DEV_ITEM_LIST} />}
