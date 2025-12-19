@@ -23,7 +23,7 @@ const GameHeader: React.FC<Props> = ({
             <div className="flex items-center gap-4">
                 <div>
                     <h1 className="text-4xl font-bold tracking-tighter text-slate-800 dark:text-slate-100">
-                        <span className="text-red-600">Z</span>-SIMULATOR 1.0.2v
+                        <span className="text-red-600">Z</span>-SIMULATOR 1.0.3v
                     </h1>
                     <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">MBTI 성격 기반 생존 시뮬레이터</p>
                 </div>
