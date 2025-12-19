@@ -1,0 +1,170 @@
+# Z-Apocalypse Simulator 기술 명세서 (Full Documentation)
+
+이 문서는 프로젝트의 모든 상태 변수, 데이터 구조, 상수, 그리고 핵심 로직 함수들을 정리한 문서입니다.
+
+---
+
+## 1. 핵심 데이터 타입 (Types & Interfaces)
+`src/types.ts`에 정의된 데이터 모델입니다.
+
+### 1.1 Character (생존자 객체)
+- **id** (string): UUID v4 형식의 고유 식별자.
+- **name** (string): 캐릭터 이름.
+- **gender** ('Male' | 'Female' | 'Non-Binary'): 성별.
+- **mbti** (MBTI): 16가지 MBTI 성격 유형 (예: 'ISTJ', 'ENFP').
+- **job** (string): 직업 (직업별 이벤트 및 초기 스킬에 영향).
+- **stats** (Stats): 5대 능력치 객체 (0~10).
+  - `str` (힘): 전투, 육체노동 판정.
+  - `agi` (민첩): 도주, 회피, 잠입 판정.
+  - `con` (체력): 최대 HP, 질병 저항 판정.
+  - `int` (지능): 기술, 의료, 해킹, 전략 판정.
+  - `cha` (매력): 설득, 리더십, 거래 판정.
+- **skills** (Skill[]): 보유 중인 특수 능력 리스트.
+- **hp** (number): 현재 체력.
+- **maxHp** (number): 최대 체력 (기본 100 + con * 10).
+- **sanity** (number): 현재 정신력.
+- **maxSanity** (number): 최대 정신력 (기본 100 + int * 10).
+- **fatigue** (number): 피로도 (0~100). 80 이상 시 사고 발생.
+- **infection** (number): 감염도 (0~100). 100 도달 시 좀비화 투표.
+- **hunger** (number): 허기. 좀비 상태일 때만 사용 (0이 되면 HP 감소).
+- **status** (Status): 현재 상태 ('Alive' | 'Dead' | 'Zombie' | 'Infected' | 'Missing').
+- **mentalState** (MentalState): 정신 상태 ('Normal' | 'Trauma' | 'Despair' | 'Delusion' | 'Anxiety' | 'Madness').
+- **hasMuzzle** (boolean): 좀비 상태일 때 입마개 착용 여부.
+- **inventory** (string[]): 개인 소지 아이템 (현재 시스템에선 주로 그룹 인벤토리 사용).
+- **relationships** (Record<string, number>): 타인 ID 매핑 호감도 (-100 ~ 100).
+- **relationshipStatuses** (Record<string, RelationshipStatus>): 타인과의 관계 (Lover, Spouse, Enemy 등).
+- **relationshipDurations** (Record<string, number>): 관계가 지속된 일수.
+- **killCount** (number): 좀비 처치 횟수.
+- **plannedAction** (string | null): 다음 턴 예약된 행동 (rest, scavenge 등).
+- **griefLogs** (string[]): 동료 사망 시 기록된 추모 텍스트 리스트.
+
+### 1.2 GameSettings (게임 설정)
+- **friendshipMode** (boolean): 연애 기능 비활성화 여부.
+- **pureLoveMode** (boolean): 바람/환승이별 방지 모드.
+- **restrictStudentDating** (boolean): 학생 간 연애만 허용.
+- **allowSameSexCouples** (boolean): 동성 연애 허용.
+- **allowOppositeSexCouples** (boolean): 이성 연애 허용.
+- **allowIncest** (boolean): 가족 간 연애 허용.
+- **restrictMinorAdultActions** (boolean): 미성년자 음주/흡연 텍스트 검열.
+- **developerMode** (boolean): 치트 메뉴 활성화.
+- **useMentalStates** (boolean): 정신 질환 시스템 활성화.
+- **enableInteractions** (boolean): 상호작용 이벤트 활성화.
+- **enableStoryChoices** (boolean): 스토리 선택지 활성화.
+- **enablePregnancy** (boolean): 임신 시스템 활성화.
+- **pregnancyChance** (number): 일일 임신 확률(%).
+- **showEventEffects** (boolean): 로그에 수치 변동 표시.
+- **enableEndings** (boolean): 엔딩 조건 활성화.
+
+### 1.3 StoryNode (스토리 이벤트 구조)
+- **id** (string): 노드 ID.
+- **text** (string): 표시될 텍스트.
+- **next** (StoryOption[]): 다음 분기점 옵션들.
+- **effect** (StoryEffect): 이벤트 발생 시 적용될 효과 (HP/물자 변동 등).
+
+---
+
+## 2. 전역 상태 및 주요 함수 (App.tsx)
+
+### 2.1 State Variables (React States)
+- `day` (number): 현재 생존 일수.
+- `characters` (Character[]): 전체 캐릭터 리스트.
+- `logs` (DayLog[]): 일차별 게임 로그.
+- `inventory` (string[]): 그룹 공용 인벤토리.
+- `storyNodeId` (string | null): 현재 진행 중인 스토리 노드 ID.
+- `gameSettings` (GameSettings): 현재 게임 설정값.
+- `forcedEvents` (ForcedEvent[]): 개발자 모드로 예약된 강제 이벤트 큐.
+- `storySelection` (Object): 유저가 방금 선택한 스토리 선택지 정보.
+- `pendingBaby` (BabyEventData): 임신 이벤트 발생 시 부모 정보 임시 저장.
+- `activeTarot` (boolean): 타로 카드 이벤트 활성화 여부.
+- `activeEnding` (Ending): 엔딩 발생 시 엔딩 데이터.
+
+### 2.2 Core Functions (핵심 로직)
+- **simulateDay(nextDay, ...)**: `services/simulation.ts`를 호출하여 하루를 진행시키고 결과를 받아와 상태를 업데이트함.
+- **addCharacter(...)**: 새로운 캐릭터 생성 및 초기 관계 설정 후 리스트에 추가.
+- **handleUseItem(targetId)**: 선택된 아이템의 효과(HP회복, 감염치료 등)를 대상에게 적용하고 인벤토리에서 제거.
+- **handleNextDay()**: '다음 날' 버튼 클릭 핸들러. 시뮬레이션 실행 및 결과 반영, 자동 저장 트리거.
+- **resetGame()**: 모든 상태를 초기화하고 로컬 스토리지 삭제.
+- **handleSaveGame() / handleLoadGame()**: 현재 상태를 JSON 파일로 내보내거나 읽어옴.
+
+---
+
+## 3. 시뮬레이션 로직 (services/simulation.ts)
+
+이 파일은 게임의 "엔진" 역할을 합니다. `simulateDay` 함수가 메인 진입점입니다.
+
+### 3.1 simulateDay 함수 흐름
+1. **스토리 진행**: `getNextStoryNode`를 통해 다음 스토리를 결정하고 효과를 적용.
+2. **계획된 행동 처리 (processPlannedActions)**: 유저가 설정한 `plannedAction`(휴식, 수색, 보수 등)을 처리.
+3. **개인 이벤트 처리 (processPersonalEvents)**:
+   - 직업 특수 능력 (생산직 아이템 생성).
+   - 정신 질환 발작 (광기, 망상 등).
+   - 피로도 과다 사고.
+   - MBTI/직업 기반 랜덤 이벤트.
+4. **상호작용 처리 (processInteractionPhase)**: 생존자 2명을 랜덤 매칭하여 관계(Friend, Enemy, Lover 등)에 따른 상호작용 발생.
+5. **상태 변화 처리 (processStatusChanges)**:
+   - 정신력 50 이하 시 정신 질환(MentalState) 획득 판정.
+   - 좀비의 허기 감소 및 아사 판정.
+   - 감염도 100 도달 시 **생존자 투표** 로직 실행 (사살 vs 구속).
+   - HP 0 이하 시 사망 처리 및 **추모 로그(Grief Log)** 생성.
+6. **관계 발전 처리 (processRelationshipEvolution)**:
+   - 호감도/조건에 따라 이별, 재결합, 고백, 결혼, 임신 이벤트 발생.
+7. **유령 이벤트**: 사망자와 친밀했던 생존자에게 유령 목격 이벤트 발생.
+8. **엔딩 체크**: 전멸, 365일 생존, 구조 헬기 등 엔딩 조건 확인.
+
+---
+
+## 4. 이벤트 데이터 및 상수 (Constants & Data)
+
+### 4.1 Constants (`src/constants.ts`)
+- `MAX_HP`, `MAX_SANITY`, `MAX_FATIGUE`, `MAX_INFECTION`, `MAX_HUNGER` (모두 100).
+- `FATIGUE_THRESHOLD` (80): 사고 발생 기준.
+- `JOB_CATEGORIES`: 직업군 분류 (전투, 의료, 기술, 예술 등).
+- `PRODUCTION_JOBS`: 매일 아이템 생성 확률이 있는 직업 목록.
+
+### 4.2 Item Effects (`src/App.tsx` 내 정의)
+- **붕대**: HP +15.
+- **항생제**: HP +25.
+- **통조림**: 피로도 -20.
+- **초콜릿**: 정신력 +15.
+- **비타민**: 피로도 -10, 정신력 +5.
+- **안정제**: 정신력 +25, 정신 상태 'Normal'로 회복.
+- **백신**: 감염도 -50.
+- **입마개**: 좀비에게 착용 (물기 방지).
+- **고기**: 좀비 허기 +30.
+- **인육**: 좀비 허기 +100.
+
+### 4.3 Story Nodes (`services/events/storyNodes.ts` 및 하위 폴더)
+게임의 모든 텍스트 이벤트가 정의된 데이터베이스입니다.
+- **Main Arcs**: Hospital(병원), Winter(겨울), Metro(지하철), Radio(방송국), Wander(조우), Cult(광신도), Bunker(벙커), School(학교), Prison(교도소), Amusement(놀이공원).
+- **One-offs**: 날씨(비, 안개), 환경(쥐떼, 헬기), 주사위 챌린지(함정, 금고 따기).
+
+### 4.4 Event Pools (랜덤 이벤트 풀)
+- **MBTI_EVENT_POOL**: 16가지 MBTI별 고유 행동.
+- **ALL_JOB_MBTI_EVENTS**: 직업 + MBTI 성향(분석가/외교관/관리자/탐험가) 조합 이벤트.
+- **INTERACTION_POOL**: 관계 상태별 상호작용 (Lover, Enemy, Sibling 등).
+- **MENTAL_ILLNESS_ACTIONS**: 5가지 정신 질환별 돌발 행동.
+- **GHOST_EVENTS**: 사망자가 산 자에게 나타나는 이벤트.
+
+### 4.5 Skill Data (`services/skillData.ts`)
+- **SKILLS**: 60가지 스킬의 이름, 설명, 아이콘 정의.
+- **JOB_SKILLS**: 각 직업 생성 시 부여되는 기본 스킬 매핑.
+
+---
+
+## 5. UI 컴포넌트 구조
+
+- **App**: 최상위 컨테이너. 상태 관리 및 모달 렌더링.
+- **GameHeader**: 타이틀, 날짜, 생존자 수, 다크모드 토글.
+- **CharacterForm**: 생존자 생성 입력 폼.
+- **CharacterCard**: 개별 생존자 상태(HP바, 스탯, 관계 등) 표시 카드.
+- **SurvivorList**: 캐릭터 카드 그리드.
+- **InventoryPanel**: 아이템 목록 및 사용 버튼.
+- **EventLog**: 텍스트 로그 뷰어.
+- **RelationshipMap**: D3/SVG 기반 인물 관계도 시각화.
+- **SystemMenu**: 저장/불러오기, 게임 설정 메뉴.
+- **DeveloperMenu**: 강제 이벤트 실행, 스탯 조작 등 치트 툴.
+- **StoryChoiceModal**: 스토리 분기 선택 및 주사위 굴림 UI.
+- **DiceRollModal**: 스킬/스탯 기반 주사위 애니메이션 및 판정 UI.
+- **EndingModal**: 게임 엔딩 화면.
+- **GriefModal**: 생존자들의 심리 상태 및 사망자 추모 로그 확인.
+- **ProbabilityModal**: 게임 내 확률(이벤트, 관계 발전 등) 정보 표시.

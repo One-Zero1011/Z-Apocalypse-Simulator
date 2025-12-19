@@ -1,4 +1,3 @@
-
 import { 
     Character, SimulationResult, CharacterUpdate, GameSettings, ForcedEvent, 
     RelationshipStatus, ActionEffect, BabyEventData, RelationshipUpdate, MBTI, Ending, MentalState, StoryEffect
@@ -90,17 +89,44 @@ const sanitizeForMinors = (text: string, participants: Character[], settings: Ga
     return sanitized;
 };
 
-const generateEffectLog = (effect: ActionEffect, characters: Character[], showResources: boolean, targetId?: string): string => {
-    if (!showResources) return '';
+const
+ generateEffectLog = (effect: ActionEffect, characters: Character[], showResources: boolean, targetId?: string): string => {
+    // 이름이 있으면 이름 뒤에 공백이나 콜론 등을 붙이기 위해 순수 이름만 추출
+    const target = targetId ? characters.find(c => c.id === targetId) : null;
+    const name = target ? target.name : '';
     const parts: string[] = [];
-    if (effect.hp || effect.actorHp) parts.push(`❤️${(effect.hp || effect.actorHp || 0) > 0 ? '+' : ''}${effect.hp || effect.actorHp}`);
-    if (effect.sanity || effect.actorSanity) parts.push(`🧠${(effect.sanity || effect.actorSanity || 0) > 0 ? '+' : ''}${effect.sanity || effect.actorSanity}`);
-    if (effect.fatigue || effect.actorFatigue) parts.push(`💤${(effect.fatigue || effect.actorFatigue || 0) > 0 ? '+' : ''}${effect.fatigue || effect.actorFatigue}`);
-    if (effect.infection) parts.push(`🦠${effect.infection > 0 ? '+' : ''}${effect.infection}`);
-    const affinityVal = (effect as any).affinity || (effect as any).affinityChange;
-    if (affinityVal && targetId) {
-        const target = characters.find(c => c.id === targetId);
-        parts.push(`💞${target?.name || '??'}${affinityVal > 0 ? '+' : ''}${affinityVal}`);
+    if (effect.loot && effect.loot.length > 0) {
+        parts.push(`🎒+${effect.loot.join(',')}`);
+    }
+    if (effect.inventoryRemove && effect.inventoryRemove.length > 0) {
+        parts.push(`🎒-${effect.inventoryRemove.join(',')}`);
+    }
+
+    // 2. 스탯(Stats) 변화
+    if (effect.statChanges) {
+        Object.entries(effect.statChanges).forEach(([stat, val]) => {
+            parts.push(`💪${name ? name + ' ' : ''}${stat.toUpperCase()}${val > 0 ? '+' : ''}${val}`);
+        });
+    }
+
+    // 3. 스킬(Skills) 획득 및 제거
+    if (effect.skillsAdd && effect.skillsAdd.length > 0) {
+        const names = effect.skillsAdd.map(s => s.name).join(',');
+        parts.push(`✨Skill${name ? name + ' ' : ''}+(${names})`);
+    }
+    if (effect.skillsRemove && effect.skillsRemove.length > 0) {
+        parts.push(`🚫Skill${name ? name + ' ' : ''}-(${effect.skillsRemove.join(',')})`);
+    }
+    if (showResources == true) {
+        if (effect.hp || effect.actorHp) parts.push(`❤️${(effect.hp || effect.actorHp || 0) > 0 ? '+' : ''}${effect.hp || effect.actorHp}`);
+        if (effect.sanity || effect.actorSanity) parts.push(`🧠${(effect.sanity || effect.actorSanity || 0) > 0 ? '+' : ''}${effect.sanity || effect.actorSanity}`);
+        if (effect.fatigue || effect.actorFatigue) parts.push(`💤${(effect.fatigue || effect.actorFatigue || 0) > 0 ? '+' : ''}${effect.fatigue || effect.actorFatigue}`);
+        if (effect.infection) parts.push(`🦠${effect.infection > 0 ? '+' : ''}${effect.infection}`);
+        const affinityVal = (effect as any).affinity || (effect as any).affinityChange;
+        if (affinityVal && targetId) {
+            const target = characters.find(c => c.id === targetId);
+            parts.push(`💞${target?.name || '??'}${affinityVal > 0 ? '+' : ''}${affinityVal}`);
+        }
     }
     return parts.length > 0 ? ` [${parts.join(', ')}]` : '';
 };
@@ -113,15 +139,15 @@ const processStatusChanges = (characters: Character[], updates: CharacterUpdate[
         
         // 1. Mental State System Logic
         if (settings.useMentalStates) {
-            // 정신력 30 이하일 때 확률적으로 정신 질환 발생
+            // 정신력 50 이하일 때 확률적으로 정신 질환 발생
             if (c.mentalState === 'Normal' && c.sanity <= 50 && Math.random() < 0.4) {
                 const possibleStates: MentalState[] = ['Trauma', 'Despair', 'Delusion', 'Anxiety', 'Madness'];
                 const newState = possibleStates[Math.floor(Math.random() * possibleStates.length)];
                 u.mentalState = newState;
                 events.push(`🧠 [정신 붕괴] ${c.name}은(는) 계속되는 악몽을 견디지 못하고 [${newState}] 상태에 빠졌습니다.`);
             }
-            // 정신력 70 이상일 때 확률적으로 회복
-            else if (c.mentalState !== 'Normal' && c.sanity >= 70 && Math.random() < 0.2) {
+            // 정신력 70 + 100이상부터 10씩증가 이상일 때 확률적으로 회복
+            else if (c.mentalState !== 'Normal' && c.sanity >= 70 + (((c.maxSanity/10) - 10) *10)  && Math.random() < 0.1) {
                 u.mentalState = 'Normal';
                 events.push(`✨ [정신 회복] ${c.name}은(는) 안정을 되찾고 정신적 고통에서 벗어났습니다.`);
             }
@@ -195,13 +221,26 @@ const processStatusChanges = (characters: Character[], updates: CharacterUpdate[
         if (!isDeadAlready && (currentHp <= 0 || isInstantDeath) && !isTurningZombie && !isVoteDeath) {
             u.status = 'Dead';
             events.push(`💀 [사망] ${c.name}이(가) 고통 끝에 숨을 거두었습니다.`);
-            
             characters.filter(v => v.id !== c.id && v.status !== 'Dead' && v.status !== 'Missing').forEach(v => {
                 const vu = getCharacterUpdate(updates, v.id);
                 // Prevent overwriting existing grief logs (e.g. if specific event already added one)
                 if (!vu.griefLogAdd) {
                     const affinity = v.relationships[c.id] || 0;
-                    if (affinity > 50) vu.griefLogAdd = `나의 소중한 친구 ${c.name}을(를) 잃었습니다. 가슴 한구석이 텅 빈 것 같습니다.`;
+                    const relStatus = v.relationshipStatuses[c.id]; // 관계 상태 가져오기
+                    if (['Spouse', 'Parent', 'Child', 'Sibling', 'Family'].includes(relStatus || '') && affinity > 50) {
+                        vu.griefLogAdd = `사랑하는 가족 ${c.name}이(가) 떠났습니다. 하늘이 무너지는 슬픔을 느낍니다.`
+                    }
+                    else if (['Spouse', 'Parent', 'Child', 'Sibling', 'Family'].includes(relStatus || '') && affinity <= 50 && affinity >= 0) {
+                        vu.griefLogAdd = `가족 ${c.name}이(가) 떠났습니다. 그리 슬프진 않지만, 어째서인지 눈물이 새어나옵니다.`
+                    }
+                    else if (relStatus === 'Lover') {
+                        vu.griefLogAdd = `사랑하는 연인 ${c.name}을(를) 잃었습니다. 더 이상 살아갈 이유를 모르겠습니다.`
+                    }
+                    else if (relStatus === 'Rival') {
+                        vu.griefLogAdd = `라이벌인 ${c.name}을(를) 잃었습니다. 어딘가 복잡한 기분이 듭니다.`
+                    }
+                    else if (affinity > 50) vu.griefLogAdd = `나의 소중한 친구 ${c.name}을(를) 잃었습니다. 가슴 한구석이 텅 빈 것 같습니다.`;
+
                     else vu.griefLogAdd = `동료였던 ${c.name}의 죽음을 목격했습니다. 죽음은 언제나 우리 곁에 있습니다.`;
                 }
             });
@@ -283,6 +322,7 @@ const processInteractionPhase = (characters: Character[], settings: GameSettings
 };
 
 const processRelationshipEvolution = (characters: Character[], updates: CharacterUpdate[], events: string[], settings: GameSettings): BabyEventData | null => {
+    if (settings.friendshipMode) return null;
     let newBaby: BabyEventData | null = null;
     const living = characters.filter(c => c.status !== 'Dead' && c.status !== 'Missing' && c.status !== 'Zombie');
     
@@ -384,9 +424,14 @@ const processRelationshipEvolution = (characters: Character[], updates: Characte
             }
             
             // 5. Pregnancy Logic
+            
             else if (settings.enablePregnancy && currentStatus === 'Spouse' && !newBaby && Math.random() < (settings.pregnancyChance / 100)) {
-                newBaby = { fatherId: c1.gender === 'Male' ? c1.id : c2.id, motherId: c1.gender === 'Female' ? c1.id : c2.id };
-            }
+                // 이성 커플인지 확인 (남성-여성 조합일 때만)
+                const isHetero = (c1.gender === 'Male' && c2.gender === 'Female') || (c1.gender === 'Female' && c2.gender === 'Male');
+                if (isHetero) {
+                    newBaby = { fatherId: c1.gender === 'Male' ? c1.id : c2.id, motherId: c1.gender === 'Female' ? c1.id : c2.id };
+                    }
+                }
         });
     });
     return newBaby;
@@ -399,12 +444,48 @@ export const simulateDay = async (day: number, characters: Character[], currentS
     const storyNode = getNextStoryNode(currentStoryNodeId, userSelectedNodeId);
     let nextStoryNodeId = storyNode.id;
     
-    // Apply Minor Protection to Story Text
+    // 타로 이벤트 체크
+    const tarotEvent = nextStoryNodeId === 'tarot_continue';
+
+    // [변경점 1] 효과 로그를 저장할 변수를 먼저 선언
+    let effectLogString = '';
+
+    // [변경점 2] 효과 적용 로직을 로그 생성보다 *먼저* 실행
+    if (storyNode.effect) {
+        const effect = storyNode.effect;
+        let targets: Character[] = [];
+        const living = characters.filter(c => c.status !== 'Dead' && c.status !== 'Missing');
+        
+        // 타겟 선정
+        if (effect.target === 'ALL') targets = living;
+        else if (effect.target === 'RANDOM_1' && living.length > 0) targets = [living[Math.floor(Math.random() * living.length)]];
+        else if (effect.target === 'RANDOM_HALF' && living.length > 0) targets = [...living].sort(() => 0.5 - Math.random()).slice(0, Math.ceil(living.length / 2));
+        
+        // 아이템 획득 처리
+        if (effect.loot) {
+            addLootToGlobal(effect.loot, globalLoot);
+        }
+
+        // 캐릭터 업데이트 적용
+        const effectForTargets = { ...effect, loot: undefined };
+        targets.forEach(t => {
+            const u = getCharacterUpdate(updates, t.id);
+            applyEffectToUpdate(u, effectForTargets as any, globalLoot);
+        });
+
+        if (effect.inventoryRemove) inventoryRemove.push(...effect.inventoryRemove);
+
+        // [변경점 3] 타겟이 정해진 후 로그 생성 (대상이 1명이면 ID를 넘겨서 이름 표시)
+        const targetIdForLog = targets.length === 1 ? targets[0].id : undefined;
+        effectLogString = generateEffectLog(storyNode.effect as any, characters, settings.showEventEffects, targetIdForLog);
+    }
+    
+    // [변경점 4] 최종 로그 조합 및 출력
     const sanitizedStoryText = sanitizeForMinors(storyNode.text, characters, settings);
-    events.push(`📖 [스토리] ${sanitizedStoryText}`);
+    let storyLog = `📖 [스토리] ${sanitizedStoryText}${effectLogString}`;
+    events.push(storyLog);
     
     // FIX: 특정 스토리 노드 도달 시 타로 이벤트 플래그 활성화
-    const tarotEvent = nextStoryNodeId === 'tarot_continue';
 
     if (storyNode.effect) {
         const effect = storyNode.effect;
@@ -438,8 +519,13 @@ export const simulateDay = async (day: number, characters: Character[], currentS
             u.plannedAction = null; 
             switch(c.plannedAction) {
                 case 'rest':
-                    const restEffect = REST_EVENTS[Math.floor(Math.random() * REST_EVENTS.length)](c.name);
-                    applyEffectToUpdate(u, restEffect, globalLoot);
+                    const restEffect = REST_EVENTS[Math.floor(Math.random() * REST_EVENTS.length)](c.name);  // 1. 랜덤 이벤트 풀에서 텍스트(상황 묘사)만 가져옵니다.
+                    // 2. [수정됨] UI에 명시된 대로 고정된 대폭 회복 수치를 직접 적용합니다.
+                    // 기존의 applyEffectToUpdate를 사용하지 않고 직접 수치를 더합니다.
+                    u.hpChange = (u.hpChange || 0) + 15;        // 체력 +15
+                    u.fatigueChange = (u.fatigueChange || 0) - 35; // 피로도 -35 (대폭 감소)
+                    u.sanityChange = (u.sanityChange || 0) + 5;    // (보너스) 정신력 소폭 회복
+                    // 3. 로그 출력
                     events.push(`🛌 [계획/휴식] ${restEffect.text}`);
                     break;
                 case 'scavenge':
@@ -464,7 +550,7 @@ export const simulateDay = async (day: number, characters: Character[], currentS
     };
 
     const processPersonalEvents = (characters: Character[], updates: CharacterUpdate[], events: string[], settings: GameSettings, globalLoot: string[]) => {
-        characters.filter(c => c.status !== 'Dead' && c.status !== 'Missing' && !c.plannedAction).forEach(c => {
+        characters.filter(c => c.status !== 'Dead' && c.status !== 'Missing' && c.status !== 'Zombie' && !c.plannedAction).forEach(c => {
             const u = getCharacterUpdate(updates, c.id);
             if (PRODUCTION_JOBS.includes(c.job) && Math.random() < 0.3) {
                 const found = Math.random() < 0.5 ? '통조림' : '붕대';
@@ -474,25 +560,25 @@ export const simulateDay = async (day: number, characters: Character[], currentS
             if (c.mentalState !== 'Normal' && Math.random() < 0.3) {
                 const effect = MENTAL_ILLNESS_ACTIONS[c.mentalState](c);
                 applyEffectToUpdate(u, effect, globalLoot);
-                events.push(sanitizeForMinors(effect.text, characters, settings) + generateEffectLog(effect, characters, settings.showEventEffects));
+                events.push(sanitizeForMinors(effect.text, characters, settings) + generateEffectLog(effect, characters, settings.showEventEffects, c.id));
                 return;
             }
             if (c.fatigue >= 80 && Math.random() < 0.4) {
                 const effect = FATIGUE_EVENTS[Math.floor(Math.random() * FATIGUE_EVENTS.length)](c.name);
                 applyEffectToUpdate(u, effect, globalLoot);
-                events.push(sanitizeForMinors(effect.text, characters, settings) + generateEffectLog(effect, characters, settings.showEventEffects));
+                events.push(sanitizeForMinors(effect.text, characters, settings) + generateEffectLog(effect, characters, settings.showEventEffects, c.id));
                 return;
             }
             const rand = Math.random();
             if (rand < 0.5) {
                 const effect = getJobMbtiEvent(c.job, c.mbti, c.name);
                 applyEffectToUpdate(u, effect, globalLoot);
-                events.push(sanitizeForMinors(effect.text, characters, settings) + generateEffectLog(effect, characters, settings.showEventEffects));
+                events.push(sanitizeForMinors(effect.text, characters, settings) + generateEffectLog(effect, characters, settings.showEventEffects, c.id));
             } else if (rand < 0.8) {
                 const pool = MBTI_EVENT_POOL[c.mbti];
                 const effect = pool[Math.floor(Math.random() * pool.length)](c.name, c.gender === 'Female' ? '그녀' : '그');
                 applyEffectToUpdate(u, effect, globalLoot);
-                events.push(`🧩 [${c.mbti}] ${sanitizeForMinors(effect.text, characters, settings)}${generateEffectLog(effect, characters, settings.showEventEffects)}`);
+                events.push(`🧩 [${c.mbti}] ${sanitizeForMinors(effect.text, characters, settings)}${generateEffectLog(effect, characters, settings.showEventEffects, c.id)}`);
             }
         });
     };
@@ -518,7 +604,7 @@ export const simulateDay = async (day: number, characters: Character[], currentS
     const finalLiving = characters.filter(c => c.status !== 'Dead' && c.status !== 'Missing').length;
     if (finalLiving === 0 && characters.length > 0) {
         triggeredEnding = { id: 'extinction', title: '인류의 황혼', description: '모든 생존자가 사망했습니다. 고요한 폐허 속에 인류의 흔적만이 바람에 흩날립니다.', icon: '💀', type: 'BAD' };
-    } else if (day >= 365) {
+    } else if (day == 365) {
         triggeredEnding = { id: 'survival_1year', title: '새로운 시작', description: '1년이라는 긴 시간 동안 지옥에서 살아남았습니다. 당신들은 이제 단순한 생존자가 아닌, 새로운 세계의 개척자입니다.', icon: '🌅', type: 'GOOD' };
     } else if (storyNode.id.includes('rescue')) {
         triggeredEnding = { id: 'rescue_success', title: '안전 지대로', description: '극적인 구조 끝에 안전한 곳으로 이송되었습니다. 지옥 같던 날들은 이제 기억 속에만 남을 것입니다.', icon: '🚁', type: 'GOOD' };

@@ -273,7 +273,9 @@ const App: React.FC = () => {
     const newChar: Character = { 
         id: newId, name, gender, mbti, job, stats, skills,
         hp: maxHp, maxHp, 
-        sanity: maxSanity, maxSanity, 
+        // [수정됨] mentalState가 'Normal'이 아니면 50, 'Normal'이면 maxSanity로 설정
+        sanity: mentalState !== 'Normal' ? 50 + (stats.int * 10) : maxSanity, 
+        maxSanity, 
         fatigue: 0, infection: 0, hunger: MAX_HUNGER, hasMuzzle: false, status: 'Alive', mentalState: mentalState, inventory: [], relationships: {}, relationshipStatuses: {}, relationshipDurations: {}, killCount: 0, plannedAction: null, griefLogs: [] 
     };
     
@@ -407,7 +409,7 @@ const App: React.FC = () => {
               Object.entries(update.statChanges).forEach(([stat, change]) => {
                   const sKey = stat as keyof Stats;
                   if (sKey in currentStats) {
-                      currentStats[sKey] = Math.max(0, Math.min(15, (currentStats[sKey] || 0) + (change || 0)));
+                      currentStats[sKey] = Math.max(0, Math.min(10, (currentStats[sKey] || 0) + (change || 0)));
                       if (sKey === 'con') char.maxHp = 100 + (currentStats.con * 10);
                       if (sKey === 'int') char.maxSanity = 100 + (currentStats.int * 10);
                   }
