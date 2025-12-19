@@ -288,7 +288,7 @@ const processInteractionPhase = (characters: Character[], settings: GameSettings
             pool = INTERACTION_POOL['FATIGUE_RELIEF'];
         } else {
             // 일반 관계 기반 풀
-            pool = INTERACTION_POOL[relStatus] || INTERACTION_POOL['POSITIVE'];
+            pool = Math.random() < 0.5 ? INTERACTION_POOL['NEGATIVE'] : INTERACTION_POOL['POSITIVE'];
         }
 
         const effect = pool[Math.floor(Math.random() * pool.length)](a.name, b.name) as any;

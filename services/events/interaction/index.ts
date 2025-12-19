@@ -31,8 +31,8 @@ export const INTERACTION_POOL: Record<string, InteractionFunction[]> = {
     'Lover': LOVER_EVENTS,
     'Spouse': SPOUSE_EVENTS,
     'Sibling': SIBLING_EVENTS,
-    'Parent': PARENT_TO_CHILD_EVENTS, // Actor is Parent -> Target is Child
-    'Child': CHILD_TO_PARENT_EVENTS, // Actor is Child -> Target is Parent
+    'Parent':  CHILD_TO_PARENT_EVENTS, // Actor is Parent -> Target is Child
+    'Child': PARENT_TO_CHILD_EVENTS, // Actor is Child -> Target is Parent
     'Guardian': GUARDIAN_TO_WARD_EVENTS, // Actor is Guardian
     'Ward': WARD_TO_GUARDIAN_EVENTS, // Actor is Ward
     'Family': FAMILY_EVENTS,
