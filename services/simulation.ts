@@ -288,7 +288,13 @@ const processInteractionPhase = (characters: Character[], settings: GameSettings
             pool = INTERACTION_POOL['FATIGUE_RELIEF'];
         } else {
             // 일반 관계 기반 풀
-            pool = Math.random() < 0.5 ? INTERACTION_POOL['NEGATIVE'] : INTERACTION_POOL['POSITIVE'];
+            // [수정] 관계(Parent, Child, Lover 등)에 맞는 전용 이벤트 풀이 있으면 그것을 우선 사용
+            if (relStatus && relStatus !== 'None' && INTERACTION_POOL[relStatus]) {
+                pool = INTERACTION_POOL[relStatus];
+            } else {
+                // 관계가 없거나('None') 전용 이벤트가 없는 경우 랜덤하게 긍정/부정 이벤트 발생
+                pool = Math.random() < 0.5 ? INTERACTION_POOL['NEGATIVE'] : INTERACTION_POOL['POSITIVE'];
+            }
         }
 
         const effect = pool[Math.floor(Math.random() * pool.length)](a.name, b.name) as any;
