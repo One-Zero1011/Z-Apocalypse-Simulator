@@ -94,8 +94,8 @@ export const AMUSEMENT_NODES: Record<string, StoryNode> = {
         next: [
             { id: 'amusement_6_bomber', weight: 0.0, choiceText: "광대 폭파 (폭발 전문가 필요)", req: { skill: '폭발 전문가' } },
             { id: 'amusement_6_trap', weight: 0.0, choiceText: "함정으로 유인 (함정 설치 필요)", req: { skill: '함정 설치' } },
-            { id: 'amusement_6_fight', weight: 0.5 },
-            { id: 'amusement_6_run', weight: 0.5 }
+            // [수정] 단일 선택지를 통해 랜덤 결과 노드로 진입합니다.
+            { id: 'amusement_6_escape_attempt', weight: 1.0, choiceText: "필사적으로 도망치기" }
         ],
         effect: { target: 'ALL', sanity: -20 }
     },
@@ -112,6 +112,16 @@ export const AMUSEMENT_NODES: Record<string, StoryNode> = {
         effect: { target: 'RANDOM_1', kill: 5, sanity: 10, skillsAdd: [S.TRAP], statChanges: { int: 1 } }
     },
 
+    // [추가] 중간 경유 노드: 여기서 자동으로 50:50 분기됩니다.
+    'amusement_6_escape_attempt': {
+        id: 'amusement_6_escape_attempt',
+        text: "🏃‍♂️ 뒤도 돌아보지 않고 달립니다! 광대들의 기괴한 웃음소리가 등 뒤에서 점점 가까워집니다...",
+        next: [
+            { id: 'amusement_6_run', weight: 0.5 },   // 성공 (기존 노드 활용)
+            { id: 'amusement_6_caught', weight: 0.5 } // 실패 (새로 추가)
+        ]
+    },
+
     'amusement_6_fight': {
         id: 'amusement_6_fight',
         text: "🔫 광대들을 처치하고 통제실에 도착해 전원을 올립니다.",
@@ -120,9 +130,16 @@ export const AMUSEMENT_NODES: Record<string, StoryNode> = {
     },
     'amusement_6_run': {
         id: 'amusement_6_run',
-        text: "🏃‍♂️ 놈들을 피해 통제실로 숨어 들어가 전원을 올립니다.",
+        text: "🏃‍♂️ 성공! 미친 듯이 달려 광대들을 따돌리고 통제실로 숨어 들어가 전원을 올립니다.",
         next: [{ id: 'amusement_7_mascot_boss', weight: 1.0 }],
         effect: { target: 'ALL', fatigue: 25, statChanges: { agi: 1 } }
+    },
+    // [추가] 실패 시 결과
+    'amusement_6_caught': {
+        id: 'amusement_6_caught',
+        text: "🤡 실패! 막다른 길에 몰렸습니다. 광대들에게 둘러싸여 억지로 싸워야 합니다.",
+        next: [{ id: 'amusement_7_mascot_boss', weight: 1.0 }],
+        effect: { target: 'RANDOM_HALF', hp: -25, fatigue: 30, sanity: -10, statChanges: { agi: -1 } }
     },
 
     'amusement_7_mascot_boss': {
