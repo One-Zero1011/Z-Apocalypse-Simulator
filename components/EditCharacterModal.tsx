@@ -44,6 +44,7 @@ const EditCharacterModal: React.FC<Props> = ({ character, allCharacters, onSave,
             case 'Savior': return 50;
             case 'Friend': return 30;
             case 'Colleague': return 15;
+            case 'Fan': return 40;
             case 'Rival': return -15;
             case 'Ex': return -20;
             case 'Enemy': return -50;
@@ -231,6 +232,7 @@ const EditCharacterModal: React.FC<Props> = ({ character, allCharacters, onSave,
                                                     <option value="Friend">친구</option>
                                                     <option value="BestFriend">절친</option>
                                                     <option value="Colleague">동료</option>
+                                                    <option value="Fan">팬</option>
                                                     <option value="Savior">은인</option>
                                                     {!friendshipMode && <option value="Lover">연인</option>}
                                                     {!friendshipMode && !isMarriageForbidden && <option value="Spouse">부부</option>}

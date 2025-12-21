@@ -293,7 +293,7 @@ const SystemMenu: React.FC<Props> = ({
                         </button>
                         
                         <a 
-                            href="https://posty.pe/r5133n" 
+                            href="https://posty.pe/w1g6pe" 
                             target="_blank" 
                             rel="noopener noreferrer"
                             className="w-full flex items-center justify-between p-5 bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-800 hover:border-red-500 transition-all group"

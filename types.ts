@@ -14,7 +14,8 @@ export type MentalState = 'Normal' | 'Trauma' | 'Despair' | 'Delusion' | 'Anxiet
 export type RelationshipStatus = 
     'Lover' | 'Spouse' | 'Parent' | 'Child' | 'Sibling' | 
     'Rival' | 'Enemy' | 'BestFriend' | 'Family' | 
-    'Colleague' | 'Ex' | 'Friend' | 'Savior' | 'Guardian' | 'Ward' | 'None';
+    'Colleague' | 'Ex' | 'Friend' | 'Savior' | 'Guardian' | 'Ward' | 
+    'Fan' | 'None';
 
 export interface Stats {
   str: number; // 힘

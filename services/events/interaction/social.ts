@@ -46,3 +46,14 @@ export const SAVIOR_EVENTS: InteractionFunction[] = [
     (a: string, b: string) => ({ text: `${a}은(는) ${b}가 위험해지자 자신의 몸을 던져 막아냈습니다.`, affinity: 15, actorHp: -5 }),
     (a: string, b: string) => ({ text: `${a}은(는) ${b}에게 절대적인 충성심을 보였습니다.`, affinity: 10 })
 ];
+
+export const FAN_EVENTS: InteractionFunction[] = [
+    (a: string, b: string) => ({ text: `${a}은(는) ${b}를 바라보는 것만으로도 행복해하며 에너지를 얻었습니다.`, affinity: 2, actorSanity: 5 }),
+    (a: string, b: string) => ({ text: `${a}은(는) ${b}에게 "당신은 나의 희망이에요"라며 응원했습니다.`, affinity: 5, targetSanity: 5 }),
+    (a: string, b: string) => ({ text: `${a}은(는) ${b}가 쓰던 물건을 성물처럼 소중히 챙겼습니다.`, affinity: 2 }),
+    (a: string, b: string) => ({ text: `${a}은(는) ${b}를 위해 위험한 일을 자처하며 "제가 하겠습니다!"라고 외쳤습니다.`, affinity: 10, actorFatigue: 10 }),
+    (a: string, b: string) => ({ text: `${a}은(는) ${b}의 사소한 행동 하나하나에 감탄하며 칭찬했습니다.`, affinity: 5 }),
+    (a: string, b: string) => ({ text: `${a}은(는) ${b}가 다치지 않게 인간 방패가 되어주려 했습니다.`, affinity: 10, actorHp: -2 }),
+    (a: string, b: string) => ({ text: `${a}은(는) ${b}에게 잘 보이기 위해 자신의 몫인 식량을 양보했습니다.`, affinity: 5, targetHp: 5, actorHp: -2 }),
+    (a: string, b: string) => ({ text: `${a}은(는) 몰래 ${b}의 모습을 스케치하거나 일기에 기록했습니다.`, affinity: 2, actorSanity: 2 })
+];

@@ -305,6 +305,7 @@ const CharacterForm: React.FC<Props> = ({ onAdd, disabled, existingCharacters = 
                                 <option value="BestFriend">절친 (Best Friend)</option>
                                 <option value="Friend">친구 (Friend)</option>
                                 <option value="Colleague">동료 (Colleague)</option>
+                                <option value="Fan">팬 (Fan)</option>
                                 <option value="Savior">은인 (Savior)</option>
                             </optgroup>
                             <optgroup label="적대 (Hostile)">

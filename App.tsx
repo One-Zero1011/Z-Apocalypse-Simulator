@@ -70,7 +70,8 @@ const INITIAL_AFFINITY: Record<string, number> = {
     'Colleague': 15,
     'Rival': -15,
     'Ex': -20,
-    'Enemy': -50
+    'Enemy': -50,
+    'Fan': 60
 };
 
 const DEV_ITEM_LIST = Array.from(new Set([...Object.keys(ITEM_EFFECTS), '생수 500ml', '맥가이버 칼', '권총', '지도', '무전기'])).sort();

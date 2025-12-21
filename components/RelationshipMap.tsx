@@ -103,6 +103,7 @@ const RelationshipMap: React.FC<Props> = ({ characters, onClose }) => {
     if (status === 'Rival') return { stroke: '#f97316', width: isMobile ? 2 : 4, label: '라이벌', opacity: 0.9 }; // Orange
     if (status === 'Enemy') return { stroke: '#ef4444', width: isMobile ? 3 : 5, label: '원수', opacity: 0.9, dash: '5,2' }; // Red Dashed
     if (status === 'Ex') return { stroke: '#9f1239', width: isMobile ? 2 : 3, label: '전 애인', opacity: 0.6, dash: '5,5' }; // Dark Red Dashed
+    if (status === 'Fan') return { stroke: '#84cc16', width: isMobile ? 2 : 4, label: '팬(동경)', opacity: 0.8, dash: '5,5' }; // 라임색 점선
 
     // 2. Fallback to Score
     if (affinity >= 30) return { stroke: '#22c55e', width: 3, label: '우호', opacity: 0.7 }; // Green
@@ -140,7 +141,8 @@ const RelationshipMap: React.FC<Props> = ({ characters, onClose }) => {
           'Savior': '은인 🦸', 
           'Colleague': '동료 💼', 
           'Rival': '라이벌 ⚔️',
-          'Enemy': '원수 👿', 
+          'Enemy': '원수 👿',
+          'Fan': '팬 😍', 
           'Ex': '전 애인 💔', 
           'Friend': '친구 🤝',
           'Dislike': '싫어함 😠', 
