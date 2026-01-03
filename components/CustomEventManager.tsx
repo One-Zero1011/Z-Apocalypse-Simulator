@@ -1,5 +1,4 @@
-
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { CustomStoryArc, StoryNode, StoryOption, StoryEffect, Stats, MBTI, MentalState, Status } from '../types';
 
 interface Props {
@@ -25,6 +24,7 @@ const CustomEventManager: React.FC<Props> = ({ onClose, customArcs, onUpdateArcs
     const [editorMode, setEditorMode] = useState<'LIST' | 'GRID'>('LIST'); 
     const [currentArc, setCurrentArc] = useState<CustomStoryArc | null>(null);
     const [currentNode, setCurrentNode] = useState<StoryNode>(DEFAULT_NODE);
+    const [deleteTarget, setDeleteTarget] = useState<{ type: 'ARC' | 'NODE', id: string } | null>(null);
 
     // --- Grid View States ---
     const [pan, setPan] = useState({ x: 0, y: 0 });
@@ -32,6 +32,41 @@ const CustomEventManager: React.FC<Props> = ({ onClose, customArcs, onUpdateArcs
     const [dragNodeId, setDragNodeId] = useState<string | null>(null);
     const lastMousePos = useRef({ x: 0, y: 0 });
     const graphRef = useRef<HTMLDivElement>(null);
+
+    // Auto-layout for nodes without positions
+    useEffect(() => {
+        if (view === 'EDIT_ARC' && currentArc && editorMode === 'GRID') {
+            const nodes = Object.values(currentArc.nodes);
+            const needsLayout = nodes.some(n => !n.position || (n.position.x === 0 && n.position.y === 0));
+            
+            if (needsLayout) {
+                const newNodes = { ...currentArc.nodes };
+                let col = 0;
+                let row = 0;
+                const GAP_X = 300;
+                const GAP_Y = 200;
+                const COLS = 5;
+
+                Object.keys(newNodes).forEach((key, idx) => {
+                    if (!newNodes[key].position || (newNodes[key].position!.x === 0 && newNodes[key].position!.y === 0)) {
+                        newNodes[key] = {
+                            ...newNodes[key],
+                            position: {
+                                x: 100 + (col * GAP_X),
+                                y: 100 + (row * GAP_Y)
+                            }
+                        };
+                        col++;
+                        if (col >= COLS) {
+                            col = 0;
+                            row++;
+                        }
+                    }
+                });
+                setCurrentArc({ ...currentArc, nodes: newNodes });
+            }
+        }
+    }, [view, editorMode, currentArc]);
 
     // --- Arc Management ---
     const handleCreateArc = () => {
@@ -50,9 +85,7 @@ const CustomEventManager: React.FC<Props> = ({ onClose, customArcs, onUpdateArcs
     };
 
     const handleDeleteArc = (id: string) => {
-        if (confirm('정말 삭제하시겠습니까?')) {
-            onUpdateArcs(customArcs.filter(a => a.id !== id));
-        }
+        setDeleteTarget({ type: 'ARC', id });
     };
 
     const handleSaveCurrentArc = () => {
@@ -99,7 +132,12 @@ const CustomEventManager: React.FC<Props> = ({ onClose, customArcs, onUpdateArcs
     const handleSaveNode = () => {
         if (!currentArc || !currentNode.id) return;
         
-        const updatedNodes = { ...currentArc.nodes, [currentNode.id]: currentNode };
+        // Filter out empty connections
+        const validNext = currentNode.next?.filter(opt => opt.id.trim() !== '') || [];
+        
+        const nodeToSave = { ...currentNode, next: validNext };
+        const updatedNodes = { ...currentArc.nodes, [currentNode.id]: nodeToSave };
+        
         let updatedStarter = currentArc.starterNodeId;
         if (!updatedStarter || Object.keys(updatedNodes).length === 1) {
             updatedStarter = currentNode.id;
@@ -110,10 +148,20 @@ const CustomEventManager: React.FC<Props> = ({ onClose, customArcs, onUpdateArcs
     };
 
     const handleDeleteNode = (id: string) => {
-        if (!currentArc) return;
-        const updatedNodes = { ...currentArc.nodes };
-        delete updatedNodes[id];
-        setCurrentArc({ ...currentArc, nodes: updatedNodes });
+        setDeleteTarget({ type: 'NODE', id });
+    };
+
+    const confirmDelete = () => {
+        if (!deleteTarget) return;
+        
+        if (deleteTarget.type === 'ARC') {
+            onUpdateArcs(customArcs.filter(a => a.id !== deleteTarget.id));
+        } else if (deleteTarget.type === 'NODE' && currentArc) {
+            const updatedNodes = { ...currentArc.nodes };
+            delete updatedNodes[deleteTarget.id];
+            setCurrentArc({ ...currentArc, nodes: updatedNodes });
+        }
+        setDeleteTarget(null);
     };
 
     // --- Import / Export ---
@@ -135,7 +183,8 @@ const CustomEventManager: React.FC<Props> = ({ onClose, customArcs, onUpdateArcs
         reader.onload = (event) => {
             try {
                 const parsed = JSON.parse(event.target?.result as string);
-                if (parsed.nodes && parsed.starterNodeId) {
+                if (parsed.nodes) {
+                    // Generate new ID to avoid conflict
                     const importedArc = { ...parsed, id: `imported_${Date.now()}` };
                     onUpdateArcs([...customArcs, importedArc]);
                     alert("이벤트 불러오기 성공!");
@@ -310,7 +359,6 @@ const CustomEventManager: React.FC<Props> = ({ onClose, customArcs, onUpdateArcs
     );
 
     const OptionEditor = ({ option, idx, onChange, onDelete }: { option: StoryOption, idx: number, onChange: (o: StoryOption) => void, onDelete: () => void }) => {
-        // 타입 결정: choiceText가 있으면 'CHOICE'(선택지), 없으면 'AUTO'(자동 진행)
         const [mode, setMode] = useState<'AUTO' | 'CHOICE'>(option.choiceText ? 'CHOICE' : 'AUTO');
         const [isDice, setIsDice] = useState(!!option.dice);
 
@@ -323,24 +371,23 @@ const CustomEventManager: React.FC<Props> = ({ onClose, customArcs, onUpdateArcs
             const newDice = { ...option.dice, [field]: val } as any;
             if (!newDice.stat) newDice.stat = 'str';
             if (!newDice.threshold) newDice.threshold = 50;
+            if (newDice.successId === undefined) newDice.successId = '';
+            if (newDice.failId === undefined) newDice.failId = '';
             onChange({ ...option, dice: newDice });
         };
 
         const handleTypeChange = (newType: 'AUTO' | 'CHOICE') => {
             setMode(newType);
             if (newType === 'AUTO') {
-                // 자동 진행: 텍스트 제거, 주사위 제거
                 onChange({ ...option, choiceText: undefined, dice: undefined });
                 setIsDice(false);
             } else {
-                // 선택지: 기본 텍스트 추가
                 onChange({ ...option, choiceText: '선택지 입력' });
             }
         };
 
         return (
             <div className="bg-white dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-600 space-y-3 shadow-sm transition-all">
-                {/* Header & Type Selector */}
                 <div className="flex justify-between items-center border-b border-slate-100 dark:border-slate-700 pb-2">
                     <div className="flex items-center gap-2">
                         <div className="bg-slate-100 dark:bg-slate-700 px-2 py-1 rounded text-xs font-bold text-slate-500">#{idx + 1}</div>
@@ -363,7 +410,6 @@ const CustomEventManager: React.FC<Props> = ({ onClose, customArcs, onUpdateArcs
                 </div>
 
                 <div className="space-y-3">
-                    {/* Common Field: Next Node ID */}
                     <div className="flex items-center gap-2">
                         <label className="text-[10px] font-bold w-16 text-slate-500">이동할 노드 ID</label>
                         <input 
@@ -374,7 +420,6 @@ const CustomEventManager: React.FC<Props> = ({ onClose, customArcs, onUpdateArcs
                         />
                     </div>
 
-                    {/* Auto Mode Specific */}
                     {mode === 'AUTO' && (
                         <div className="flex items-center gap-2">
                             <label className="text-[10px] font-bold w-16 text-slate-500">확률 가중치</label>
@@ -388,7 +433,6 @@ const CustomEventManager: React.FC<Props> = ({ onClose, customArcs, onUpdateArcs
                         </div>
                     )}
 
-                    {/* Choice Mode Specific */}
                     {mode === 'CHOICE' && (
                         <>
                             <div className="flex items-center gap-2">
@@ -401,7 +445,6 @@ const CustomEventManager: React.FC<Props> = ({ onClose, customArcs, onUpdateArcs
                                 />
                             </div>
 
-                            {/* Dice Toggle */}
                             <div className="flex items-center gap-2 pt-2 border-t border-slate-100 dark:border-slate-700">
                                 <label className="flex items-center gap-2 text-xs cursor-pointer">
                                     <input 
@@ -409,7 +452,7 @@ const CustomEventManager: React.FC<Props> = ({ onClose, customArcs, onUpdateArcs
                                         checked={isDice} 
                                         onChange={(e) => {
                                             setIsDice(e.target.checked);
-                                            if (e.target.checked) onChange({ ...option, dice: { stat: 'str', threshold: 50, successId: option.id, failId: '' } });
+                                            if (e.target.checked) onChange({ ...option, dice: { stat: 'str', threshold: 50, successId: option.id || '', failId: '' } });
                                             else onChange({ ...option, dice: undefined });
                                         }}
                                         className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
@@ -418,7 +461,6 @@ const CustomEventManager: React.FC<Props> = ({ onClose, customArcs, onUpdateArcs
                                 </label>
                             </div>
 
-                            {/* Dice Config */}
                             {isDice && (
                                 <div className="space-y-2 p-2 bg-indigo-50 dark:bg-indigo-900/20 rounded border border-indigo-100 dark:border-indigo-800 mt-2">
                                     <div className="flex gap-2 text-xs">
@@ -447,7 +489,6 @@ const CustomEventManager: React.FC<Props> = ({ onClose, customArcs, onUpdateArcs
                                 </div>
                             )}
 
-                            {/* Requirements */}
                             <div className="flex gap-2 items-center text-xs bg-slate-50 dark:bg-slate-900/50 p-2 rounded mt-2">
                                 <span className="font-bold text-slate-500">조건(선택):</span>
                                 <input className="w-20 p-1 border rounded bg-white text-slate-900" placeholder="스킬명" value={option.req?.skill || ''} onChange={(e) => onChange({...option, req: {...option.req, skill: e.target.value}})} />
@@ -459,6 +500,53 @@ const CustomEventManager: React.FC<Props> = ({ onClose, customArcs, onUpdateArcs
                 </div>
             </div>
         );
+    };
+
+    // Helper for Bezier Curves
+    const renderConnection = (node: StoryNode, opt: StoryOption, i: number, currentArc: CustomStoryArc) => {
+        // Find positions
+        const startX = (node.position?.x || 0) + 2500 + 180; // Card Width 180
+        const startY = (node.position?.y || 0) + 2500 + 40; // Card Height ~80 / 2
+
+        const drawCurve = (targetId: string, color: string, isDashed: boolean) => {
+            const realTarget = currentArc.nodes[targetId];
+            if (!realTarget) return null;
+
+            const endX = (realTarget.position?.x || 0) + 2500;
+            const endY = (realTarget.position?.y || 0) + 2500 + 40;
+
+            const c1x = startX + 50;
+            const c1y = startY;
+            const c2x = endX - 50;
+            const c2y = endY;
+
+            return (
+                <g key={`${node.id}-${i}-${targetId}`}>
+                    <path 
+                        d={`M ${startX} ${startY} C ${c1x} ${c1y}, ${c2x} ${c2y}, ${endX} ${endY}`}
+                        stroke={color}
+                        strokeWidth={isDashed ? "1" : "2"} 
+                        strokeDasharray={isDashed ? "5,5" : ""}
+                        fill="none" 
+                        opacity="0.6"
+                    />
+                    <polygon points={`${endX},${endY} ${endX-10},${endY-5} ${endX-10},${endY+5}`} fill={color} />
+                </g>
+            );
+        };
+
+        if (opt.dice) {
+            // Success Path (Green)
+            const successLine = drawCurve(opt.dice.successId, "#22c55e", false); // Green-500
+            // Fail Path (Red)
+            const failLine = drawCurve(opt.dice.failId, "#ef4444", false); // Red-500
+            return <>{successLine}{failLine}</>;
+        } else {
+            // Normal Path
+            const color = opt.choiceText ? "#3b82f6" : "#64748b"; // Blue or Slate
+            const isDashed = !opt.choiceText;
+            return drawCurve(opt.id, color, isDashed);
+        }
     };
 
     return (
@@ -619,38 +707,7 @@ const CustomEventManager: React.FC<Props> = ({ onClose, customArcs, onUpdateArcs
                                         {/* Connections Layer (SVG) */}
                                         <svg className="absolute top-0 left-0 w-[5000px] h-[5000px] overflow-visible pointer-events-none" style={{transform: 'translate(-2500px, -2500px)'}}>
                                             {Object.values(currentArc.nodes).map(node => (
-                                                node.next?.map((opt, i) => {
-                                                    const targetNode = opt.dice ? (currentArc.nodes[opt.dice.successId] || currentArc.nodes[opt.dice.failId]) : currentArc.nodes[opt.id];
-                                                    // Note: Dice logic splits into two paths, visualizing simplified logic here to target primary ID for now or successId
-                                                    const realTarget = currentArc.nodes[opt.id] || (opt.dice ? currentArc.nodes[opt.dice.successId] : null);
-                                                    
-                                                    if (!realTarget) return null;
-                                                    
-                                                    const startX = (node.position?.x || 0) + 2500 + 180; // Card Width 180
-                                                    const startY = (node.position?.y || 0) + 2500 + 40; // Card Height ~80 / 2
-                                                    const endX = (realTarget.position?.x || 0) + 2500;
-                                                    const endY = (realTarget.position?.y || 0) + 2500 + 40;
-
-                                                    // Bezier Curve
-                                                    const c1x = startX + 50;
-                                                    const c1y = startY;
-                                                    const c2x = endX - 50;
-                                                    const c2y = endY;
-
-                                                    return (
-                                                        <g key={`${node.id}-${i}`}>
-                                                            <path 
-                                                                d={`M ${startX} ${startY} C ${c1x} ${c1y}, ${c2x} ${c2y}, ${endX} ${endY}`}
-                                                                stroke={opt.dice ? "#a855f7" : (opt.choiceText ? "#3b82f6" : "#64748b")} 
-                                                                strokeWidth={opt.choiceText ? "2" : "1"} 
-                                                                strokeDasharray={opt.choiceText ? "" : "5,5"}
-                                                                fill="none" 
-                                                                opacity="0.6"
-                                                            />
-                                                            <polygon points={`${endX},${endY} ${endX-10},${endY-5} ${endX-10},${endY+5}`} fill={opt.dice ? "#a855f7" : (opt.choiceText ? "#3b82f6" : "#64748b")} />
-                                                        </g>
-                                                    );
-                                                })
+                                                node.next?.map((opt, i) => renderConnection(node, opt, i, currentArc))
                                             ))}
                                         </svg>
 
@@ -692,7 +749,10 @@ const CustomEventManager: React.FC<Props> = ({ onClose, customArcs, onUpdateArcs
                                     </button>
                                     
                                     <div className="absolute top-2 left-2 bg-black/50 text-white text-[10px] p-2 rounded pointer-events-none">
-                                        드래그: 이동 | 더블클릭: 편집
+                                        드래그: 이동 | 더블클릭: 편집 | 스크롤: (미지원)
+                                    </div>
+                                    <div className="absolute top-2 right-2 bg-black/50 text-white text-[10px] p-2 rounded pointer-events-none">
+                                        <span className="text-green-400">초록선: 성공</span> | <span className="text-red-400">빨간선: 실패</span> | <span className="text-blue-400">파란선: 선택지</span> | <span className="text-slate-400">점선: 자동</span>
                                     </div>
                                 </div>
                             )}
@@ -770,6 +830,39 @@ const CustomEventManager: React.FC<Props> = ({ onClose, customArcs, onUpdateArcs
                     </div>
                 )}
             </div>
+
+            {/* Custom Delete Confirmation Modal */}
+            {deleteTarget && (
+                <div className="fixed inset-0 z-[130] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fade-in">
+                    <div className="bg-white dark:bg-slate-800 rounded-xl shadow-2xl max-w-sm w-full overflow-hidden border border-slate-200 dark:border-slate-600 transform transition-all scale-100">
+                        <div className="p-6">
+                            <h3 className="text-xl font-bold text-slate-800 dark:text-slate-100 mb-3 flex items-center gap-2">
+                                <span className="text-red-500">⚠️</span>
+                                {deleteTarget.type === 'ARC' ? '시나리오 삭제' : '노드 삭제'}
+                            </h3>
+                            <p className="text-slate-600 dark:text-slate-300 text-sm leading-relaxed whitespace-pre-wrap">
+                                {deleteTarget.type === 'ARC' 
+                                    ? '정말 이 시나리오를 삭제하시겠습니까?\n삭제된 데이터는 복구할 수 없습니다.' 
+                                    : '정말 이 노드를 삭제하시겠습니까?\n연결된 모든 링크가 끊어집니다.'}
+                            </p>
+                        </div>
+                        <div className="bg-slate-50 dark:bg-slate-900/50 p-4 flex gap-3 justify-end border-t border-slate-100 dark:border-slate-700">
+                            <button
+                                onClick={() => setDeleteTarget(null)}
+                                className="px-4 py-2 rounded-lg font-bold text-sm text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
+                            >
+                                취소
+                            </button>
+                            <button
+                                onClick={confirmDelete}
+                                className="px-4 py-2 rounded-lg font-bold text-sm text-white shadow-sm transition-colors flex items-center gap-2 bg-red-600 hover:bg-red-700"
+                            >
+                                삭제
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };
