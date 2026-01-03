@@ -162,6 +162,16 @@ export interface GameSettings {
     enableEndings: boolean; 
 }
 
+export interface CustomStoryArc {
+    id: string;
+    title: string;
+    description: string;
+    nodes: Record<string, StoryNode>;
+    starterNodeId: string;
+    author?: string;
+    version?: number;
+}
+
 export interface GameState {
     type: 'FULL_SAVE';
     version: 1;
@@ -172,6 +182,7 @@ export interface GameState {
     logs: DayLog[];
     storyNodeId?: string | null;
     settings?: GameSettings; 
+    customArcs?: CustomStoryArc[]; // 커스텀 이벤트 저장
 }
 
 export interface StoryEffect {
@@ -220,6 +231,7 @@ export interface StoryNode {
     text: string;
     next?: StoryOption[]; 
     effect?: StoryEffect;
+    position?: { x: number; y: number }; // Added for Grid View
 }
 
 export interface ForcedEvent {

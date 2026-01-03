@@ -28,7 +28,7 @@ export const SPIRITUAL_EVENTS: Record<string, Record<string, ((n: string) => Act
         'ANALYST': [
             (n) => ({ text: `📿 [스님] ${n}은(는) 인과응보의 이치를 따져 상황을 이해했습니다.`, sanity: 5 }),
             (n) => ({ text: `🪵 [스님] ${n}은(는) 사찰의 지리적 이점을 이용해 은신했습니다.`, fatigue: -5 }),
-            (n) => ({ text: `🧘 [스님] ${n}은(는) 명상을 통해 에너지 소모를 최소화했습니다.`, hunger: 5, fatigue: -10 })
+            (n) => ({ text: `🧘 [스님] ${n}은(는) 명상을 통해 에너지 소모를 최소화했습니다.`, fatigue: -20 }) // hunger 제거, 피로도 대폭 감소
         ],
         'DIPLOMAT': [
             (n) => ({ text: `📿 [스님] ${n}은(는) 자비로운 마음으로 배고픈 이에게 시주(식량)를 주었습니다.`, hp: -2, sanity: 10 }),
@@ -37,7 +37,7 @@ export const SPIRITUAL_EVENTS: Record<string, Record<string, ((n: string) => Act
         ],
         'SENTINEL': [
             (n) => ({ text: `📿 [스님] ${n}은(는) 새벽 예불을 드리고 마당을 쓸었습니다.`, sanity: 5, fatigue: 5 }),
-            (n) => ({ text: `🪵 [스님] ${n}은(는) 발우공양을 하듯 음식을 남기지 않았습니다.`, hunger: 5 }),
+            (n) => ({ text: `🪵 [스님] ${n}은(는) 발우공양을 하듯 음식을 남기지 않았습니다.`, hp: 5 }), // hunger 제거, 체력 회복
             (n) => ({ text: `🧘 [스님] ${n}은(는) 계율을 철저히 지키며 살생을 자제했습니다.`, sanity: 5 })
         ],
         'EXPLORER': [

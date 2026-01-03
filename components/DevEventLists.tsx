@@ -279,7 +279,12 @@ const DevEventLists: React.FC<Props> = ({ type, activeId, onSelectStory, onOpenM
                                     const preview = gen('생존자');
                                     if (!matchesSearch(preview.text)) return null;
                                     return (
-                                        <button key={idx} onClick={() => onOpenModal('JOB', activeSubTab, idx, preview.text)} className="w-full text-left p-2 bg-white dark:bg-slate-800 rounded border border-slate-200 dark:border-slate-700 text-[11px] hover:bg-amber-50 transition-colors">
+                                        <button 
+                                            key={idx} 
+                                            // Fix: Pass composite key to include group info
+                                            onClick={() => onOpenModal('JOB', `${activeSubTab}::${group}`, idx, preview.text)} 
+                                            className="w-full text-left p-2 bg-white dark:bg-slate-800 rounded border border-slate-200 dark:border-slate-700 text-[11px] hover:bg-amber-50 transition-colors"
+                                        >
                                             <div className="text-slate-700 dark:text-slate-300">{preview.text}</div>
                                             {renderEffects(preview)}
                                         </button>
