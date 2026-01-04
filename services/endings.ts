@@ -10,9 +10,13 @@ export const checkEnding = (
     updates: CharacterUpdate[],
     currentInventory: string[],
     storyNodeId: string | null,
-    settings: GameSettings
+    settings: GameSettings,
+    viewedEndings: string[] = [] // 이미 본 엔딩 목록
 ): Ending | null => {
     if (!settings.enableEndings) return null;
+
+    // Helper to check if ending was already viewed
+    const isNew = (id: string) => !viewedEndings.includes(id);
 
     // 1. 이번 턴의 업데이트가 반영된 가상 상태 계산
     const nextStateChars = characters.map(c => {
@@ -48,8 +52,8 @@ export const checkEnding = (
 
     // --- 엔딩 조건 검사 ---
 
-    // 1. [BAD] 인류의 황혼 (전멸) - 최우선 순위
-    if (totalLivingCount === 0) {
+    // 1. [BAD] 인류의 황혼 (전멸) - 최우선 순위 (항상 발동 가능)
+    if (totalLivingCount === 0 && isNew('extinction')) {
         return {
             id: 'extinction',
             title: '인류의 황혼',
@@ -60,7 +64,7 @@ export const checkEnding = (
     }
 
     // 2. [GOOD] 안전 지대로 (스토리 이벤트)
-    if (storyNodeId && storyNodeId.includes('rescue_success')) {
+    if (storyNodeId && storyNodeId.includes('rescue_success') && isNew('rescue_success')) {
         return {
             id: 'rescue_success',
             title: '안전 지대로',
@@ -72,7 +76,7 @@ export const checkEnding = (
 
     // 3. [GOOD] 치료제 개발
     // 조건: 30일 이상, 의료 전문가 생존, 백신 3개 이상 보유
-    if (day >= 30 && hasMedicalExpert && vaccineCount >= 3) {
+    if (day >= 30 && hasMedicalExpert && vaccineCount >= 3 && isNew('cure_found')) {
         return {
             id: 'cure_found',
             title: '치료제 개발',
@@ -84,7 +88,7 @@ export const checkEnding = (
 
     // 4. [GOOD] 외부와의 교신
     // 조건: 40일 이상, 무전기와 지도 보유
-    if (day >= 40 && hasRadio && hasMap) {
+    if (day >= 40 && hasRadio && hasMap && isNew('global_contact')) {
         return {
             id: 'global_contact',
             title: '외부와의 교신',
@@ -96,7 +100,7 @@ export const checkEnding = (
 
     // 5. [GOOD] 완벽한 요새
     // 조건: 60일 이상, 기술 전문가 생존, 평균 피로도 20 미만 (안락함)
-    if (day >= 60 && hasTechExpert && avgFatigue < 20) {
+    if (day >= 60 && hasTechExpert && avgFatigue < 20 && isNew('fortress')) {
         return {
             id: 'fortress',
             title: '완벽한 요새',
@@ -108,7 +112,7 @@ export const checkEnding = (
 
     // 6. [SPECIAL] 기묘한 공존
     // 조건: 50일 이상, 입마개한 좀비 2명 이상, 생존자 2명 이상
-    if (day >= 50 && muzzledZombiesCount >= 2 && aliveHumans.length >= 2) {
+    if (day >= 50 && muzzledZombiesCount >= 2 && aliveHumans.length >= 2 && isNew('coexistence')) {
         return {
             id: 'coexistence',
             title: '기묘한 공존',
@@ -120,7 +124,7 @@ export const checkEnding = (
 
     // 7. [NEUTRAL] 황무지의 학살자
     // 조건: 40일 이상, 누적 킬 수 100 이상
-    if (day >= 40 && totalKills >= 100) {
+    if (day >= 40 && totalKills >= 100 && isNew('slayers')) {
         return {
             id: 'slayers',
             title: '황무지의 학살자',
@@ -132,7 +136,7 @@ export const checkEnding = (
 
     // 8. [BAD] 광기의 숭배
     // 조건: 30일 이상, 생존자 3명 이상, 평균 정신력 10 이하
-    if (day >= 30 && aliveHumans.length >= 3 && avgSanity <= 10) {
+    if (day >= 30 && aliveHumans.length >= 3 && avgSanity <= 10 && isNew('cult_madness')) {
         return {
             id: 'cult_madness',
             title: '광기의 숭배',
@@ -143,20 +147,21 @@ export const checkEnding = (
     }
 
     // 9. [BAD] 고독한 생존자
-    // 조건: 15일 이상, 생존자 단 1명, 좀비 동료 없음
-    if (day >= 15 && aliveHumans.length === 1 && zombies.length === 0) {
+    // 조건: 365일 이상, 생존자 단 1명, 좀비 동료 없음
+    // (조건이 365일로 상향 조정됨)
+    if (day >= 365 && aliveHumans.length === 1 && zombies.length === 0 && isNew('lone_survivor')) {
         return {
             id: 'lone_survivor',
             title: '고독한 생존자',
-            description: '모두가 떠나고 혼자 남았습니다. 좀비보다 더 무서운 것은 뼈에 사무치는 고독입니다.',
+            description: '1년이라는 시간이 지났습니다. 모두가 떠나고 혼자 남았습니다. 좀비보다 더 무서운 것은 뼈에 사무치는 고독입니다.',
             icon: '🚶',
             type: 'BAD'
         };
     }
 
     // 10. [GOOD] 새로운 시작 (기본 생존 엔딩)
-    // 조건: 365일 도달
-    if (day >= 365) {
+    // 조건: 365일 도달 (고독한 생존자가 아닐 경우)
+    if (day >= 365 && isNew('survival_1year')) {
         return {
             id: 'survival_1year',
             title: '새로운 시작',

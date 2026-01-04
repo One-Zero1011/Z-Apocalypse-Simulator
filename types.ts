@@ -182,7 +182,8 @@ export interface GameState {
     logs: DayLog[];
     storyNodeId?: string | null;
     settings?: GameSettings; 
-    customArcs?: CustomStoryArc[]; // 커스텀 이벤트 저장
+    customArcs?: CustomStoryArc[]; 
+    viewedEndings?: string[]; // 이미 본 엔딩 목록 추가
 }
 
 export interface StoryEffect {
@@ -231,7 +232,7 @@ export interface StoryNode {
     text: string;
     next?: StoryOption[]; 
     effect?: StoryEffect;
-    position?: { x: number; y: number }; // Added for Grid View
+    position?: { x: number; y: number }; 
 }
 
 export interface ForcedEvent {

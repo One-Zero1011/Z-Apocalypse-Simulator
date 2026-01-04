@@ -23,7 +23,8 @@ export const simulateDay = async (
     forcedEvents: ForcedEvent[], 
     currentInventory: string[], // Used for ending checks
     userSelectedNodeId?: string,
-    customArcs: CustomStoryArc[] = []
+    customArcs: CustomStoryArc[] = [],
+    viewedEndings: string[] = [] // Added parameter
 ): Promise<SimulationResult> => {
     const events: string[] = []; 
     const updates: CharacterUpdate[] = []; 
@@ -112,7 +113,8 @@ export const simulateDay = async (
         updates, 
         updatedInventory, 
         storyNode.id, 
-        settings
+        settings,
+        viewedEndings // Pass viewed endings
     );
 
     // 5. Zombie Hunger Update (Passive)

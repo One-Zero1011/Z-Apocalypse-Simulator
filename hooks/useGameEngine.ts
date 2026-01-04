@@ -32,7 +32,8 @@ export const useGameEngine = () => {
     const [inventory, setInventory] = useState<string[]>(INITIAL_INVENTORY);
     const [storyNodeId, setStoryNodeId] = useState<string | null>(null);
     const [gameSettings, setGameSettings] = useState<GameSettings>(INITIAL_SETTINGS);
-    const [customArcs, setCustomArcs] = useState<CustomStoryArc[]>([]); // New State
+    const [customArcs, setCustomArcs] = useState<CustomStoryArc[]>([]); 
+    const [viewedEndings, setViewedEndings] = useState<string[]>([]); // New State
     
     // UI/Interaction States
     const [loading, setLoading] = useState(false);
@@ -55,7 +56,8 @@ export const useGameEngine = () => {
                 setLogs(parsed.logs ?? []);
                 setStoryNodeId(parsed.storyNodeId ?? null);
                 setGameSettings(prev => ({ ...prev, ...(parsed.settings || {}) }));
-                setCustomArcs(parsed.customArcs || []); // Load Custom Arcs
+                setCustomArcs(parsed.customArcs || []);
+                setViewedEndings(parsed.viewedEndings || []);
             } catch (e) {
                 console.error("Failed to load autosave", e);
             }
@@ -64,11 +66,11 @@ export const useGameEngine = () => {
 
     useEffect(() => {
         const timer = setTimeout(() => {
-            const gameState = { day, characters, inventory, logs, storyNodeId, settings: gameSettings, customArcs };
+            const gameState = { day, characters, inventory, logs, storyNodeId, settings: gameSettings, customArcs, viewedEndings };
             localStorage.setItem('z_sim_autosave', JSON.stringify(gameState));
         }, 1000);
         return () => clearTimeout(timer);
-    }, [day, characters, inventory, logs, storyNodeId, gameSettings, customArcs]);
+    }, [day, characters, inventory, logs, storyNodeId, gameSettings, customArcs, viewedEndings]);
 
     // Core Actions
     const resetGame = useCallback(() => {
@@ -83,8 +85,7 @@ export const useGameEngine = () => {
         setPendingBaby(null);
         setActiveTarot(false);
         setActiveEnding(null);
-        // Note: customArcs are NOT reset on game reset, they are global config basically.
-        // If user wants to clear them, they can do so in the manager.
+        setViewedEndings([]);
     }, []);
 
     const loadGame = useCallback((parsed: GameState) => {
@@ -95,6 +96,7 @@ export const useGameEngine = () => {
         setStoryNodeId(parsed.storyNodeId);
         setGameSettings(parsed.settings || INITIAL_SETTINGS);
         if (parsed.customArcs) setCustomArcs(parsed.customArcs);
+        if (parsed.viewedEndings) setViewedEndings(parsed.viewedEndings);
     }, []);
 
     const loadRoster = useCallback((newCharacters: Character[]) => {
@@ -103,6 +105,7 @@ export const useGameEngine = () => {
         setLogs([]);
         setInventory(INITIAL_INVENTORY);
         setActiveEnding(null);
+        setViewedEndings([]);
     }, []);
 
     const addCharacter = (name: string, gender: Gender, mbti: MBTI, job: string, mentalState: MentalState, stats: Stats, initialRelations: { targetId: string, type: string }[] = []) => {
@@ -148,30 +151,32 @@ export const useGameEngine = () => {
         if (loading || activeEnding) return;
         const living = characters.filter(c => c.status === 'Alive' || c.status === 'Infected' || c.status === 'Zombie');
         
-        if (living.length === 0 && characters.length > 0) { 
-            setActiveEnding({ 
+        if (living.length === 0 && characters.length > 0 && !viewedEndings.includes('extinction_manual')) { 
+            const ending = { 
                 id: 'extinction_manual', 
                 title: '인류의 황혼', 
                 description: '모든 생존자가 사망했습니다. 고요한 폐허 속에 인류의 흔적만이 바람에 흩날립니다.', 
                 icon: '💀', 
                 type: 'BAD' 
-            }); 
+            } as Ending;
+            setActiveEnding(ending);
+            setViewedEndings(prev => [...prev, ending.id]);
             return; 
         }
         
         setLoading(true); setError(null);
         try {
           const nextDayVal = day + 1;
-          // Pass inventory to simulateDay (Argument index 6)
           const result = await simulateDay(
               nextDayVal, 
               characters, 
               storyNodeId, 
               gameSettings, 
               forcedEvents, 
-              inventory, // Passed Inventory
+              inventory,
               storySelection?.id, 
-              customArcs
+              customArcs,
+              viewedEndings // Pass currently viewed endings
           );
           
           if (storySelection?.penalty) {
@@ -196,7 +201,6 @@ export const useGameEngine = () => {
               if (index === -1) return;
               const char = { ...nextChars[index] };
               
-              // Stat & Skill Changes
               if (update.statChanges) {
                   const currentStats = char.stats || { str: 5, agi: 5, con: 5, int: 5, cha: 5 };
                   Object.entries(update.statChanges).forEach(([stat, change]) => {
@@ -223,7 +227,6 @@ export const useGameEngine = () => {
                   char.skills = char.skills.filter(s => !update.skillsRemove!.includes(s.name));
               }
     
-              // Basic Attribute Changes
               if (update.hpChange !== undefined) char.hp = Math.max(0, Math.min(char.maxHp, Math.round(char.hp + update.hpChange)));
               if (update.sanityChange !== undefined) char.sanity = Math.max(0, Math.min(char.maxSanity, Math.round(char.sanity + update.sanityChange)));
               if (update.fatigueChange !== undefined) char.fatigue = Math.max(0, Math.min(MAX_FATIGUE, Math.round(char.fatigue + update.fatigueChange)));
@@ -273,11 +276,15 @@ export const useGameEngine = () => {
           setDay(nextDayVal); setStoryNodeId(result.nextStoryNodeId); 
           if (result.babyEvent) setPendingBaby(result.babyEvent);
           if (result.tarotEvent) setActiveTarot(true); 
-          if (result.ending) setActiveEnding(result.ending);
-        } catch (err) { console.error(err); setError("시뮬레이션 오류 발생"); } finally { setLoading(false); }
-    }, [day, characters, loading, storyNodeId, gameSettings, forcedEvents, storySelection, activeEnding, customArcs, inventory]);
+          
+          if (result.ending) {
+              setActiveEnding(result.ending);
+              setViewedEndings(prev => [...prev, result.ending!.id]);
+          }
 
-    // Helpers exposed to UI
+        } catch (err) { console.error(err); setError("시뮬레이션 오류 발생"); } finally { setLoading(false); }
+    }, [day, characters, loading, storyNodeId, gameSettings, forcedEvents, storySelection, activeEnding, customArcs, inventory, viewedEndings]);
+
     const updateCharacter = (updatedChar: Character) => setCharacters(prev => prev.map(c => c.id === updatedChar.id ? updatedChar : c));
     const deleteCharacter = (id: string) => { 
         setCharacters(prev => prev.filter(c => c.id !== id).map(c => { 
@@ -305,8 +312,7 @@ export const useGameEngine = () => {
         pendingBaby, setPendingBaby,
         activeTarot, setActiveTarot,
         activeEnding, setActiveEnding,
-        customArcs, setCustomArcs, // Expose Custom Arcs
-        // Actions
+        customArcs, setCustomArcs, 
         nextDay, addCharacter, updateCharacter, deleteCharacter, setPlannedAction,
         resetGame, loadGame, loadRoster, setInventory
     };
