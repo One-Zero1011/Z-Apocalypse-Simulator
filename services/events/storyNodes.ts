@@ -11,6 +11,10 @@ import { BUNKER_NODES } from "./stories/bunker";
 import { SCHOOL_NODES } from "./stories/school";
 import { PRISON_NODES } from "./stories/prison";
 import { AMUSEMENT_NODES } from "./stories/amusement";
+// New Imports
+import { SHIP_NODES } from "./stories/ship";
+import { FACTORY_NODES } from "./stories/factory";
+import { MUSEUM_NODES } from "./stories/museum";
 
 // =================================================================
 // Story Arcs Aggregation
@@ -27,12 +31,15 @@ export const STORY_NODES: Record<string, StoryNode> = {
     ...BUNKER_NODES,
     ...SCHOOL_NODES,
     ...PRISON_NODES,
-    ...AMUSEMENT_NODES
+    ...AMUSEMENT_NODES,
+    ...SHIP_NODES,
+    ...FACTORY_NODES,
+    ...MUSEUM_NODES
 };
 
 // 시작 가능한 메인 아크의 첫 번째 노드 ID 목록
 export const STARTER_NODE_IDS = [
-    // Main Arcs (10)
+    // Main Arcs (13 Arcs now)
     'hospital_0_start',
     'winter_0_start',
     'metro_0_start',
@@ -42,7 +49,10 @@ export const STARTER_NODE_IDS = [
     'bunker_0_signal',
     'school_0_start', 
     'prison_0_start', 
-    'amusement_0_start', 
+    'amusement_0_start',
+    'ship_0_start',    // New
+    'factory_0_start', // New
+    'museum_0_start',  // New
     
     // One-offs (Environmental/Atmospheric) (15)
     'tarot_start', 

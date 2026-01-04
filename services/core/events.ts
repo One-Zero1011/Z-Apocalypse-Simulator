@@ -9,7 +9,7 @@ import { MBTI_EVENT_POOL } from '../events/mbtiEvents';
 import { getCharacterUpdate, sanitizeForMinors, generateEffectLog, applyEffectToUpdate } from './utils';
 
 export const processPlannedActions = (characters: Character[], updates: CharacterUpdate[], events: string[], globalLoot: string[]) => {
-    characters.filter(c => c.status === 'Alive' && c.plannedAction).forEach(c => {
+    characters.filter(c => (c.status === 'Alive' || c.status === 'Infected') && c.plannedAction).forEach(c => {
         const u = getCharacterUpdate(updates, c.id);
         u.plannedAction = null; 
         switch(c.plannedAction) {

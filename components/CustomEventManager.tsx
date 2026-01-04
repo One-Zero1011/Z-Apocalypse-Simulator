@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { CustomStoryArc, StoryNode, StoryOption, StoryEffect, Stats, MBTI, MentalState, Status } from '../types';
 
@@ -36,11 +37,12 @@ const CustomEventManager: React.FC<Props> = ({ onClose, customArcs, onUpdateArcs
     // Auto-layout for nodes without positions
     useEffect(() => {
         if (view === 'EDIT_ARC' && currentArc && editorMode === 'GRID') {
-            const nodes = Object.values(currentArc.nodes);
+            const nodes = Object.values(currentArc.nodes) as StoryNode[];
             const needsLayout = nodes.some(n => !n.position || (n.position.x === 0 && n.position.y === 0));
             
             if (needsLayout) {
-                const newNodes = { ...currentArc.nodes };
+                // Explicitly type newNodes to avoid 'unknown' errors
+                const newNodes: Record<string, StoryNode> = { ...currentArc.nodes };
                 let col = 0;
                 let row = 0;
                 const GAP_X = 300;
@@ -48,9 +50,10 @@ const CustomEventManager: React.FC<Props> = ({ onClose, customArcs, onUpdateArcs
                 const COLS = 5;
 
                 Object.keys(newNodes).forEach((key, idx) => {
-                    if (!newNodes[key].position || (newNodes[key].position!.x === 0 && newNodes[key].position!.y === 0)) {
+                    const node = newNodes[key];
+                    if (!node.position || (node.position.x === 0 && node.position.y === 0)) {
                         newNodes[key] = {
-                            ...newNodes[key],
+                            ...node,
                             position: {
                                 x: 100 + (col * GAP_X),
                                 y: 100 + (row * GAP_Y)
@@ -358,7 +361,8 @@ const CustomEventManager: React.FC<Props> = ({ onClose, customArcs, onUpdateArcs
         </div>
     );
 
-    const OptionEditor = ({ option, idx, onChange, onDelete }: { option: StoryOption, idx: number, onChange: (o: StoryOption) => void, onDelete: () => void }) => {
+    // Type definition to support 'key' prop in JSX
+    const OptionEditor: React.FC<{ option: StoryOption, idx: number, onChange: (o: StoryOption) => void, onDelete: () => void }> = ({ option, idx, onChange, onDelete }) => {
         const [mode, setMode] = useState<'AUTO' | 'CHOICE'>(option.choiceText ? 'CHOICE' : 'AUTO');
         const [isDice, setIsDice] = useState(!!option.dice);
 
@@ -659,7 +663,7 @@ const CustomEventManager: React.FC<Props> = ({ onClose, customArcs, onUpdateArcs
                                         <button onClick={handleCreateNode} className="px-3 py-1 bg-indigo-600 text-white text-xs font-bold rounded hover:bg-indigo-700">+ 노드 추가</button>
                                     </div>
                                     <div className="bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-b-lg p-4 space-y-2">
-                                        {Object.values(currentArc.nodes).map(node => (
+                                        {Object.values(currentArc.nodes).map((node: StoryNode) => (
                                             <div key={node.id} className="flex justify-between items-center bg-white dark:bg-slate-800 p-3 rounded border border-slate-200 dark:border-slate-600">
                                                 <div className="flex-1">
                                                     <div className="flex items-center gap-2">
@@ -706,13 +710,13 @@ const CustomEventManager: React.FC<Props> = ({ onClose, customArcs, onUpdateArcs
                                     >
                                         {/* Connections Layer (SVG) */}
                                         <svg className="absolute top-0 left-0 w-[5000px] h-[5000px] overflow-visible pointer-events-none" style={{transform: 'translate(-2500px, -2500px)'}}>
-                                            {Object.values(currentArc.nodes).map(node => (
+                                            {Object.values(currentArc.nodes).map((node: StoryNode) => (
                                                 node.next?.map((opt, i) => renderConnection(node, opt, i, currentArc))
                                             ))}
                                         </svg>
 
                                         {/* Nodes Layer */}
-                                        {Object.values(currentArc.nodes).map(node => (
+                                        {Object.values(currentArc.nodes).map((node: StoryNode) => (
                                             <div
                                                 key={node.id}
                                                 onMouseDown={(e) => handleMouseDown(e, node.id)}

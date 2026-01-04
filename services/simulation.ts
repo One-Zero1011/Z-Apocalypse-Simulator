@@ -5,6 +5,7 @@ import {
 import { DAILY_HUNGER_LOSS } from '../constants';
 import { getNextStoryNode } from './events/globalEvents';
 import { GHOST_EVENTS } from './events/ghostEvents';
+import { checkEnding } from './endings'; // Import the new ending service
 
 // Import Logic Modules
 import { addLootToGlobal, applyEffectToUpdate, getCharacterUpdate, sanitizeForMinors, generateEffectLog } from './core/utils';
@@ -20,6 +21,7 @@ export const simulateDay = async (
     currentStoryNodeId: string | null, 
     settings: GameSettings, 
     forcedEvents: ForcedEvent[], 
+    currentInventory: string[], // Used for ending checks
     userSelectedNodeId?: string,
     customArcs: CustomStoryArc[] = []
 ): Promise<SimulationResult> => {
@@ -94,29 +96,24 @@ export const simulateDay = async (
         });
     });
 
-    // 4. Ending Check (Logic Fixed: Check updated status)
-    let triggeredEnding: Ending | null = null;
-    
-    // Calculate final living count based on current state + updates
-    let finalLivingCount = 0;
-    characters.forEach(c => {
-        const update = updates.find(u => u.id === c.id);
-        const currentStatus = update?.status || c.status;
-        if (currentStatus !== 'Dead' && currentStatus !== 'Missing') {
-            finalLivingCount++;
-        }
-    });
-
-    // Pre-check condition: Are there any characters at all?
-    if (characters.length > 0) {
-        if (finalLivingCount === 0) {
-            triggeredEnding = { id: 'extinction', title: '인류의 황혼', description: '모든 생존자가 사망했습니다. 고요한 폐허 속에 인류의 흔적만이 바람에 흩날립니다.', icon: '💀', type: 'BAD' };
-        } else if (day >= 365) {
-            triggeredEnding = { id: 'survival_1year', title: '새로운 시작', description: '1년이라는 긴 시간 동안 지옥에서 살아남았습니다. 당신들은 이제 단순한 생존자가 아닌, 새로운 세계의 개척자입니다.', icon: '🌅', type: 'GOOD' };
-        } else if (storyNode.id.includes('rescue')) {
-            triggeredEnding = { id: 'rescue_success', title: '안전 지대로', description: '극적인 구조 끝에 안전한 곳으로 이송되었습니다. 지옥 같던 날들은 이제 기억 속에만 남을 것입니다.', icon: '🚁', type: 'GOOD' };
-        }
+    // 4. Ending Check (Delegated to external service)
+    // 인벤토리 변화를 반영하기 위해 현재 인벤토리 + 획득 - 제거를 계산
+    const updatedInventory = [...currentInventory, ...globalLoot];
+    if (inventoryRemove.length > 0) {
+        inventoryRemove.forEach(item => {
+            const idx = updatedInventory.indexOf(item);
+            if (idx > -1) updatedInventory.splice(idx, 1);
+        });
     }
+
+    const triggeredEnding = checkEnding(
+        day, 
+        characters, 
+        updates, 
+        updatedInventory, 
+        storyNode.id, 
+        settings
+    );
 
     // 5. Zombie Hunger Update (Passive)
     characters.filter(c => c.status === 'Zombie').forEach(c => {

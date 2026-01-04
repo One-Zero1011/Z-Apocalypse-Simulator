@@ -50,7 +50,12 @@ const InventoryPanel: React.FC<Props> = ({ inventory, onSelectItem }) => {
                                         item === '백신' ? '💉' :
                                         item === '입마개' ? '😷' :
                                         item === '고기' ? '🥩' :
-                                        item === '인육' ? '🍖' : '📦'}
+                                        item === '인육' ? '🍖' : 
+                                        item === '생수 500ml' ? '💧' :
+                                        item === '맥가이버 칼' ? '🔪' :
+                                        item === '권총' ? '🔫' :
+                                        item === '지도' ? '🗺️' :
+                                        item === '무전기' ? '📻' : '📦'}
                                 </span>
                                 <div className="text-center leading-none">
                                     <span className="block">{item}</span>

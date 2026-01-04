@@ -99,6 +99,7 @@ const CharacterForm: React.FC<Props> = ({ onAdd, disabled, existingCharacters = 
           case 'Savior': return '은인 (+50)';
           case 'Friend': return '친구 (+30)';
           case 'Colleague': return '동료 (+15)';
+          case 'Fan': return '팬 (+40)';
           case 'Rival': return '라이벌 (-15)';
           case 'Ex': return '전 애인 (-20)';
           case 'Enemy': return '원수 (-50)';

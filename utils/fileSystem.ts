@@ -25,7 +25,8 @@ export const createRosterData = (characters: Character[]) => {
         killCount: 0, 
         plannedAction: null, 
         mentalState: 'Normal', 
-        hasMuzzle: false 
+        hasMuzzle: false,
+        griefLogs: []
     }));
 };
 

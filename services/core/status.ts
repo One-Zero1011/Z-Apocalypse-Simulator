@@ -48,7 +48,8 @@ export const processStatusChanges = (characters: Character[], updates: Character
             const currentInfection = c.infection + (u.infectionChange || 0);
             if (currentInfection >= MAX_INFECTION) {
                 let voteScore = 0;
-                const voters = characters.filter(v => v.id !== c.id && v.status === 'Alive');
+                // 감염자 본인을 제외하고, 생존(Alive)하거나 감염된(Infected) 동료들이 투표에 참여
+                const voters = characters.filter(v => v.id !== c.id && (v.status === 'Alive' || v.status === 'Infected'));
                 
                 voters.forEach(v => {
                     if (v.mbti.includes('F')) voteScore += 2; else voteScore -= 2;
