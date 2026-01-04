@@ -162,8 +162,17 @@ export const useGameEngine = () => {
         setLoading(true); setError(null);
         try {
           const nextDayVal = day + 1;
-          // Pass customArcs to simulateDay
-          const result = await simulateDay(nextDayVal, characters, storyNodeId, gameSettings, forcedEvents, storySelection?.id, customArcs);
+          // Pass inventory to simulateDay (Argument index 6)
+          const result = await simulateDay(
+              nextDayVal, 
+              characters, 
+              storyNodeId, 
+              gameSettings, 
+              forcedEvents, 
+              inventory, // Passed Inventory
+              storySelection?.id, 
+              customArcs
+          );
           
           if (storySelection?.penalty) {
               const p = storySelection.penalty;
@@ -266,7 +275,7 @@ export const useGameEngine = () => {
           if (result.tarotEvent) setActiveTarot(true); 
           if (result.ending) setActiveEnding(result.ending);
         } catch (err) { console.error(err); setError("시뮬레이션 오류 발생"); } finally { setLoading(false); }
-    }, [day, characters, loading, storyNodeId, gameSettings, forcedEvents, storySelection, activeEnding, customArcs]);
+    }, [day, characters, loading, storyNodeId, gameSettings, forcedEvents, storySelection, activeEnding, customArcs, inventory]);
 
     // Helpers exposed to UI
     const updateCharacter = (updatedChar: Character) => setCharacters(prev => prev.map(c => c.id === updatedChar.id ? updatedChar : c));
