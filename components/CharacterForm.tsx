@@ -107,6 +107,20 @@ const CharacterForm: React.FC<Props> = ({ onAdd, disabled, existingCharacters = 
       }
   };
 
+  const getRelationDescription = (targetName: string, type: string) => {
+      const myName = name || "현재 캐릭터";
+      switch (type) {
+          case 'Parent': return `👉 ${targetName}이(가) ${myName}의 [부모]가 됩니다.`;
+          case 'Child': return `👉 ${targetName}이(가) ${myName}의 [자식]이 됩니다.`;
+          case 'Guardian': return `👉 ${targetName}이(가) ${myName}의 [보호자]가 됩니다. (대상이 나를 지킴)`;
+          case 'Ward': return `👉 ${targetName}이(가) ${myName}의 [피보호자]가 됩니다. (내가 대상을 지킴)`;
+          case 'Spouse': return `👉 ${targetName}이(가) ${myName}의 [배우자]가 됩니다.`;
+          case 'Sibling': return `👉 ${targetName}이(가) ${myName}의 [형제/자매]가 됩니다.`;
+          case 'Lover': return `👉 ${targetName}이(가) ${myName}의 [연인]이 됩니다.`;
+          default: return `👉 ${targetName}이(가) ${myName}의 [${getRelationText(type).split(' ')[0]}] 관계가 됩니다.`;
+      }
+  };
+
   const livingCharacters = existingCharacters.filter(c => c.status !== 'Dead' && c.status !== 'Missing');
   const availableTargets = livingCharacters.filter(c => !pendingRelations.some(r => r.targetId === c.id));
 
@@ -274,55 +288,63 @@ const CharacterForm: React.FC<Props> = ({ onAdd, disabled, existingCharacters = 
 
                 {/* Relation Adder */}
                 {availableTargets.length > 0 ? (
-                    <div className="flex gap-2">
-                        <select
-                            value={tempTargetId}
-                            onChange={(e) => setTempTargetId(e.target.value)}
-                            className="flex-1 bg-gray-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded p-2 text-sm text-slate-900 dark:text-slate-100 focus:border-zombie-green dark:focus:border-zombie-green focus:outline-none"
-                            disabled={disabled}
-                        >
-                            <option value="">(대상 선택)</option>
-                            {availableTargets.map(char => (
-                                <option key={char.id} value={char.id}>{char.name}</option>
-                            ))}
-                        </select>
-                        <select
-                            value={tempRelationType}
-                            onChange={(e) => setTempRelationType(e.target.value)}
-                            className="flex-1 bg-gray-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded p-2 text-sm text-slate-900 dark:text-slate-100 focus:border-zombie-green dark:focus:border-zombie-green focus:outline-none"
-                            disabled={!tempTargetId || disabled}
-                        >
-                            <optgroup label="가족 (Family)">
-                                {!friendshipMode && !isMarriageForbidden && <option value="Spouse">부부 (Spouse)</option>}
-                                <option value="Child">자식 (Child)</option>
-                                <option value="Parent">부모 (Parent)</option>
-                                <option value="Sibling">형제/자매 (Sibling)</option>
-                                <option value="Guardian">보호자 (Guardian)</option>
-                                <option value="Ward">피보호자 (Ward)</option>
-                                <option value="Family">친척/기타 가족</option>
-                            </optgroup>
-                            <optgroup label="사회 (Social)">
-                                {!friendshipMode && <option value="Lover">연인 (Lover)</option>}
-                                <option value="BestFriend">절친 (Best Friend)</option>
-                                <option value="Friend">친구 (Friend)</option>
-                                <option value="Colleague">동료 (Colleague)</option>
-                                <option value="Fan">팬 (Fan)</option>
-                                <option value="Savior">은인 (Savior)</option>
-                            </optgroup>
-                            <optgroup label="적대 (Hostile)">
-                                <option value="Rival">라이벌 (Rival)</option>
-                                {!friendshipMode && <option value="Ex">전 애인 (Ex)</option>}
-                                <option value="Enemy">원수 (Enemy)</option>
-                            </optgroup>
-                        </select>
-                        <button 
-                            type="button"
-                            onClick={handleAddRelation}
-                            disabled={!tempTargetId || disabled}
-                            className="bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-300 px-3 rounded text-sm font-bold disabled:opacity-50"
-                        >
-                            +
-                        </button>
+                    <div className="flex flex-col gap-2">
+                        <div className="flex gap-2">
+                            <select
+                                value={tempTargetId}
+                                onChange={(e) => setTempTargetId(e.target.value)}
+                                className="flex-1 bg-gray-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded p-2 text-sm text-slate-900 dark:text-slate-100 focus:border-zombie-green dark:focus:border-zombie-green focus:outline-none"
+                                disabled={disabled}
+                            >
+                                <option value="">(대상 선택)</option>
+                                {availableTargets.map(char => (
+                                    <option key={char.id} value={char.id}>{char.name}</option>
+                                ))}
+                            </select>
+                            <select
+                                value={tempRelationType}
+                                onChange={(e) => setTempRelationType(e.target.value)}
+                                className="flex-1 bg-gray-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded p-2 text-sm text-slate-900 dark:text-slate-100 focus:border-zombie-green dark:focus:border-zombie-green focus:outline-none"
+                                disabled={!tempTargetId || disabled}
+                            >
+                                <optgroup label="가족 (Family)">
+                                    {!friendshipMode && !isMarriageForbidden && <option value="Spouse">부부 (Spouse)</option>}
+                                    <option value="Child">자식 (Child)</option>
+                                    <option value="Parent">부모 (Parent)</option>
+                                    <option value="Sibling">형제/자매 (Sibling)</option>
+                                    <option value="Guardian">보호자 (Guardian)</option>
+                                    <option value="Ward">피보호자 (Ward)</option>
+                                    <option value="Family">친척/기타 가족</option>
+                                </optgroup>
+                                <optgroup label="사회 (Social)">
+                                    {!friendshipMode && <option value="Lover">연인 (Lover)</option>}
+                                    <option value="BestFriend">절친 (Best Friend)</option>
+                                    <option value="Friend">친구 (Friend)</option>
+                                    <option value="Colleague">동료 (Colleague)</option>
+                                    <option value="Fan">팬 (Fan)</option>
+                                    <option value="Savior">은인 (Savior)</option>
+                                </optgroup>
+                                <optgroup label="적대 (Hostile)">
+                                    <option value="Rival">라이벌 (Rival)</option>
+                                    {!friendshipMode && <option value="Ex">전 애인 (Ex)</option>}
+                                    <option value="Enemy">원수 (Enemy)</option>
+                                </optgroup>
+                            </select>
+                            <button 
+                                type="button"
+                                onClick={handleAddRelation}
+                                disabled={!tempTargetId || disabled}
+                                className="bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-300 px-3 rounded text-sm font-bold disabled:opacity-50"
+                            >
+                                +
+                            </button>
+                        </div>
+                        {/* Dynamic Relationship Description */}
+                        {tempTargetId && tempRelationType && (
+                            <div className="text-xs text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/10 p-2 rounded border border-indigo-100 dark:border-indigo-800 animate-fade-in">
+                                {getRelationDescription(livingCharacters.find(c => c.id === tempTargetId)?.name || '대상', tempRelationType)}
+                            </div>
+                        )}
                     </div>
                 ) : (
                     <p className="text-xs text-slate-400 italic">더 이상 관계를 맺을 생존자가 없습니다.</p>

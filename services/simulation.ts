@@ -1,6 +1,6 @@
 
 import { 
-    Character, SimulationResult, CharacterUpdate, GameSettings, ForcedEvent, Ending, CustomStoryArc
+    Character, SimulationResult, CharacterUpdate, GameSettings, ForcedEvent, Ending, CustomStoryArc, CampState
 } from '../types';
 import { DAILY_HUNGER_LOSS } from '../constants';
 import { getNextStoryNode } from './events/globalEvents';
@@ -14,6 +14,7 @@ import { processInteractionPhase } from './core/interaction';
 import { processRelationshipEvolution } from './core/relationship';
 import { processPlannedActions, processPersonalEvents } from './core/events';
 import { processForcedEvents } from './core/forcedEvents'; 
+import { processCampEffects } from './core/camp'; // New Import
 
 export const simulateDay = async (
     day: number, 
@@ -24,7 +25,8 @@ export const simulateDay = async (
     currentInventory: string[], // Used for ending checks
     userSelectedNodeId?: string,
     customArcs: CustomStoryArc[] = [],
-    viewedEndings: string[] = [] // Added parameter
+    viewedEndings: string[] = [], // Added parameter
+    camp?: CampState // Added parameter
 ): Promise<SimulationResult> => {
     const events: string[] = []; 
     const updates: CharacterUpdate[] = []; 
@@ -72,6 +74,12 @@ export const simulateDay = async (
     // 2. Module Execution
     // Handle Forced Events (Non-Story)
     processForcedEvents(characters, forcedEvents, updates, events, globalLoot, settings);
+
+    // Camp Effects (New: Before personal events to buff stats)
+    if (camp) {
+        // NOTE: inventoryRemove passed to processCampEffects to track consumed food
+        processCampEffects(camp, characters, updates, events, globalLoot, currentInventory, inventoryRemove, settings);
+    }
 
     processPlannedActions(characters, updates, events, globalLoot);
     processPersonalEvents(characters, updates, events, settings, globalLoot);

@@ -320,7 +320,7 @@ const SystemMenu: React.FC<Props> = ({
                     </div>
 
                     <div className="mt-12 text-[10px] font-bold text-slate-400 flex flex-col gap-1">
-                        <span>Version 1.1.1</span>
+                        <span>Version 1.2.0</span>
                         <span>Created by 김먁먁</span>
                     </div>
                 </div>

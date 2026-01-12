@@ -12,6 +12,7 @@ import EventLog from './components/EventLog';
 import InventoryPanel from './components/InventoryPanel';
 import SurvivorList from './components/SurvivorList';
 import GameModals from './components/GameModals';
+import CampManagementModal from './components/CampManagementModal'; 
 
 const ITEM_EFFECTS: Record<string, { desc: string, hp?: number, sanity?: number, fatigue?: number, cureMental?: boolean, cureInfection?: number, muzzle?: boolean, feed?: number }> = {
     '붕대': { desc: '체력 +15', hp: 15 },
@@ -24,7 +25,8 @@ const ITEM_EFFECTS: Record<string, { desc: string, hp?: number, sanity?: number,
     '백신': { desc: '감염도 치료 (-50)', cureInfection: 50 },
     '입마개': { desc: '좀비에게 착용 시 물기 방지', muzzle: true },
     '고기': { desc: '좀비 허기 회복 (+30)', feed: 30 },
-    '인육': { desc: '좀비 허기 완전 회복 (+100)', feed: 100 }
+    '인육': { desc: '좀비 허기 완전 회복 (+100)', feed: 100 },
+    '채소': { desc: '건강한 식량. 체력 +10, 좀비 허기 +20', hp: 10, feed: 20 }
 };
 
 interface ConfirmState { title: string; message: string; action: () => void; isDangerous?: boolean; }
@@ -40,7 +42,8 @@ const App: React.FC = () => {
   const [showDevMenu, setShowDevMenu] = useState(false);
   const [showGriefList, setShowGriefList] = useState(false);
   const [showTutorial, setShowTutorial] = useState(false); 
-  const [showCustomEvents, setShowCustomEvents] = useState(false); // New State
+  const [showCustomEvents, setShowCustomEvents] = useState(false); 
+  const [showCampModal, setShowCampModal] = useState(false); 
   const [confirmState, setConfirmState] = useState<ConfirmState | null>(null);
   
   const [selectedItem, setSelectedItem] = useState<string | null>(null);
@@ -75,7 +78,7 @@ const App: React.FC = () => {
   };
   
   const handleSaveGame = () => {
-      const gameState: GameState = { type: 'FULL_SAVE', version: 1, timestamp: new Date().toISOString(), day: engine.day, characters: engine.characters, inventory: engine.inventory, logs: engine.logs, storyNodeId: engine.storyNodeId, settings: engine.gameSettings, customArcs: engine.customArcs };
+      const gameState: GameState = { type: 'FULL_SAVE', version: 1, timestamp: new Date().toISOString(), day: engine.day, characters: engine.characters, inventory: engine.inventory, logs: engine.logs, storyNodeId: engine.storyNodeId, settings: engine.gameSettings, customArcs: engine.customArcs, camp: engine.camp };
       saveToFile(`z-save-day${engine.day}.json`, gameState);
       setShowSystemMenu(false);
   };
@@ -196,6 +199,9 @@ const App: React.FC = () => {
       
       <div className="flex flex-wrap justify-end gap-2 mb-4">
             {engine.gameSettings.developerMode && <button onClick={() => setShowDevMenu(true)} className="px-3 py-1.5 rounded font-bold text-xs border border-zombie-green text-zombie-green hover:bg-zombie-green hover:text-white transition-colors">디버그</button>}
+            <button onClick={() => setShowCampModal(true)} className="px-3 py-1.5 rounded font-bold text-xs border border-indigo-500 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-500 hover:text-white transition-colors flex items-center gap-1">
+                <span>⛺</span> 거점 관리
+            </button>
             <button onClick={() => setShowGriefList(true)} disabled={engine.characters.length === 0} className="px-3 py-1.5 rounded font-bold text-xs border border-purple-500 text-purple-600 dark:text-purple-400 hover:bg-purple-500 hover:text-white transition-colors disabled:opacity-30">추모 및 감정</button>
             <button onClick={() => setShowRelationshipMap(true)} disabled={livingSurvivors.length < 2} className="px-3 py-1.5 rounded font-bold text-xs border border-blue-500 text-blue-600 dark:text-blue-400 hover:bg-blue-500 hover:text-white transition-colors disabled:opacity-30">인물 관계도</button>
             <button onClick={() => setShowSystemMenu(true)} className="px-3 py-1.5 rounded font-bold text-xs border border-slate-300 dark:border-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">시스템 설정</button>
@@ -238,7 +244,7 @@ const App: React.FC = () => {
             showDevMenu, setShowDevMenu,
             showGriefList, setShowGriefList,
             showTutorial, setShowTutorial,
-            showCustomEvents, setShowCustomEvents, // uiState 추가
+            showCustomEvents, setShowCustomEvents,
             selectedItem, setSelectedItem,
             editingCharacter, setEditingCharacter,
             planningCharacter, setPlanningCharacter,
@@ -255,6 +261,18 @@ const App: React.FC = () => {
         }}
         refs={{ rosterInputRef, gameSaveInputRef }}
       />
+
+      {showCampModal && (
+          <CampManagementModal 
+              camp={engine.camp} 
+              inventory={engine.inventory} 
+              characters={engine.characters} 
+              onUpgrade={engine.upgradeFacility} 
+              onAssignmentToggle={engine.toggleFacilityAssignment}
+              onPolicyChange={engine.changePolicy} // Pass handler
+              onClose={() => setShowCampModal(false)} 
+          />
+      )}
     </div>
   );
 };

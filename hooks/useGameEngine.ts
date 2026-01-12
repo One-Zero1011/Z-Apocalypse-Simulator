@@ -1,10 +1,11 @@
 
 import { useState, useEffect, useCallback } from 'react';
-import { Character, GameSettings, DayLog, ForcedEvent, GameState, BabyEventData, Ending, CharacterUpdate, RelationshipStatus, Stats, RelationshipUpdate, MBTI, Gender, MentalState, CustomStoryArc } from '../types';
+import { Character, GameSettings, DayLog, ForcedEvent, GameState, BabyEventData, Ending, CharacterUpdate, RelationshipStatus, Stats, RelationshipUpdate, MBTI, Gender, MentalState, CustomStoryArc, CampState, FacilityType, CampPolicies } from '../types';
 import { INITIAL_INVENTORY, MAX_HUNGER, MAX_FATIGUE, MAX_INFECTION } from '../constants';
 import { simulateDay } from '../services/simulation';
 import { getInitialSkills } from '../services/skillData';
-import { ensureIntegrity } from '../utils/fileSystem';
+import { ensureIntegrity, ensureCampIntegrity } from '../utils/fileSystem';
+import { CAMP_FACILITIES } from '../services/camp/constants';
 
 const INITIAL_SETTINGS: GameSettings = {
     allowSameSexCouples: true, allowOppositeSexCouples: true, allowIncest: false, pureLoveMode: false, restrictStudentDating: true, friendshipMode: false, 
@@ -25,6 +26,28 @@ const INVERSE_RELATIONS: Record<string, RelationshipStatus> = {
     'Enemy': 'Enemy', 'Ex': 'Ex', 'Savior': 'Friend', 'Family': 'Family'
 };
 
+const INITIAL_CAMP: CampState = {
+    facilities: {
+        'Barricade': 0,
+        'Infirmary': 0,
+        'Garden': 0,
+        'Workshop': 0,
+        'Lounge': 0
+    },
+    assignments: {
+        'Barricade': [],
+        'Infirmary': [],
+        'Garden': [],
+        'Workshop': [],
+        'Lounge': []
+    },
+    policies: {
+        rationing: 'Normal',
+        workLoad: 'Normal',
+        security: 'Standard'
+    }
+};
+
 export const useGameEngine = () => {
     const [day, setDay] = useState(0);
     const [characters, setCharacters] = useState<Character[]>([]);
@@ -33,7 +56,8 @@ export const useGameEngine = () => {
     const [storyNodeId, setStoryNodeId] = useState<string | null>(null);
     const [gameSettings, setGameSettings] = useState<GameSettings>(INITIAL_SETTINGS);
     const [customArcs, setCustomArcs] = useState<CustomStoryArc[]>([]); 
-    const [viewedEndings, setViewedEndings] = useState<string[]>([]); // New State
+    const [viewedEndings, setViewedEndings] = useState<string[]>([]);
+    const [camp, setCamp] = useState<CampState>(INITIAL_CAMP); // New Camp State
     
     // UI/Interaction States
     const [loading, setLoading] = useState(false);
@@ -58,6 +82,7 @@ export const useGameEngine = () => {
                 setGameSettings(prev => ({ ...prev, ...(parsed.settings || {}) }));
                 setCustomArcs(parsed.customArcs || []);
                 setViewedEndings(parsed.viewedEndings || []);
+                setCamp(ensureCampIntegrity(parsed.camp));
             } catch (e) {
                 console.error("Failed to load autosave", e);
             }
@@ -66,11 +91,11 @@ export const useGameEngine = () => {
 
     useEffect(() => {
         const timer = setTimeout(() => {
-            const gameState = { day, characters, inventory, logs, storyNodeId, settings: gameSettings, customArcs, viewedEndings };
+            const gameState = { day, characters, inventory, logs, storyNodeId, settings: gameSettings, customArcs, viewedEndings, camp };
             localStorage.setItem('z_sim_autosave', JSON.stringify(gameState));
         }, 1000);
         return () => clearTimeout(timer);
-    }, [day, characters, inventory, logs, storyNodeId, gameSettings, customArcs, viewedEndings]);
+    }, [day, characters, inventory, logs, storyNodeId, gameSettings, customArcs, viewedEndings, camp]);
 
     // Core Actions
     const resetGame = useCallback(() => {
@@ -86,6 +111,7 @@ export const useGameEngine = () => {
         setActiveTarot(false);
         setActiveEnding(null);
         setViewedEndings([]);
+        setCamp(INITIAL_CAMP);
     }, []);
 
     const loadGame = useCallback((parsed: GameState) => {
@@ -97,6 +123,7 @@ export const useGameEngine = () => {
         setGameSettings(parsed.settings || INITIAL_SETTINGS);
         if (parsed.customArcs) setCustomArcs(parsed.customArcs);
         if (parsed.viewedEndings) setViewedEndings(parsed.viewedEndings);
+        if (parsed.camp) setCamp(ensureCampIntegrity(parsed.camp));
     }, []);
 
     const loadRoster = useCallback((newCharacters: Character[]) => {
@@ -106,6 +133,7 @@ export const useGameEngine = () => {
         setInventory(INITIAL_INVENTORY);
         setActiveEnding(null);
         setViewedEndings([]);
+        setCamp(INITIAL_CAMP);
     }, []);
 
     const addCharacter = (name: string, gender: Gender, mbti: MBTI, job: string, mentalState: MentalState, stats: Stats, initialRelations: { targetId: string, type: string }[] = []) => {
@@ -176,7 +204,8 @@ export const useGameEngine = () => {
               inventory,
               storySelection?.id, 
               customArcs,
-              viewedEndings // Pass currently viewed endings
+              viewedEndings, // Pass currently viewed endings
+              camp // Pass camp state
           );
           
           if (storySelection?.penalty) {
@@ -283,7 +312,7 @@ export const useGameEngine = () => {
           }
 
         } catch (err) { console.error(err); setError("시뮬레이션 오류 발생"); } finally { setLoading(false); }
-    }, [day, characters, loading, storyNodeId, gameSettings, forcedEvents, storySelection, activeEnding, customArcs, inventory, viewedEndings]);
+    }, [day, characters, loading, storyNodeId, gameSettings, forcedEvents, storySelection, activeEnding, customArcs, inventory, viewedEndings, camp]); 
 
     const updateCharacter = (updatedChar: Character) => setCharacters(prev => prev.map(c => c.id === updatedChar.id ? updatedChar : c));
     const deleteCharacter = (id: string) => { 
@@ -304,6 +333,105 @@ export const useGameEngine = () => {
     };
     const setPlannedAction = (charId: string, actionId: string | null) => { setCharacters(prev => prev.map(c => { if (c.id === charId) return { ...c, plannedAction: actionId }; return c; })); };
     
+    // Camp Upgrade Function
+    const upgradeFacility = (type: FacilityType) => {
+        const config = CAMP_FACILITIES[type];
+        const nextLevel = (camp.facilities[type] || 0) + 1;
+        if (nextLevel > config.maxLevel) return;
+
+        const cost = config.costPerLevel[nextLevel];
+        if (!cost) return;
+
+        // Check Inventory
+        const inventoryCounts: Record<string, number> = {};
+        inventory.forEach(item => { inventoryCounts[item] = (inventoryCounts[item] || 0) + 1; });
+
+        for (const [item, count] of Object.entries(cost)) {
+            if ((inventoryCounts[item] || 0) < count) {
+                alert(`자원이 부족합니다! (${item} ${count - (inventoryCounts[item] || 0)}개 부족)`);
+                return;
+            }
+        }
+
+        // Deduct Items
+        setInventory(prev => {
+            const nextInv = [...prev];
+            for (const [item, count] of Object.entries(cost)) {
+                for (let i = 0; i < count; i++) {
+                    const idx = nextInv.indexOf(item);
+                    if (idx > -1) nextInv.splice(idx, 1);
+                }
+            }
+            return nextInv;
+        });
+
+        // Upgrade
+        setCamp(prev => ({
+            ...prev,
+            facilities: {
+                ...prev.facilities,
+                [type]: nextLevel
+            }
+        }));
+    };
+
+    // Assignment Logic
+    const toggleFacilityAssignment = (type: FacilityType, charId: string) => {
+        const facilityLevel = camp.facilities[type] || 0;
+        if (facilityLevel === 0) {
+            alert("건설되지 않은 시설에는 배치할 수 없습니다.");
+            return;
+        }
+
+        const currentAssignments = camp.assignments[type] || [];
+        if (currentAssignments.includes(charId)) {
+            // Unassign
+            setCamp(prev => ({
+                ...prev,
+                assignments: {
+                    ...prev.assignments,
+                    [type]: prev.assignments[type].filter(id => id !== charId)
+                }
+            }));
+            return;
+        }
+
+        // Check Capacity
+        const capacity = facilityLevel >= 5 ? 3 : facilityLevel >= 3 ? 2 : 1;
+        if (currentAssignments.length >= capacity) {
+            alert(`이 시설의 배치 인원이 꽉 찼습니다 (최대 ${capacity}명). 시설 레벨을 올리면 슬롯이 늘어납니다.`);
+            return;
+        }
+
+        // Check assigned elsewhere
+        for (const fType of Object.keys(camp.assignments)) {
+            if (camp.assignments[fType as FacilityType].includes(charId)) {
+                alert("이 생존자는 이미 다른 시설에 배치되어 있습니다.");
+                return;
+            }
+        }
+
+        // Assign
+        setCamp(prev => ({
+            ...prev,
+            assignments: {
+                ...prev.assignments,
+                [type]: [...(prev.assignments[type] || []), charId]
+            }
+        }));
+    };
+
+    // Policy Change Handler
+    const changePolicy = (category: keyof CampPolicies, value: string) => {
+        setCamp(prev => ({
+            ...prev,
+            policies: {
+                ...prev.policies,
+                [category]: value
+            }
+        }));
+    };
+
     return {
         day, characters, logs, inventory, gameSettings, setGameSettings,
         loading, error,
@@ -314,6 +442,7 @@ export const useGameEngine = () => {
         activeEnding, setActiveEnding,
         customArcs, setCustomArcs, 
         nextDay, addCharacter, updateCharacter, deleteCharacter, setPlannedAction,
-        resetGame, loadGame, loadRoster, setInventory
+        resetGame, loadGame, loadRoster, setInventory,
+        camp, upgradeFacility, toggleFacilityAssignment, changePolicy // Added changePolicy
     };
 };

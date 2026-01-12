@@ -1,5 +1,5 @@
 
-import { Character, GameSettings, GameState } from '../types';
+import { Character, GameSettings, GameState, CampState, FacilityType, CampPolicies } from '../types';
 import { INITIAL_INVENTORY, MAX_HUNGER } from '../constants';
 import { getInitialSkills } from '../services/skillData';
 
@@ -54,13 +54,50 @@ export const ensureIntegrity = (chars: any[]): Character[] => {
     }));
 };
 
+// Camp integrity check
+export const ensureCampIntegrity = (camp?: CampState): CampState => {
+    const defaultFacilities: Record<FacilityType, number> = {
+        'Barricade': 0,
+        'Infirmary': 0,
+        'Garden': 0,
+        'Workshop': 0,
+        'Lounge': 0
+    };
+    
+    const defaultAssignments: Record<FacilityType, string[]> = {
+        'Barricade': [],
+        'Infirmary': [],
+        'Garden': [],
+        'Workshop': [],
+        'Lounge': []
+    };
+
+    const defaultPolicies: CampPolicies = {
+        rationing: 'Normal',
+        workLoad: 'Normal',
+        security: 'Standard'
+    };
+
+    if (!camp) {
+        return { facilities: defaultFacilities, assignments: defaultAssignments, policies: defaultPolicies };
+    }
+
+    // Ensure all facility types exist
+    const facilities = { ...defaultFacilities, ...camp.facilities };
+    const assignments = { ...defaultAssignments, ...(camp.assignments || {}) };
+    const policies = { ...defaultPolicies, ...(camp.policies || {}) };
+    
+    return { facilities, assignments, policies };
+};
+
 export const parseSaveFile = (content: string): GameState | null => {
     try {
         const parsed = JSON.parse(content);
         if (parsed.type === 'FULL_SAVE') {
             return {
                 ...parsed,
-                characters: ensureIntegrity(parsed.characters)
+                characters: ensureIntegrity(parsed.characters),
+                camp: ensureCampIntegrity(parsed.camp) // Load camp state safely
             };
         }
         return null;

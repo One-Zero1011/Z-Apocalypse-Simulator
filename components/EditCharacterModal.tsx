@@ -109,6 +109,42 @@ const EditCharacterModal: React.FC<Props> = ({ character, allCharacters, onSave,
         onSave(updatedChar, relations);
     };
 
+    const getRelationText = (type: string) => {
+        switch (type) {
+            case 'Spouse': return '부부';
+            case 'Child': return '자식';
+            case 'Parent': return '부모';
+            case 'Sibling': return '형제/자매';
+            case 'Guardian': return '보호자';
+            case 'Ward': return '피보호자';
+            case 'Lover': return '연인';
+            case 'Family': return '가족';
+            case 'BestFriend': return '절친';
+            case 'Savior': return '은인';
+            case 'Friend': return '친구';
+            case 'Colleague': return '동료';
+            case 'Fan': return '팬';
+            case 'Rival': return '라이벌';
+            case 'Ex': return '전 애인';
+            case 'Enemy': return '원수';
+            default: return type;
+        }
+    };
+
+    const getRelationDescription = (targetName: string, type: string) => {
+        const myName = name || "현재 캐릭터";
+        switch (type) {
+            case 'Parent': return `👉 ${targetName}이(가) ${myName}의 [부모]가 됩니다.`;
+            case 'Child': return `👉 ${targetName}이(가) ${myName}의 [자식]이 됩니다.`;
+            case 'Guardian': return `👉 ${targetName}이(가) ${myName}의 [보호자]가 됩니다. (대상이 나를 지킴)`;
+            case 'Ward': return `👉 ${targetName}이(가) ${myName}의 [피보호자]가 됩니다. (내가 대상을 지킴)`;
+            case 'Spouse': return `👉 ${targetName}이(가) ${myName}의 [배우자]가 됩니다.`;
+            case 'Sibling': return `👉 ${targetName}이(가) ${myName}의 [형제/자매]가 됩니다.`;
+            case 'Lover': return `👉 ${targetName}이(가) ${myName}의 [연인]이 됩니다.`;
+            default: return `👉 ${targetName}이(가) ${myName}의 [${getRelationText(type)}] 관계가 됩니다.`;
+        }
+    };
+
     const availableTargets = allCharacters.filter(c => c.id !== character.id);
 
     return (
@@ -207,68 +243,77 @@ const EditCharacterModal: React.FC<Props> = ({ character, allCharacters, onSave,
                             <div className="space-y-2 max-h-40 overflow-y-auto pr-1">
                                 {relations.map((rel, idx) => {
                                     const targetCharJob = allCharacters.find(c => c.id === rel.targetId)?.job || '';
+                                    const targetCharName = allCharacters.find(c => c.id === rel.targetId)?.name || '대상';
                                     const isMarriageForbidden = ['초등학생', '중학생'].includes(job) || ['초등학생', '중학생'].includes(targetCharJob);
 
                                     return (
-                                        <div key={idx} className={`flex gap-2 items-center p-2 rounded border ${rel.isFixed ? 'bg-gray-100 dark:bg-slate-800 border-gray-200 dark:border-slate-700' : 'bg-slate-50 dark:bg-slate-700/50 border-slate-200 dark:border-slate-600'}`}>
-                                            <select 
-                                                value={rel.targetId} 
-                                                onChange={(e) => handleTargetChange(idx, e.target.value)}
-                                                className="flex-1 text-xs p-1 rounded border bg-white dark:bg-slate-800 dark:border-slate-600 dark:text-white disabled:bg-gray-100 dark:disabled:bg-slate-900 disabled:text-gray-500"
-                                                disabled={rel.isFixed}
-                                            >
-                                                {availableTargets.map(t => (
-                                                    <option key={t.id} value={t.id} disabled={relations.some((r, i) => i !== idx && r.targetId === t.id)}>{t.name}</option>
-                                                ))}
-                                            </select>
-                                            
-                                            <select 
-                                                value={rel.status} 
-                                                onChange={(e) => handleRelationChange(idx, 'status', e.target.value)}
-                                                className="w-24 text-xs p-1 rounded border bg-white dark:bg-slate-800 dark:border-slate-600 dark:text-white"
-                                            >
-                                                <option value="None">관계없음</option>
-                                                <optgroup label="긍정">
-                                                    <option value="Friend">친구</option>
-                                                    <option value="BestFriend">절친</option>
-                                                    <option value="Colleague">동료</option>
-                                                    <option value="Fan">팬</option>
-                                                    <option value="Savior">은인</option>
-                                                    {!friendshipMode && <option value="Lover">연인</option>}
-                                                    {!friendshipMode && !isMarriageForbidden && <option value="Spouse">부부</option>}
-                                                </optgroup>
-                                                <optgroup label="가족">
-                                                    <option value="Family">가족</option>
-                                                    <option value="Parent">부모</option>
-                                                    <option value="Child">자식</option>
-                                                    <option value="Sibling">형제/자매</option>
-                                                    <option value="Guardian">보호자</option>
-                                                    <option value="Ward">피보호자</option>
-                                                </optgroup>
-                                                <optgroup label="부정">
-                                                    <option value="Rival">라이벌</option>
-                                                    {!friendshipMode && <option value="Ex">전 애인</option>}
-                                                    <option value="Enemy">원수</option>
-                                                </optgroup>
-                                            </select>
+                                        <div key={idx} className={`flex flex-col gap-1 p-2 rounded border ${rel.isFixed ? 'bg-gray-100 dark:bg-slate-800 border-gray-200 dark:border-slate-700' : 'bg-slate-50 dark:bg-slate-700/50 border-slate-200 dark:border-slate-600'}`}>
+                                            <div className="flex gap-2 items-center">
+                                                <select 
+                                                    value={rel.targetId} 
+                                                    onChange={(e) => handleTargetChange(idx, e.target.value)}
+                                                    className="flex-1 text-xs p-1 rounded border bg-white dark:bg-slate-800 dark:border-slate-600 dark:text-white disabled:bg-gray-100 dark:disabled:bg-slate-900 disabled:text-gray-500"
+                                                    disabled={rel.isFixed}
+                                                >
+                                                    {availableTargets.map(t => (
+                                                        <option key={t.id} value={t.id} disabled={relations.some((r, i) => i !== idx && r.targetId === t.id)}>{t.name}</option>
+                                                    ))}
+                                                </select>
+                                                
+                                                <select 
+                                                    value={rel.status} 
+                                                    onChange={(e) => handleRelationChange(idx, 'status', e.target.value)}
+                                                    className="w-24 text-xs p-1 rounded border bg-white dark:bg-slate-800 dark:border-slate-600 dark:text-white"
+                                                >
+                                                    <option value="None">관계없음</option>
+                                                    <optgroup label="긍정">
+                                                        <option value="Friend">친구</option>
+                                                        <option value="BestFriend">절친</option>
+                                                        <option value="Colleague">동료</option>
+                                                        <option value="Fan">팬</option>
+                                                        <option value="Savior">은인</option>
+                                                        {!friendshipMode && <option value="Lover">연인</option>}
+                                                        {!friendshipMode && !isMarriageForbidden && <option value="Spouse">부부</option>}
+                                                    </optgroup>
+                                                    <optgroup label="가족">
+                                                        <option value="Family">가족</option>
+                                                        <option value="Parent">부모</option>
+                                                        <option value="Child">자식</option>
+                                                        <option value="Sibling">형제/자매</option>
+                                                        <option value="Guardian">보호자</option>
+                                                        <option value="Ward">피보호자</option>
+                                                    </optgroup>
+                                                    <optgroup label="부정">
+                                                        <option value="Rival">라이벌</option>
+                                                        {!friendshipMode && <option value="Ex">전 애인</option>}
+                                                        <option value="Enemy">원수</option>
+                                                    </optgroup>
+                                                </select>
 
-                                            <div className="w-16 flex flex-col items-center">
-                                                <span className="text-[9px] text-slate-400 font-bold uppercase">Affinity</span>
-                                                <input 
-                                                    type="number" 
-                                                    value={rel.affinity} 
-                                                    readOnly
-                                                    className="w-14 text-xs p-1 rounded border bg-gray-100 dark:bg-slate-900 dark:border-slate-600 text-slate-500 dark:text-slate-400 text-center font-mono cursor-not-allowed"
-                                                    title="호감도는 관계 유형에 따라 자동 설정됩니다."
-                                                />
+                                                <div className="w-16 flex flex-col items-center">
+                                                    <span className="text-[9px] text-slate-400 font-bold uppercase">Affinity</span>
+                                                    <input 
+                                                        type="number" 
+                                                        value={rel.affinity} 
+                                                        readOnly
+                                                        className="w-14 text-xs p-1 rounded border bg-gray-100 dark:bg-slate-900 dark:border-slate-600 text-slate-500 dark:text-slate-400 text-center font-mono cursor-not-allowed"
+                                                        title="호감도는 관계 유형에 따라 자동 설정됩니다."
+                                                    />
+                                                </div>
+
+                                                {!rel.isFixed ? (
+                                                    <button type="button" onClick={() => handleRemoveRelation(idx)} className="text-red-500 hover:text-red-700 px-1">
+                                                        ×
+                                                    </button>
+                                                ) : (
+                                                    <span className="px-1 text-gray-400 text-xs cursor-not-allowed" title="이미 저장된 관계는 유형 변경만 가능합니다.">🔒</span>
+                                                )}
                                             </div>
-
-                                            {!rel.isFixed ? (
-                                                <button type="button" onClick={() => handleRemoveRelation(idx)} className="text-red-500 hover:text-red-700 px-1">
-                                                    ×
-                                                </button>
-                                            ) : (
-                                                <span className="px-1 text-gray-400 text-xs cursor-not-allowed" title="이미 저장된 관계는 유형 변경만 가능합니다.">🔒</span>
+                                            {/* 설명 텍스트 추가 */}
+                                            {rel.targetId && rel.status !== 'None' && (
+                                                <div className="text-[10px] text-indigo-600 dark:text-indigo-400 pl-1">
+                                                    {getRelationDescription(targetCharName, rel.status)}
+                                                </div>
                                             )}
                                         </div>
                                     );

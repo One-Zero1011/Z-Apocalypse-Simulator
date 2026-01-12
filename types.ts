@@ -172,6 +172,36 @@ export interface CustomStoryArc {
     version?: number;
 }
 
+// --- Camp & Facility Types ---
+export type FacilityType = 'Barricade' | 'Infirmary' | 'Garden' | 'Workshop' | 'Lounge';
+
+// Policy Types
+export type RationingPolicy = 'Generous' | 'Normal' | 'Tight';
+export type WorkPolicy = 'Relaxed' | 'Normal' | 'Hard';
+export type SecurityPolicy = 'None' | 'Standard' | 'Strict';
+
+export interface CampPolicies {
+    rationing: RationingPolicy;
+    workLoad: WorkPolicy;
+    security: SecurityPolicy;
+}
+
+export interface CampState {
+    facilities: Record<FacilityType, number>; // Level 0~5
+    assignments: Record<FacilityType, string[]>; // Facility -> Character IDs
+    policies: CampPolicies; // New policies
+}
+
+export interface FacilityConfig {
+    name: string;
+    description: string;
+    icon: string;
+    maxLevel: number;
+    effects: string[]; // Level 1 to 5 descriptions
+    costPerLevel: Record<number, Record<string, number>>; // Level -> { Item: Count }
+}
+// -----------------------------
+
 export interface GameState {
     type: 'FULL_SAVE';
     version: 1;
@@ -183,7 +213,8 @@ export interface GameState {
     storyNodeId?: string | null;
     settings?: GameSettings; 
     customArcs?: CustomStoryArc[]; 
-    viewedEndings?: string[]; // 이미 본 엔딩 목록 추가
+    viewedEndings?: string[]; 
+    camp?: CampState; // 거점 상태 추가
 }
 
 export interface StoryEffect {
