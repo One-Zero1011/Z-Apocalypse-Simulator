@@ -192,6 +192,7 @@ const App: React.FC = () => {
   };
 
   const livingSurvivors = engine.characters.filter(c => c.status === 'Alive' || c.status === 'Infected' || c.status === 'Zombie');
+  const isGameOver = engine.characters.length > 0 && livingSurvivors.length === 0;
 
   return (
     <div className="min-h-screen p-4 md:p-8 max-w-7xl mx-auto transition-colors duration-300 pb-20 md:pb-8">
@@ -225,7 +226,7 @@ const App: React.FC = () => {
       </main>
 
       <div className="fixed bottom-4 left-4 right-4 z-40 md:hidden flex gap-2">
-          <button onClick={engine.nextDay} disabled={engine.loading || engine.characters.length === 0} className="flex-1 py-4 rounded-xl font-bold bg-red-600 text-white shadow-lg active:scale-95 transition-transform">{engine.loading ? '진행 중...' : '다음 날'}</button>
+          <button onClick={engine.nextDay} disabled={engine.loading || engine.characters.length === 0 || isGameOver} className={`flex-1 py-4 rounded-xl font-bold text-white shadow-lg active:scale-95 transition-transform ${isGameOver ? 'bg-slate-700 cursor-not-allowed' : 'bg-red-600'}`}>{isGameOver ? '게임 종료 (전원 사망)' : engine.loading ? '진행 중...' : '다음 날'}</button>
       </div>
 
       <div className="fixed bottom-0 left-0 right-0 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 flex md:hidden z-50">
@@ -234,7 +235,7 @@ const App: React.FC = () => {
           <button onClick={() => setActiveMobileTab('manage')} className={`flex-1 py-3 text-xs font-bold ${activeMobileTab === 'manage' ? 'text-red-600 border-t-2 border-red-600' : 'text-slate-500'}`}>관리</button>
       </div>
 
-      <div className="fixed bottom-10 right-10 z-40 hidden md:block"><button onClick={engine.nextDay} disabled={engine.loading || engine.characters.length === 0} className="px-8 py-4 rounded-full font-bold text-xl bg-red-600 text-white shadow-xl hover:shadow-2xl transition-all transform hover:-translate-y-1">{engine.loading ? '진행 중...' : '다음 날'}</button></div>
+      <div className="fixed bottom-10 right-10 z-40 hidden md:block"><button onClick={engine.nextDay} disabled={engine.loading || engine.characters.length === 0 || isGameOver} className={`px-8 py-4 rounded-full font-bold text-xl text-white shadow-xl hover:shadow-2xl transition-all transform hover:-translate-y-1 ${isGameOver ? 'bg-slate-700 cursor-not-allowed' : 'bg-red-600'}`}>{isGameOver ? '게임 종료 (전원 사망)' : engine.loading ? '진행 중...' : '다음 날'}</button></div>
 
       <GameModals 
         engine={engine}
