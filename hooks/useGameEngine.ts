@@ -179,16 +179,19 @@ export const useGameEngine = () => {
         if (loading || activeEnding) return;
         const living = characters.filter(c => c.status === 'Alive' || c.status === 'Infected' || c.status === 'Zombie');
         
-        if (living.length === 0 && characters.length > 0 && !viewedEndings.includes('extinction_manual')) { 
-            const ending = { 
+        // 전멸 체크: 생존자가 아무도 없으면 진행 불가
+        if (characters.length > 0 && living.length === 0) { 
+            const ending: Ending = { 
                 id: 'extinction_manual', 
                 title: '인류의 황혼', 
                 description: '모든 생존자가 사망했습니다. 고요한 폐허 속에 인류의 흔적만이 바람에 흩날립니다.', 
                 icon: '💀', 
                 type: 'BAD' 
-            } as Ending;
+            };
             setActiveEnding(ending);
-            setViewedEndings(prev => [...prev, ending.id]);
+            if (!viewedEndings.includes('extinction_manual')) {
+                setViewedEndings(prev => [...prev, ending.id]);
+            }
             return; 
         }
         
