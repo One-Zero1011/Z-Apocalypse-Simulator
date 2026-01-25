@@ -75,6 +75,13 @@ export const STARTER_NODE_IDS = [
     'flower_field',
     'weapon_maintenance',
 
+    // Material One-offs (New 5)
+    'oneoff_hardware_store',
+    'oneoff_construction_site',
+    'oneoff_scrap_yard',
+    'oneoff_renovation_house',
+    'oneoff_utility_van',
+
     // Dice Challenge One-offs (Existing 20)
     'dice_tripwire',
     'dice_locked_pharmacy',
@@ -128,6 +135,9 @@ export const STARTER_NODE_IDS = [
     
     // Duplicates for Probability Boost
     'abandoned_truck',
+    'oneoff_hardware_store',
+    'oneoff_construction_site',
+    'factory_0_start',
     'pharmacy_ruin',
     'vaccine_drop',
     'dice_tripwire',

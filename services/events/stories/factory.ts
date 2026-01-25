@@ -10,13 +10,13 @@ const S = {
 export const FACTORY_NODES: Record<string, StoryNode> = {
     'factory_0_start': {
         id: 'factory_0_start',
-        text: "🏭 웅웅거리는 기계 소리가 들리는 현대식 공장입니다. 담벼락엔 '접근 금지: 자동 방어 시스템 가동 중'이라고 적혀 있습니다.",
+        text: "🏭 웅웅거리는 기계 소리가 들리는 현대식 공장입니다. 담벼락엔 '접근 금지: 자동 방어 시스템 가동 중'이라고 적혀 있습니다. 내부에는 거점에 유용한 대량의 자재가 보관되어 있을 것입니다.",
         next: [
             { id: 'factory_1_hack', weight: 0.0, choiceText: "보안 시스템 해킹 (시스템 해킹 필요)", req: { skill: '시스템 해킹' } },
             { id: 'factory_1_sneak', weight: 0.6, choiceText: "개구멍으로 잠입" },
             { id: 'factory_avoid', weight: 0.4, choiceText: "지나치기" }
         ],
-        effect: { target: 'ALL', fatigue: 5 }
+        effect: { target: 'ALL', fatigue: 5, loot: ['고철'] }
     },
     'factory_avoid': {
         id: 'factory_avoid',
@@ -25,9 +25,9 @@ export const FACTORY_NODES: Record<string, StoryNode> = {
     },
     'factory_1_hack': {
         id: 'factory_1_hack',
-        text: "💻 외부 터미널에 접속하여 경비 시스템을 '아군'으로 인식시켰습니다. 정문이 활짝 열립니다.",
+        text: "💻 외부 터미널에 접속하여 경비 시스템을 '아군'으로 인식시켰습니다. 정문이 활짝 열리며 자재 창고가 모습을 드러냅니다.",
         next: [{ id: 'factory_3_control', weight: 1.0 }],
-        effect: { target: 'RANDOM_1', sanity: 10, skillsAdd: [S.HACKING], statChanges: { int: 1 } }
+        effect: { target: 'RANDOM_1', sanity: 10, skillsAdd: [S.HACKING], statChanges: { int: 1 }, loot: ['부품'] }
     },
     'factory_1_sneak': {
         id: 'factory_1_sneak',
@@ -55,7 +55,7 @@ export const FACTORY_NODES: Record<string, StoryNode> = {
     },
     'factory_3_control': {
         id: 'factory_3_control',
-        text: "🎛️ 중앙 제어실입니다. 생산 라인을 조작하면 유용한 물품을 만들 수 있지만, 경보가 울리고 있습니다.",
+        text: "🎛️ 중앙 제어실입니다. 생산 라인을 조작하면 유용한 물품이나 건설 자재를 만들 수 있지만, 경보가 울리고 있습니다.",
         next: [
             { id: 'factory_4_elec', weight: 0.0, choiceText: "회로 과부하로 경보 해제 (전자 공학 필요)", req: { skill: '전자 공학' } },
             { id: 'factory_4_loot_run', weight: 0.5, choiceText: "빠르게 챙기고 도주" },
@@ -64,15 +64,15 @@ export const FACTORY_NODES: Record<string, StoryNode> = {
     },
     'factory_4_elec': {
         id: 'factory_4_elec',
-        text: "⚡ 전자 공학 지식으로 경보 시스템의 퓨즈를 날려버렸습니다. 안전하게 공장 재고를 털었습니다.",
+        text: "⚡ 전자 공학 지식으로 경보 시스템의 퓨즈를 날려버렸습니다. 안전하게 공장 재고 자재들을 털었습니다.",
         next: [{ id: 'factory_5_exit', weight: 1.0 }],
-        effect: { target: 'ALL', loot: ['권총', '맥가이버 칼', '통조림'], sanity: 10, skillsAdd: [S.ELECTRONICS] }
+        effect: { target: 'ALL', loot: ['부품', '고철', '목재'], sanity: 10, skillsAdd: [S.ELECTRONICS] }
     },
     'factory_4_loot_run': {
         id: 'factory_4_loot_run',
-        text: "🏃 경비 드론이 몰려오기 전에 눈에 보이는 것만 챙겨서 달아났습니다.",
+        text: "🏃 경비 드론이 몰려오기 전에 눈에 보이는 자재들만 챙겨서 달아났습니다.",
         next: [{ id: 'factory_5_exit', weight: 1.0 }],
-        effect: { target: 'ALL', loot: ['통조림', '붕대'], fatigue: 15 }
+        effect: { target: 'ALL', loot: ['고철', '부품', '붕대'], fatigue: 15 }
     },
     'factory_4_produce': {
         id: 'factory_4_produce',
@@ -88,15 +88,15 @@ export const FACTORY_NODES: Record<string, StoryNode> = {
     },
     'factory_produce_success': {
         id: 'factory_produce_success',
-        text: "🛡️ 쏟아지는 좀비들을 몸으로 막아내는 동안, 기계가 '최신형 전술 장비' 생산을 마쳤습니다!",
+        text: "🛡️ 쏟아지는 좀비들을 몸으로 막아내는 동안, 기계가 대량의 '정밀 부품'과 '강화 고철' 생산을 마쳤습니다!",
         next: [{ id: 'factory_5_exit', weight: 1.0 }],
-        effect: { target: 'ALL', loot: ['권총', '권총', '지도'], hp: -10, kill: 5, statChanges: { con: 1, str: 1 } }
+        effect: { target: 'ALL', loot: ['부품', '부품', '고철', '고철', '시멘트'], hp: -10, kill: 5, statChanges: { con: 1, str: 1 } }
     },
     'factory_produce_fail': {
         id: 'factory_produce_fail',
-        text: "🧟 버티지 못하고 밀려났습니다! 생산되던 물품은 컨베이어 벨트에 낀 채 망가졌고, 우리는 상처만 입고 도망쳤습니다.",
+        text: "🧟 버티지 못하고 밀려났습니다! 생산되던 자재들은 파손되었고, 우리는 상처만 입고 도망쳤습니다.",
         next: [{ id: 'factory_5_exit', weight: 1.0 }],
-        effect: { target: 'ALL', hp: -25, infection: 10, sanity: -20 }
+        effect: { target: 'ALL', hp: -25, infection: 10, sanity: -20, loot: ['고철'] }
     },
     'factory_5_exit': {
         id: 'factory_5_exit',

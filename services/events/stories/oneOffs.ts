@@ -240,7 +240,7 @@ export const ONE_OFF_NODES: Record<string, StoryNode> = {
     },
     'abandoned_truck': {
         id: 'abandoned_truck',
-        text: "🚚 갓길에 버려진 택배 트럭을 발견했습니다. 뒷문은 굳게 잠겨있습니다.",
+        text: "🚚 갓길에 버려진 택배 트럭을 발견했습니다. 뒷문은 굳게 잠겨있습니다. 안에는 건설용 자재들이 가득 실려있는 것 같습니다.",
         next: [
             { id: 'truck_scavenge', weight: 0.0, choiceText: "버려진 상자 정밀 수색 (폐지 줍기 필요)", req: { skill: '폐지 줍기' } },
             { id: 'truck_lockpick', weight: 0.0, choiceText: "자물쇠 해킹 (전자 공학 필요)", req: { skill: '전자 공학' } },
@@ -251,23 +251,23 @@ export const ONE_OFF_NODES: Record<string, StoryNode> = {
     },
     'truck_scavenge': {
         id: 'truck_scavenge',
-        text: "📦 폐지 줍기 달인의 감각으로 트럭 구석에서 아무도 발견하지 못한 '귀중품 상자'를 찾아냈습니다.",
-        effect: { target: 'RANDOM_1', loot: ['백신', '통조림', '비타민'], sanity: 10, skillsAdd: [S.SCAVENGING, S.INVESTIGATION] }
+        text: "📦 폐지 줍기 달인의 감각으로 트럭 구석에서 아무도 발견하지 못한 '자재 상자'를 찾아냈습니다.",
+        effect: { target: 'RANDOM_1', loot: ['목재', '고철', '백신'], sanity: 10, skillsAdd: [S.SCAVENGING, S.INVESTIGATION] }
     },
     'truck_lockpick': {
         id: 'truck_lockpick',
-        text: "🔧 전문 기술을 발휘해 소리 없이 문을 열었습니다. 안에는 유용한 물건들이 가득합니다!",
-        effect: { target: 'RANDOM_1', loot: ['통조림', '통조림', '붕대'], sanity: 5, skillsAdd: [S.ELECTRONICS] }
+        text: "🔧 전문 기술을 발휘해 소리 없이 문을 열었습니다. 대량의 건설 자재를 확보했습니다!",
+        effect: { target: 'RANDOM_1', loot: ['목재', '목재', '고철', '부품'], sanity: 5, skillsAdd: [S.ELECTRONICS] }
     },
     'truck_lockpick_mech': { 
         id: 'truck_lockpick_mech', 
-        text: "🔧 기계 수리 실력으로 잠긴 뒷문을 손상 없이 열었습니다. 유용한 물건들이 가득합니다!", 
-        effect: { target: 'RANDOM_1', loot: ['통조림', '통조림', '붕대'], sanity: 5, skillsAdd: [S.MECHANIC] } 
+        text: "🔧 기계 수리 실력으로 잠긴 뒷문을 손상 없이 열었습니다. 유용한 자재들이 가득합니다!", 
+        effect: { target: 'RANDOM_1', loot: ['목재', '고철', '고철', '부품'], sanity: 5, skillsAdd: [S.MECHANIC] } 
     },
     'truck_force': {
         id: 'truck_force',
-        text: "🔨 한참을 두드리고 부순 끝에 문을 열었습니다. 요란한 소리 때문에 서둘러 물건만 챙겨 떠납니다.",
-        effect: { target: 'RANDOM_1', statChanges: { str: 1, int: -1 }, skillsAdd: [S.ATHLETICS], loot: ['통조림', '붕대'], fatigue: 15, skillsRemove: ["수사 근성"] }
+        text: "🔨 한참을 두드리고 부순 끝에 문을 열었습니다. 자재들을 챙겼지만 소음을 듣고 좀비가 몰려와 급히 자리를 떴습니다.",
+        effect: { target: 'RANDOM_1', statChanges: { str: 1, int: -1 }, skillsAdd: [S.ATHLETICS], loot: ['목재', '고철'], fatigue: 15, skillsRemove: ["수사 근성"] }
     },
     'pharmacy_ruin': {
         id: 'pharmacy_ruin',
@@ -358,7 +358,7 @@ export const ONE_OFF_NODES: Record<string, StoryNode> = {
     },
     'oneoff_locked_box': {
         id: 'oneoff_locked_box',
-        text: "🔒 수풀 속에 숨겨진 군용 보급 상자를 발견했습니다.",
+        text: "🔒 수풀 속에 숨겨진 군용 보급 상자를 발견했습니다. 튼튼한 금속으로 제작되어 안쪽의 자재들이 온전해 보입니다.",
         next: [
             { id: 'box_crafting', weight: 0.0, choiceText: "수제 도구로 해체 (도구 제작 필요)", req: { skill: '도구 제작' } },
             { id: 'box_knife', weight: 0.0, choiceText: "맥가이버 칼로 따기 (맥가이버 칼 필요)", req: { item: '맥가이버 칼' } },
@@ -368,18 +368,120 @@ export const ONE_OFF_NODES: Record<string, StoryNode> = {
     'box_crafting': {
         id: 'box_crafting',
         text: "⚒️ 도구 제작 스킬로 주변 나뭇가지를 깎아 완벽한 지렛대를 만들어 상자를 열었습니다.",
-        effect: { target: 'RANDOM_1', loot: ['권총', '비타민'], sanity: 5, skillsAdd: [S.CRAFTING] }
+        effect: { target: 'RANDOM_1', loot: ['부품', '고철', '비타민'], sanity: 5, skillsAdd: [S.CRAFTING] }
     },
     'box_knife': {
         id: 'box_knife',
-        text: "🔪 맥가이버 칼의 도구들을 이용해 정밀하게 자물쇠를 해체했습니다. 안에는 최고급 보급품이 가득합니다!",
-        effect: { target: 'ALL', loot: ['권총', '통조림', '항생제', '지도'], sanity: 10 }
+        text: "🔪 맥가이버 칼의 도구들을 이용해 정밀하게 자물쇠를 해체했습니다. 안에는 최고급 보급품과 자재가 가득합니다!",
+        effect: { target: 'ALL', loot: ['권총', '부품', '고철', '지도'], sanity: 10 }
     },
     'box_smash': {
         id: 'box_smash',
-        text: "🔨 돌로 수십 번을 내리찍어 겨우 상자를 열었습니다. 그 과정에서 내용물 일부가 부서졌고, 소음을 듣고 좀비가 몰려와 급히 자리를 떴습니다.",
-        effect: { target: 'RANDOM_1', statChanges: { str: 1, agi: -1 }, skillsAdd: [S.RECYCLING], loot: ['통조림'], fatigue: 15, skillsRemove: ["도구 제작"] }
+        text: "🔨 돌로 수십 번을 내리찍어 겨우 상자를 열었습니다. 그 과정에서 자재 일부가 찌그러졌지만 쓸만한 고철을 건졌습니다.",
+        effect: { target: 'RANDOM_1', statChanges: { str: 1, agi: -1 }, skillsAdd: [S.RECYCLING], loot: ['고철', '고철'], fatigue: 15, skillsRemove: ["도구 제작"] }
     },
+
+    // --- New Material Focused Events (5) ---
+    'oneoff_hardware_store': {
+        id: 'oneoff_hardware_store',
+        text: "🔨 거리 모퉁이에서 약탈당하지 않은 작은 철물점을 발견했습니다. 거점 강화에 필요한 목재와 공구가 보입니다.",
+        next: [
+            { id: 'hardware_expert', weight: 0.0, choiceText: "전문가적 수색 (기계 수리 필요)", req: { skill: '기계 수리' } },
+            { id: 'hardware_loot', weight: 1.0, choiceText: "자재 챙기기" }
+        ],
+        effect: { target: 'ALL', loot: ['목재', '고철'] }
+    },
+    'hardware_expert': {
+        id: 'hardware_expert',
+        text: "🔧 기계 수리 지식으로 가장 상태가 좋은 공구 세트와 강화용 자재들을 골라냈습니다.",
+        effect: { target: 'RANDOM_1', loot: ['공구세트', '목재', '부품'], sanity: 10, skillsAdd: [S.MECHANIC] }
+    },
+    'hardware_loot': {
+        id: 'hardware_loot',
+        text: "📦 무거운 목재 판자와 고철들을 배낭에 가득 채웠습니다.",
+        effect: { target: 'ALL', loot: ['목재', '목재', '고철'], fatigue: 15 }
+    },
+
+    'oneoff_construction_site': {
+        id: 'oneoff_construction_site',
+        text: "🏗️ 공사가 중단된 신축 빌라 현장입니다. 비계 위에 쌓인 목재와 시멘트 포대들이 그대로 남아있습니다.",
+        next: [
+            { id: 'const_athletics', weight: 0.0, choiceText: "무거운 자재 운반 (폭발적 근력 필요)", req: { skill: '폭발적 근력' } },
+            { id: 'const_basic', weight: 1.0, choiceText: "조심해서 나르기" }
+        ],
+        effect: { target: 'ALL', loot: ['목재'] }
+    },
+    'const_athletics': {
+        id: 'const_athletics',
+        text: "💪 근력을 발휘해 한 번에 여러 개의 시멘트 포대와 목재를 옮겼습니다. 거점 방벽 보강에 큰 도움이 될 것입니다.",
+        effect: { target: 'RANDOM_1', loot: ['시멘트', '목재', '목재'], fatigue: 20, statChanges: { str: 1 } }
+    },
+    'const_basic': {
+        id: 'const_basic',
+        text: "🧱 낑낑대며 시멘트 포대를 옮겼습니다. 허리가 끊어질 것 같지만 마음은 든든합니다.",
+        effect: { target: 'ALL', loot: ['시멘트', '목재'], fatigue: 30 }
+    },
+
+    'oneoff_scrap_yard': {
+        id: 'oneoff_scrap_yard',
+        text: "🚗 버려진 차들이 산더미처럼 쌓인 폐차장입니다. 기계 장치에서 뽑아낼 부품들이 많아 보입니다.",
+        next: [
+            { id: 'scrap_recycle', weight: 0.0, choiceText: "부품 정밀 추출 (부품 재활용 필요)", req: { skill: '부품 재활용' } },
+            { id: 'scrap_loot', weight: 1.0, choiceText: "쓸만한 고철 줍기" }
+        ],
+        effect: { target: 'ALL', loot: ['고철'] }
+    },
+    'scrap_recycle': {
+        id: 'scrap_recycle',
+        text: "🛠️ 부품 재활용 스킬로 폐차 엔진에서 멀쩡한 부품들과 구리 배선을 뜯어냈습니다.",
+        effect: { target: 'RANDOM_1', loot: ['부품', '부품', '고철'], sanity: 5, skillsAdd: [S.RECYCLING] }
+    },
+    'scrap_loot': {
+        id: 'scrap_loot',
+        text: "⚙️ 엔진 룸을 뒤져 쓸만한 고철 조각들을 모았습니다.",
+        effect: { target: 'ALL', loot: ['고철', '고철', '부품'], fatigue: 10 }
+    },
+
+    'oneoff_renovation_house': {
+        id: 'oneoff_renovation_house',
+        text: "🏠 한창 리모델링 공사 중이었던 것 같은 저택입니다. 내부에는 마루용 목재 판자가 묶음째로 놓여있습니다.",
+        next: [
+            { id: 'reno_scavenge', weight: 0.0, choiceText: "고급 자재 선별 (폐지 줍기 필요)", req: { skill: '폐지 줍기' } },
+            { id: 'reno_loot', weight: 1.0, choiceText: "판자 챙기기" }
+        ],
+        effect: { target: 'ALL', loot: ['목재'] }
+    },
+    'reno_scavenge': {
+        id: 'reno_scavenge',
+        text: "📦 폐지 줍기 실력으로 바닥재 아래 숨겨져 있던 비상용 공구 세트를 찾아냈습니다!",
+        effect: { target: 'RANDOM_1', loot: ['목재', '목재', '공구세트'], skillsAdd: [S.SCAVENGING] }
+    },
+    'reno_loot': {
+        id: 'reno_loot',
+        text: "🪵 튼튼한 목재 판자들을 등짐 가득 챙겼습니다.",
+        effect: { target: 'ALL', loot: ['목재', '목재', '부품'] }
+    },
+
+    'oneoff_utility_van': {
+        id: 'oneoff_utility_van',
+        text: "🚐 길가에 정차된 전기 설비 점검용 밴을 발견했습니다. 차 지붕에는 사다리가 묶여 있고 뒷좌석엔 부품 함이 가득합니다.",
+        next: [
+            { id: 'van_elec', weight: 0.0, choiceText: "전자 부품 확보 (전자 공학 필요)", req: { skill: '전자 공학' } },
+            { id: 'van_loot', weight: 1.0, choiceText: "장비 털기" }
+        ],
+        effect: { target: 'ALL', loot: ['부품'] }
+    },
+    'van_elec': {
+        id: 'van_elec',
+        text: "📟 전자 공학 지식으로 차량 제어 시스템에서 귀한 전자 회로 기판과 부품을 회수했습니다.",
+        effect: { target: 'RANDOM_1', loot: ['부품', '부품', '공구세트'], skillsAdd: [S.ELECTRONICS] }
+    },
+    'van_loot': {
+        id: 'van_loot',
+        text: "🔧 차량 뒷문을 열고 각종 전선과 부품들을 챙겼습니다.",
+        effect: { target: 'ALL', loot: ['부품', '고철', '목재'], fatigue: 10 }
+    },
+
     'oneoff_confusing_path': {
         id: 'oneoff_confusing_path',
         text: "🌫️ 짙은 안개 때문에 방향 감각을 상실했습니다.",
@@ -928,7 +1030,7 @@ export const ONE_OFF_NODES: Record<string, StoryNode> = {
 
     'dice_rusty_fire_escape': {
         id: 'dice_rusty_fire_escape',
-        text: "🏙️ 건물 5층에 물자가 보입니다. 녹슨 비상계단을 타고 올라가야 합니다.",
+        text: "🏙️ 건물 층에 물자가 보입니다. 녹슨 비상계단을 타고 올라가야 합니다.",
         next: [
             {
                 id: 'dice_escape_success',
@@ -940,7 +1042,7 @@ export const ONE_OFF_NODES: Record<string, StoryNode> = {
     },
     'dice_escape_success': {
         id: 'dice_escape_success',
-        text: "🧗 성공! 가파른 계단을 무사히 올라 5층 창고에 도달했습니다. 깨끗한 물자를 확보했습니다.",
+        text: "🧗 성공! 가파른 계단을 무사히 올라 층 창고에 도달했습니다. 깨끗한 물자를 확보했습니다.",
         effect: { target: 'ALL', loot: ['통조림', '비타민'], fatigue: 15, statChanges: { str: 1 } }
     },
     'dice_escape_fail': {
