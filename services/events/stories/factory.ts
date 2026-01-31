@@ -10,28 +10,28 @@ const S = {
 export const FACTORY_NODES: Record<string, StoryNode> = {
     'factory_0_start': {
         id: 'factory_0_start',
-        text: "🏭 웅웅거리는 기계 소리가 들리는 현대식 공장입니다. 담벼락엔 '접근 금지: 자동 방어 시스템 가동 중'이라고 적혀 있습니다. 내부에는 거점에 유용한 대량의 자재가 보관되어 있을 것입니다.",
+        text: "🏭 현대식 공장입니다. 직원 복지 구역에 있는 대형 식당을 털 계획입니다.",
         next: [
             { id: 'factory_1_hack', weight: 0.0, choiceText: "보안 시스템 해킹 (시스템 해킹 필요)", req: { skill: '시스템 해킹' } },
             { id: 'factory_1_sneak', weight: 0.6, choiceText: "개구멍으로 잠입" },
             { id: 'factory_avoid', weight: 0.4, choiceText: "지나치기" }
         ],
-        effect: { target: 'ALL', fatigue: 5, loot: ['고철'] }
+        effect: { target: 'ALL', fatigue: 5, loot: ['고철', '통조림'] }
     },
     'factory_avoid': {
         id: 'factory_avoid',
-        text: "🤖 로봇 경비견이 순찰하는 것을 보고 발길을 돌립니다. 목숨이 더 중요합니다.",
-        effect: { target: 'ALL', sanity: 5 }
+        text: "🤖 무시합니다. 근처 공장 노동자들의 쉼터에서 남은 도시락(고기)을 주웠습니다.",
+        effect: { target: 'ALL', sanity: 5, loot: ['고기', '통조림'] }
     },
     'factory_1_hack': {
         id: 'factory_1_hack',
-        text: "💻 외부 터미널에 접속하여 경비 시스템을 '아군'으로 인식시켰습니다. 정문이 활짝 열리며 자재 창고가 모습을 드러냅니다.",
+        text: "💻 보안 해제. 자동 배급기가 열리며 직원용 에너지 바(초콜릿)가 쏟아집니다.",
         next: [{ id: 'factory_3_control', weight: 1.0 }],
-        effect: { target: 'RANDOM_1', sanity: 10, skillsAdd: [S.HACKING], statChanges: { int: 1 }, loot: ['부품'] }
+        effect: { target: 'RANDOM_1', sanity: 10, skillsAdd: [S.HACKING], statChanges: { int: 1 }, loot: ['부품', '초콜릿', '초콜릿'] }
     },
     'factory_1_sneak': {
         id: 'factory_1_sneak',
-        text: "🕵️ 배수구를 통해 공장 내부로 들어왔습니다. 컨베이어 벨트가 쉴 새 없이 돌아가며 위험한 물건들을 나르고 있습니다.",
+        text: "🕵️ 잠입 중. 정비용 통로 구석에서 버려진 간식 봉투를 발견했습니다.",
         next: [
             { 
                 id: 'factory_2_dodge', 
@@ -39,44 +39,46 @@ export const FACTORY_NODES: Record<string, StoryNode> = {
                 choiceText: "프레스 기계 사이 통과 (민첩 기반)",
                 dice: { threshold: 80, stat: 'agi', successId: 'factory_3_control', failId: 'factory_2_crushed', hpPenalty: -40 }
             }
-        ]
+        ],
+        effect: { target: 'ALL', loot: ['통조림'] }
     },
     'factory_2_crushed': {
         id: 'factory_2_crushed',
-        text: "💥 쾅! 타이밍을 놓쳐 기계 팔에 강타당했습니다. 뼈가 부러지는 고통을 참으며 기어갑니다.",
+        text: "💥 부상 발생. 고통 속에 기어가며 가방 속의 통조림 하나가 찌그러졌지만 다행히 먹을 순 있습니다.",
         next: [{ id: 'factory_3_control', weight: 1.0 }],
-        effect: { target: 'RANDOM_1', hp: -40, fatigue: 20, statChanges: { agi: -1, con: -1 } }
+        effect: { target: 'RANDOM_1', hp: -40, fatigue: 20, statChanges: { agi: -1, con: -1 }, loot: ['통조림'] }
     },
     'factory_2_dodge': {
         id: 'factory_2_dodge',
-        text: "🤸 날렵하게 움직여 압착기와 절단기 사이를 무사히 통과했습니다. 마치 액션 영화의 한 장면 같았습니다.",
+        text: "🤸 회피 성공! 탈출구 근처 창고에서 신선한 고기 팩들을 발견했습니다.",
         next: [{ id: 'factory_3_control', weight: 1.0 }],
-        effect: { target: 'RANDOM_1', fatigue: 10, skillsAdd: [S.REFLEX], statChanges: { agi: 1 } }
+        effect: { target: 'RANDOM_1', fatigue: 10, skillsAdd: [S.REFLEX], statChanges: { agi: 1 }, loot: ['고기', '고기'] }
     },
     'factory_3_control': {
         id: 'factory_3_control',
-        text: "🎛️ 중앙 제어실입니다. 생산 라인을 조작하면 유용한 물품이나 건설 자재를 만들 수 있지만, 경보가 울리고 있습니다.",
+        text: "🎛️ 제어실. 이곳의 비상 보급 장치를 가동하면 압축 영양 식량을 얻을 수 있습니다.",
         next: [
             { id: 'factory_4_elec', weight: 0.0, choiceText: "회로 과부하로 경보 해제 (전자 공학 필요)", req: { skill: '전자 공학' } },
             { id: 'factory_4_loot_run', weight: 0.5, choiceText: "빠르게 챙기고 도주" },
             { id: 'factory_4_produce', weight: 0.5, choiceText: "생산 라인 가동 (위험 감수)" }
-        ]
+        ],
+        effect: { target: 'ALL', loot: ['통조림'] }
     },
     'factory_4_elec': {
         id: 'factory_4_elec',
-        text: "⚡ 전자 공학 지식으로 경보 시스템의 퓨즈를 날려버렸습니다. 안전하게 공장 재고 자재들을 털었습니다.",
+        text: "⚡ 경보 해제. 여유롭게 직원 식당 창고를 털어 대량의 통조림과 채소를 챙겼습니다.",
         next: [{ id: 'factory_5_exit', weight: 1.0 }],
-        effect: { target: 'ALL', loot: ['부품', '고철', '목재'], sanity: 10, skillsAdd: [S.ELECTRONICS] }
+        effect: { target: 'ALL', loot: ['부품', '고철', '통조림', '통조림', '채소', '채소'], sanity: 10, skillsAdd: [S.ELECTRONICS] }
     },
     'factory_4_loot_run': {
         id: 'factory_4_loot_run',
-        text: "🏃 경비 드론이 몰려오기 전에 눈에 보이는 자재들만 챙겨서 달아났습니다.",
+        text: "🏃 급히 챙깁니다. 눈에 보이는 통조림 박스 세 개를 낚아챘습니다.",
         next: [{ id: 'factory_5_exit', weight: 1.0 }],
-        effect: { target: 'ALL', loot: ['고철', '부품', '붕대'], fatigue: 15 }
+        effect: { target: 'ALL', loot: ['고철', '부품', '붕대', '통조림', '통조림', '통조림'], fatigue: 15 }
     },
     'factory_4_produce': {
         id: 'factory_4_produce',
-        text: "🏭 생산 라인을 재가동합니다! 기계가 돌아가는 소리에 좀비들이 몰려옵니다.",
+        text: "🏭 생산 라인 가동! 벨트에서 갓 만들어진 압축 전투 식량(고기)들이 쏟아집니다.",
         next: [
             { 
                 id: 'factory_produce_success', 
@@ -88,19 +90,19 @@ export const FACTORY_NODES: Record<string, StoryNode> = {
     },
     'factory_produce_success': {
         id: 'factory_produce_success',
-        text: "🛡️ 쏟아지는 좀비들을 몸으로 막아내는 동안, 기계가 대량의 '정밀 부품'과 '강화 고철' 생산을 마쳤습니다!",
+        text: "🛡️ 방어 성공! 고단백 압축 식량 수십 팩을 확보했습니다. 한 달은 끄떡없습니다!",
         next: [{ id: 'factory_5_exit', weight: 1.0 }],
-        effect: { target: 'ALL', loot: ['부품', '부품', '고철', '고철', '시멘트'], hp: -10, kill: 5, statChanges: { con: 1, str: 1 } }
+        effect: { target: 'ALL', loot: ['부품', '고기', '고기', '고기', '고기', '고기', '고기', '시멘트'], hp: -10, kill: 5, statChanges: { con: 1, str: 1 } }
     },
     'factory_produce_fail': {
         id: 'factory_produce_fail',
-        text: "🧟 버티지 못하고 밀려났습니다! 생산되던 자재들은 파손되었고, 우리는 상처만 입고 도망쳤습니다.",
+        text: "🧟 밀려났습니다! 생산된 식량 대부분이 짓밟혔지만, 품속에 몇 개는 챙겼습니다.",
         next: [{ id: 'factory_5_exit', weight: 1.0 }],
-        effect: { target: 'ALL', hp: -25, infection: 10, sanity: -20, loot: ['고철'] }
+        effect: { target: 'ALL', hp: -25, infection: 10, sanity: -20, loot: ['고기'] }
     },
     'factory_5_exit': {
         id: 'factory_5_exit',
-        text: "🚪 공장 뒷문을 통해 빠져나왔습니다. 기계 소리가 멀어집니다.",
-        effect: { target: 'ALL', fatigue: 10 }
+        text: "🚪 퇴각. 도중에 발견한 마지막 보급 상자(통조림)를 챙깁니다.",
+        effect: { target: 'ALL', fatigue: 10, loot: ['통조림', '통조림'] }
     }
 };

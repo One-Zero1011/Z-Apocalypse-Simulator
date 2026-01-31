@@ -21,6 +21,7 @@ const CharacterCard: React.FC<Props> = ({ character, allCharacters, onDelete, on
   const isZombie = character.status === 'Zombie';
   const isInfected = character.status === 'Infected' || (character.infection > 0 && !isZombie);
   const isExhausted = character.fatigue >= FATIGUE_THRESHOLD;
+  const isHungry = character.hunger <= 20;
   const mentalState = character.mentalState || 'Normal';
   const hasMentalIllness = mentalState !== 'Normal';
   
@@ -79,6 +80,7 @@ const CharacterCard: React.FC<Props> = ({ character, allCharacters, onDelete, on
               {!isZombie && (hasStatus('Child') || hasStatus('Parent') || hasStatus('Guardian') || hasStatus('Ward')) && <span title="가족/유사가족 있음" className="text-sm cursor-help">👪</span>}
               {!isZombie && isExhausted && !isDead && <span title="탈진 상태" className="text-sm animate-pulse">💤</span>}
               {!isZombie && hasMentalIllness && !isDead && <span title="정신 이상" className="text-sm animate-pulse">🧠</span>}
+              {!isZombie && isHungry && !isDead && <span title="허기짐" className="text-sm animate-bounce">🍗</span>}
           </h3>
           <div className="flex items-center gap-2 text-xs uppercase tracking-wide opacity-80 mt-1 flex-wrap">
             <span className="bg-slate-200 dark:bg-slate-700 px-1 rounded text-slate-700 dark:text-slate-300">{character.mbti}</span>
@@ -106,7 +108,6 @@ const CharacterCard: React.FC<Props> = ({ character, allCharacters, onDelete, on
                         📊
                     </button>
                 )}
-                {/* 촛불 버튼 제거됨 */}
                 {onPlan && !isDead && !isZombie && (
                     <button 
                         onClick={(e) => { e.stopPropagation(); onPlan(character); }}
@@ -172,23 +173,34 @@ const CharacterCard: React.FC<Props> = ({ character, allCharacters, onDelete, on
 
         <div className="w-full">
           <div className="flex justify-between mb-0.5">
-            {isZombie ? (
-                <span className="text-red-700 dark:text-red-400 font-bold">허기 (Hunger)</span>
-            ) : (
-                <span className={character.sanity <= 10 ? 'text-red-500 font-bold animate-pulse' : ''}>
-                    {hasMentalIllness ? '정신력 (불안정)' : '정신력'}
-                </span>
-            )}
+            <span className={character.sanity <= 10 ? 'text-red-500 font-bold animate-pulse' : ''}>
+                {hasMentalIllness ? '정신력 (불안정)' : '정신력'}
+            </span>
             <span>
-                {isZombie ? `${character.hunger}/${MAX_HUNGER}` : `${character.sanity}/${character.maxSanity || MAX_SANITY}`}
+                {character.sanity}/{character.maxSanity || MAX_SANITY}
             </span>
           </div>
           <div className="h-2 w-full bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
             <div 
               className={`h-full transition-all duration-500 ${
-                  isZombie ? 'bg-red-800' : hasMentalIllness ? 'bg-purple-600' : 'bg-blue-500'
+                  hasMentalIllness ? 'bg-purple-600' : 'bg-blue-500'
               }`} 
-              style={{ width: `${isZombie ? (character.hunger / MAX_HUNGER) * 100 : (character.sanity / (character.maxSanity || MAX_SANITY)) * 100}%` }}
+              style={{ width: `${(character.sanity / (character.maxSanity || MAX_SANITY)) * 100}%` }}
+            ></div>
+          </div>
+        </div>
+
+        <div className="w-full">
+          <div className="flex justify-between mb-0.5">
+            <span className={isHungry ? 'text-orange-600 font-bold' : ''}>허기 (Hunger)</span>
+            <span>{character.hunger}/{MAX_HUNGER}</span>
+          </div>
+          <div className="h-2 w-full bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
+            <div 
+              className={`h-full transition-all duration-500 ${
+                  isZombie ? 'bg-red-800' : isHungry ? 'bg-orange-500 animate-pulse' : 'bg-orange-400'
+              }`} 
+              style={{ width: `${(character.hunger / MAX_HUNGER) * 100}%` }}
             ></div>
           </div>
         </div>

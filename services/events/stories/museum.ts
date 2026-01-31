@@ -10,43 +10,43 @@ const S = {
 export const MUSEUM_NODES: Record<string, StoryNode> = {
     'museum_0_start': {
         id: 'museum_0_start',
-        text: "🏛️ 웅장한 국립 박물관입니다. 입구는 무너져 있지만 내부는 견고해 보입니다. 고대 무기 전시관이 있다는 안내판이 보입니다.",
+        text: "🏛️ 박물관입니다. 웅장한 로비 카페테리아에는 아직 먹을 것이 남아있을 수 있습니다.",
         next: [
             { id: 'museum_1_enter', weight: 1.0 }
         ],
-        effect: { target: 'ALL', sanity: 5 }
+        effect: { target: 'ALL', sanity: 5, loot: ['통조림'] }
     },
     'museum_1_enter': {
         id: 'museum_1_enter',
-        text: "🏺 로비에는 깨진 도자기와 미라들이 널려 있습니다. 그런데 미라 중 일부가 움직이는 것 같습니다!",
+        text: "🏺 박물관 카페의 매대가 부서져 있습니다. 구석에서 초콜릿 묶음을 발견했습니다.",
         next: [
             { id: 'museum_2_history', weight: 0.0, choiceText: "역사적 구조 파악 (지식 전수 필요)", req: { skill: '지식 전수' } },
             { id: 'museum_2_fight', weight: 0.6, choiceText: "전시물(무기) 확보 후 전투" },
             { id: 'museum_2_hide', weight: 0.4, choiceText: "전시관 사이로 은신" }
         ],
-        effect: { target: 'ALL', sanity: -5 }
+        effect: { target: 'ALL', sanity: -5, loot: ['초콜릿', '초콜릿'] }
     },
     'museum_2_history': {
         id: 'museum_2_history',
-        text: "🎓 박물관의 비밀 통로와 직원용 엘리베이터 위치를 기억해냈습니다. 좀비들을 피해 무기고(수장고)로 직행합니다.",
+        text: "🎓 비밀 통로 발견. 직원용 휴게실에서 보존 처리가 된 고대식 장기 보관 식품(?) 대신 대량의 통조림을 찾아냈습니다.",
         next: [{ id: 'museum_3_storage', weight: 1.0 }],
-        effect: { target: 'RANDOM_1', sanity: 10, skillsAdd: [S.TEACHING], statChanges: { int: 1 } }
+        effect: { target: 'RANDOM_1', sanity: 10, skillsAdd: [S.TEACHING], statChanges: { int: 1 }, loot: ['통조림', '통조림', '통조림'] }
     },
     'museum_2_fight': {
         id: 'museum_2_fight',
-        text: "⚔️ 유리 진열장을 깨고 고대 검과 창을 꺼내 들었습니다. 날은 무디지만 둔기로는 쓸만합니다!",
+        text: "⚔️ 전투 중. 쓰러진 좀비(관람객)의 배낭에서 샌드위치(고기)와 통조림을 건졌습니다.",
         next: [{ id: 'museum_3_knight', weight: 1.0 }],
-        effect: { target: 'ALL', kill: 3, fatigue: 15, statChanges: { str: 1 } }
+        effect: { target: 'ALL', kill: 3, fatigue: 15, statChanges: { str: 1 }, loot: ['고기', '통조림'] }
     },
     'museum_2_hide': {
         id: 'museum_2_hide',
-        text: "🤫 공룡 화석 뒤에 숨어 좀비들이 지나가길 기다립니다. 거대한 티라노사우루스 뼈가 삐걱거립니다.",
+        text: "🤫 공룡 화석 뒤. 도중에 발견한 자판기를 털어 간식들을 챙겼습니다.",
         next: [{ id: 'museum_3_knight', weight: 1.0 }],
-        effect: { target: 'ALL', fatigue: 5, sanity: -5 }
+        effect: { target: 'ALL', fatigue: 5, sanity: -5, loot: ['초콜릿', '통조림'] }
     },
     'museum_3_knight': {
         id: 'museum_3_knight',
-        text: "🛡️ 중세관에 들어서자, 전신 판금 갑옷을 입은 거대한 좀비가 길을 막습니다. 일반적인 공격은 통하지 않습니다!",
+        text: "🛡️ 갑옷 기사가 길을 막습니다. 놈이 지키고 있는 전시관 뒤쪽엔 직원용 냉장고가 보입니다!",
         next: [
             { id: 'museum_4_melee', weight: 0.0, choiceText: "갑옷 틈새 공략 (근접 제압 필요)", req: { skill: '근접 제압' } },
             { 
@@ -55,34 +55,35 @@ export const MUSEUM_NODES: Record<string, StoryNode> = {
                 choiceText: "협동하여 넘어뜨리기 (힘 기반)",
                 dice: { threshold: 80, stat: 'str', successId: 'museum_4_win', failId: 'museum_4_fail', hpPenalty: -30 }
             }
-        ]
+        ],
+        effect: { target: 'ALL', loot: ['통조림'] }
     },
     'museum_4_melee': {
         id: 'museum_4_melee',
-        text: "✊ 근접 제압 기술로 육중한 공격을 흘려내고, 투구 틈새와 관절 부위를 정확히 가격하여 무력화시켰습니다.",
+        text: "✊ 기사 제압. 놈의 뒤에 있던 직원용 대형 냉장고에서 신선한 고기와 채소들을 대량 확보했습니다!",
         next: [{ id: 'museum_5_treasure', weight: 1.0 }],
-        effect: { target: 'RANDOM_1', kill: 5, skillsAdd: [S.MELEE], statChanges: { str: 1, agi: 1 } }
+        effect: { target: 'RANDOM_1', kill: 5, skillsAdd: [S.MELEE], statChanges: { str: 1, agi: 1 }, loot: ['고기', '고기', '고기', '채소', '채소'] }
     },
     'museum_4_win': {
         id: 'museum_4_win',
-        text: "🛡️ 쿵! 육중한 금속음과 함께 기사 좀비가 쓰러졌습니다. 우리는 놈이 일어나기 전에 투구를 벗기고 마무리했습니다.",
+        text: "🛡️ 기사 처치. 놈의 배낭(?)에서 최고급 통조림 세트가 나옵니다.",
         next: [{ id: 'museum_5_treasure', weight: 1.0 }],
-        effect: { target: 'ALL', kill: 2, fatigue: 20, statChanges: { str: 1 } }
+        effect: { target: 'ALL', kill: 2, fatigue: 20, statChanges: { str: 1 }, loot: ['통조림', '통조림', '통조림'] }
     },
     'museum_4_fail': {
         id: 'museum_4_fail',
-        text: "🩸 놈의 철퇴에 맞아 방어선이 무너졌습니다. 갑옷 입은 괴물은 지치지도 않고 쫓아옵니다. 우리는 2층에서 뛰어내려 탈출했습니다.",
-        effect: { target: 'RANDOM_HALF', hp: -35, fatigue: 30, statChanges: { con: -1 } }
+        text: "🩸 도주 성공. 하지만 가방을 열어보니 챙겼던 식량들이 대부분 떨어져 나갔습니다.",
+        effect: { target: 'RANDOM_HALF', hp: -35, fatigue: 30, statChanges: { con: -1 }, inventoryRemove: ['통조림'] }
     },
     'museum_3_storage': {
         id: 'museum_3_storage',
-        text: "📦 수장고에는 보존 처리가 잘 된 식량과, 놀랍게도 한국 전쟁 당시의 구호 물품들이 남아있었습니다.",
+        text: "📦 수장고 파밍. 오랫동안 보존된 구호 물품 상자들을 열어 대량의 통조림을 확보했습니다.",
         next: [{ id: 'museum_5_treasure', weight: 1.0 }],
-        effect: { target: 'ALL', loot: ['통조림', '붕대'], sanity: 5 }
+        effect: { target: 'ALL', loot: ['통조림', '통조림', '통조림', '통조림', '붕대'], sanity: 5 }
     },
     'museum_5_treasure': {
         id: 'museum_5_treasure',
-        text: "👑 박물관의 깊은 곳에서 왕의 옥좌를 발견했습니다. 잠시나마 왕이 된 기분으로 휴식을 취하며, 예술품들이 주는 위안을 얻습니다.",
-        effect: { target: 'ALL', sanity: 30, fatigue: -20, skillsAdd: [S.ART], statChanges: { cha: 1 } }
+        text: "👑 왕의 옥좌 아래 숨겨진 비상용 식량(고기)과 와인을 즐기며 하루를 마무리합니다.",
+        effect: { target: 'ALL', sanity: 30, fatigue: -20, skillsAdd: [S.ART], statChanges: { cha: 1 }, loot: ['고기', '고기'] }
     }
 };

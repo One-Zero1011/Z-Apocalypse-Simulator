@@ -23,11 +23,15 @@ export const processStatusChanges = (characters: Character[], updates: Character
             if (c.mentalState !== 'Normal') u.mentalState = 'Normal';
         }
 
-        // Zombie Hunger Logic
-        if (c.status === 'Zombie') {
-            if (c.hunger <= 10) {
-                u.hpChange = (u.hpChange || 0) - 5;
-                events.push(`🦴 [굶주림] 좀비가 된 ${c.name}이(가) 심한 허기로 인해 신체 조직이 썩어갑니다.`);
+        // Hunger Logic (Human & Zombie)
+        if (c.hunger <= 0) {
+            u.hpChange = (u.hpChange || 0) - (c.status === 'Zombie' ? 5 : 10);
+            u.sanityChange = (u.sanityChange || 0) - (c.status === 'Zombie' ? 0 : 5);
+            
+            if (c.status !== 'Zombie') {
+                events.push(`🚨 [기아] ${c.name}은(는) 극심한 배고픔으로 인해 기력을 잃어가고 있습니다. (HP-10, 정신력-5)`);
+            } else if (c.hunger <= 10) {
+                events.push(`🦴 [굶주림] 좀비가 된 ${c.name}이(가) 심한 허기로 인해 신체 조직이 썩어갑니다. (HP-5)`);
             }
         }
 
@@ -48,7 +52,6 @@ export const processStatusChanges = (characters: Character[], updates: Character
             const currentInfection = c.infection + (u.infectionChange || 0);
             if (currentInfection >= MAX_INFECTION) {
                 let voteScore = 0;
-                // 감염자 본인을 제외하고, 생존(Alive)하거나 감염된(Infected) 동료들이 투표에 참여
                 const voters = characters.filter(v => v.id !== c.id && (v.status === 'Alive' || v.status === 'Infected'));
                 
                 voters.forEach(v => {

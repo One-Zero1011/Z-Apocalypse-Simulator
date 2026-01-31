@@ -12,21 +12,21 @@ const S = {
 export const HOSPITAL_NODES: Record<string, StoryNode> = {
     'hospital_0_start': {
         id: 'hospital_0_start',
-        text: "🏥 안개 속에서 거대한 종합병원 건물이 모습을 드러냈습니다. 전력이 끊긴 지 오래되어 보이지만, 약품이 남아있을지도 모릅니다.",
+        text: "🏥 안개 속에서 거대한 종합병원 건물이 모습을 드러냈습니다. 전력이 끊긴 지 오래되어 보이지만, 약품과 직원용 비상 식량이 남아있을지도 모릅니다.",
         next: [
             { id: 'hospital_1_lobby', weight: 0.7 },
             { id: 'hospital_ignore', weight: 0.3 }
         ],
-        effect: { target: 'ALL', sanity: 5 }
+        effect: { target: 'ALL', sanity: 5, loot: ['통조림'] }
     },
     'hospital_ignore': {
         id: 'hospital_ignore',
-        text: "🚫 병원은 죽음의 덫입니다. 우리는 욕심을 버리고 안전하게 우회하기로 결정했습니다.",
-        effect: { target: 'ALL', fatigue: 5, statChanges: { con: 1 } } // 생존력 상승
+        text: "🚫 병원은 죽음의 덫입니다. 우리는 욕심을 버리고 안전하게 우회하기로 결정했습니다. 다행히 근처 편의점 잔해에서 식량을 조금 챙겼습니다.",
+        effect: { target: 'ALL', fatigue: 5, statChanges: { con: 1 }, loot: ['통조림'] }
     },
     'hospital_1_lobby': {
         id: 'hospital_1_lobby',
-        text: "🚪 병원 로비에 들어서자 썩은 냄새가 코를 찌릅니다. 어디를 먼저 수색할까요?",
+        text: "🚪 병원 로비에 들어서자 썩은 냄새가 코를 찌릅니다. 접수대 안쪽 탕비실에 누군가 먹다 남긴 초콜릿과 통조림이 보입니다.",
         next: [
             { id: 'hospital_2a_stairs', weight: 0.4, choiceText: "계단으로 (전투 위험)" }, 
             { 
@@ -37,13 +37,13 @@ export const HOSPITAL_NODES: Record<string, StoryNode> = {
             },
             { id: 'hospital_2c_morgue', weight: 0.3, choiceText: "지하 영안실 탐색 (공포)" }   
         ],
-        effect: { target: 'ALL', sanity: -5 }
+        effect: { target: 'ALL', sanity: -5, loot: ['초콜릿', '통조림'] }
     },
     'hospital_2b_vents_success': {
         id: 'hospital_2b_vents_success',
-        text: "🤸 성공입니다! 날렵한 몸놀림으로 환기구를 통과했습니다. 아래쪽에서 배회하는 좀비들을 완벽히 따돌리고 안전하게 간호사 스테이션에 도착합니다.",
+        text: "🤸 성공입니다! 날렵한 몸놀림으로 환기구를 통과했습니다. 도중에 떨어진 배달원의 가방에서 신선한 채소를 발견했습니다!",
         next: [{ id: 'hospital_3_nurse_station', weight: 1.0 }],
-        effect: { target: 'ALL', sanity: 5, fatigue: 10, statChanges: { agi: 1 } }
+        effect: { target: 'ALL', sanity: 5, fatigue: 10, statChanges: { agi: 1 }, loot: ['채소', '채소'] }
     },
     'hospital_2b_vents_fail': {
         id: 'hospital_2b_vents_fail',
@@ -69,9 +69,9 @@ export const HOSPITAL_NODES: Record<string, StoryNode> = {
     },
     'hospital_3_morgue_loot': {
         id: 'hospital_3_morgue_loot',
-        text: "💍 끔찍한 냄새를 참아가며 시체들을 뒤져 귀금속과 진통제를 찾아냈습니다. 다시 로비로 올라갑니다.",
+        text: "💍 끔찍한 냄새를 참아가며 시체들을 뒤져 귀금속과 진통제, 그리고 주머니 속의 육포를 찾아냈습니다.",
         next: [{ id: 'hospital_3_nurse_station', weight: 1.0 }],
-        effect: { target: 'ALL', loot: ['비타민'], statChanges: { int: 1 } }
+        effect: { target: 'ALL', loot: ['비타민', '고기'], statChanges: { int: 1 } }
     },
     'hospital_3_morgue_wake': {
         id: 'hospital_3_morgue_wake',
@@ -84,7 +84,7 @@ export const HOSPITAL_NODES: Record<string, StoryNode> = {
         id: 'hospital_2a_stairs',
         text: "⚔️ 비상계단을 오르던 중, 잠복해 있던 감염자 무리와 마주쳤습니다! 좁은 공간에서 난전이 벌어집니다.",
         next: [{ id: 'hospital_3_nurse_station', weight: 1.0 }],
-        effect: { target: 'RANDOM_HALF', hp: -15, fatigue: 15, statChanges: { str: 1 } }
+        effect: { target: 'RANDOM_HALF', hp: -15, fatigue: 15, statChanges: { str: 1 }, loot: ['통조림'] }
     },
     'hospital_3_nurse_station': {
         id: 'hospital_3_nurse_station',
@@ -95,7 +95,7 @@ export const HOSPITAL_NODES: Record<string, StoryNode> = {
             { id: 'hospital_4_surgery', weight: 0.4, choiceText: "수술실 통과" },
             { id: 'hospital_4_roof', weight: 0.4, choiceText: "옥상으로 이동" }
         ],
-        effect: { target: 'ALL', loot: ['붕대'] }
+        effect: { target: 'ALL', loot: ['붕대', '통조림'] }
     },
     'hospital_4_pharma': {
         id: 'hospital_4_pharma',
@@ -113,7 +113,7 @@ export const HOSPITAL_NODES: Record<string, StoryNode> = {
         id: 'hospital_4_surgery',
         text: "🏥 수술실을 가로질러 이동합니다. 피 묻은 수술대와 깨진 약병들이 흩어져 있습니다. 안쪽에서 무거운 발소리가 들려옵니다.",
         next: [{ id: 'hospital_5_boss', weight: 1.0 }],
-        effect: { target: 'ALL', sanity: -10, fatigue: 5, statChanges: { int: 1 } }
+        effect: { target: 'ALL', sanity: -10, fatigue: 5, statChanges: { int: 1 }, loot: ['채소'] }
     },
     
     'hospital_4_roof': {
@@ -130,13 +130,13 @@ export const HOSPITAL_NODES: Record<string, StoryNode> = {
     },
     'hospital_5_flare_success': {
         id: 'hospital_5_flare_success',
-        text: "✨ 조명탄을 쏘아 올렸습니다! 멀리서 정찰 헬기가 이를 보고 보급품을 투하하고 사라집니다.",
-        effect: { target: 'ALL', sanity: 20, loot: ['통조림', '통조림', '항생제', '무전기'], statChanges: { cha: 1 } }
+        text: "✨ 조명탄을 쏘아 올렸습니다! 멀리서 정찰 헬기가 이를 보고 대량의 긴급 보급품을 투하하고 사라집니다.",
+        effect: { target: 'ALL', sanity: 20, loot: ['통조림', '통조림', '통조림', '항생제', '무전기'], statChanges: { cha: 1 } }
     },
     'hospital_5_flare_fail': {
         id: 'hospital_5_flare_fail',
         text: "💨 조명탄은 불발되었고, 소음 때문에 옥상으로 좀비들이 몰려옵니다! 서둘러 배관을 타고 내려와 탈출합니다.",
-        effect: { target: 'ALL', fatigue: 20, hp: -10, statChanges: { agi: -1 } }
+        effect: { target: 'ALL', fatigue: 20, hp: -10, statChanges: { agi: -1 }, loot: ['통조림'] }
     },
 
     'hospital_5_boss': {
@@ -173,12 +173,12 @@ export const HOSPITAL_NODES: Record<string, StoryNode> = {
     },
     'hospital_6_run': {
         id: 'hospital_6_run',
-        text: "🏃‍♂️ 우리는 창문을 깨고 뛰어내려 탈출했습니다. 뒤에서 '더 서전'의 기괴한 웃음소리가 들려옵니다.",
-        effect: { target: 'RANDOM_1', hp: -10, fatigue: 10, skillsRemove: ["정밀 수술", "해부학 지식"] }
+        text: "🏃‍♂️ 우리는 창문을 깨고 뛰어내려 탈출했습니다. 도중에 선반에서 떨어진 통조림 몇 개를 챙겼습니다.",
+        effect: { target: 'RANDOM_1', hp: -10, fatigue: 10, skillsRemove: ["정밀 수술", "해부학 지식"], loot: ['통조림', '통조림'] }
     },
     'hospital_6_win': {
         id: 'hospital_6_win',
-        text: "💊 판정 성공! 치열한 사투 끝에 변종을 쓰러뜨렸습니다! 놈의 가슴에 칼을 꽂아 넣자 기괴한 경련과 함께 무너집니다. 약제실은 보물창고였습니다. 희귀한 약품과 백신을 확보합니다.",
-        effect: { target: 'RANDOM_1', sanity: 35, loot: ['항생제', '안정제', '비타민', '백신'], kill: 10, skillsAdd: [S.SURGERY], statChanges: { int: 1, str: 1 } }
+        text: "💊 판정 성공! 치열한 사투 끝에 변종을 쓰러뜨렸습니다! 놈의 보관함에는 희귀 약품뿐만 아니라 신선한 보존식품이 가득합니다.",
+        effect: { target: 'RANDOM_1', sanity: 35, loot: ['항생제', '안정제', '통조림', '통조림', '고기', '백신'], kill: 10, skillsAdd: [S.SURGERY], statChanges: { int: 1, str: 1 } }
     }
 };

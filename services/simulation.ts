@@ -5,7 +5,7 @@ import {
 import { DAILY_HUNGER_LOSS } from '../constants';
 import { getNextStoryNode } from './events/globalEvents';
 import { GHOST_EVENTS } from './events/ghostEvents';
-import { checkEnding } from './endings'; // Import the new ending service
+import { checkEnding } from './endings'; 
 
 // Import Logic Modules
 import { addLootToGlobal, applyEffectToUpdate, getCharacterUpdate, sanitizeForMinors, generateEffectLog } from './core/utils';
@@ -14,7 +14,7 @@ import { processInteractionPhase } from './core/interaction';
 import { processRelationshipEvolution } from './core/relationship';
 import { processPlannedActions, processPersonalEvents } from './core/events';
 import { processForcedEvents } from './core/forcedEvents'; 
-import { processCampEffects } from './core/camp'; // New Import
+import { processCampEffects } from './core/camp'; 
 
 export const simulateDay = async (
     day: number, 
@@ -22,11 +22,11 @@ export const simulateDay = async (
     currentStoryNodeId: string | null, 
     settings: GameSettings, 
     forcedEvents: ForcedEvent[], 
-    currentInventory: string[], // Used for ending checks
+    currentInventory: string[], 
     userSelectedNodeId?: string,
     customArcs: CustomStoryArc[] = [],
-    viewedEndings: string[] = [], // Added parameter
-    camp?: CampState // Added parameter
+    viewedEndings: string[] = [], 
+    camp?: CampState 
 ): Promise<SimulationResult> => {
     const events: string[] = []; 
     const updates: CharacterUpdate[] = []; 
@@ -34,7 +34,6 @@ export const simulateDay = async (
     const inventoryRemove: string[] = [];
 
     // 1. Story Event Logic
-    // Check if there is a forced STORY event
     const forcedStoryEvent = forcedEvents.find(e => e.type === 'STORY');
     const effectiveUserSelectedNodeId = forcedStoryEvent ? forcedStoryEvent.key : userSelectedNodeId;
 
@@ -72,28 +71,32 @@ export const simulateDay = async (
     events.push(`📖 [스토리] ${sanitizedStoryText}${effectLogString}`);
 
     // 2. Module Execution
-    // Handle Forced Events (Non-Story)
     processForcedEvents(characters, forcedEvents, updates, events, globalLoot, settings);
 
-    // Camp Effects (New: Before personal events to buff stats)
+    // Camp Effects (Includes individual rationing/satiety logic)
     if (camp) {
-        // NOTE: inventoryRemove passed to processCampEffects to track consumed food
         processCampEffects(camp, characters, updates, events, globalLoot, currentInventory, inventoryRemove, settings);
     }
 
     processPlannedActions(characters, updates, events, globalLoot);
     processPersonalEvents(characters, updates, events, settings, globalLoot);
     processInteractionPhase(characters, settings, updates, events, globalLoot);
+    
+    // 3. Daily Hunger Loss (Applied to all survivors before status check)
+    characters.filter(c => c.status !== 'Dead' && c.status !== 'Missing').forEach(c => {
+        const u = getCharacterUpdate(updates, c.id);
+        u.hungerChange = (u.hungerChange || 0) - DAILY_HUNGER_LOSS;
+    });
+
     processStatusChanges(characters, updates, events, settings);
     
-    // Check Forced Pregnancy
     let babyEvent = processRelationshipEvolution(characters, updates, events, settings);
     const forcedPregnancy = forcedEvents.find(e => e.type === 'SYSTEM' && e.key === 'PREGNANCY');
     if (forcedPregnancy && forcedPregnancy.actorId && forcedPregnancy.targetId) {
         babyEvent = { fatherId: forcedPregnancy.actorId, motherId: forcedPregnancy.targetId };
     }
 
-    // 3. Ghost Events (Specific to this day)
+    // 4. Ghost Events
     characters.filter(c => c.status === 'Dead').forEach(d => {
         characters.filter(l => l.status !== 'Dead' && l.status !== 'Missing' && (l.relationships[d.id] || 0) > 50).forEach(l => {
             if (Math.random() < 0.2) {
@@ -105,8 +108,7 @@ export const simulateDay = async (
         });
     });
 
-    // 4. Ending Check (Delegated to external service)
-    // 인벤토리 변화를 반영하기 위해 현재 인벤토리 + 획득 - 제거를 계산
+    // 5. Ending Check
     const updatedInventory = [...currentInventory, ...globalLoot];
     if (inventoryRemove.length > 0) {
         inventoryRemove.forEach(item => {
@@ -122,13 +124,8 @@ export const simulateDay = async (
         updatedInventory, 
         storyNode.id, 
         settings,
-        viewedEndings // Pass viewed endings
+        viewedEndings 
     );
-
-    // 5. Zombie Hunger Update (Passive)
-    characters.filter(c => c.status === 'Zombie').forEach(c => {
-        getCharacterUpdate(updates, c.id).hungerChange = (getCharacterUpdate(updates, c.id).hungerChange || 0) - DAILY_HUNGER_LOSS;
-    });
 
     return {
         narrative: storyNode.text,

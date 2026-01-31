@@ -46,7 +46,7 @@ const getAssignmentBonus = (type: FacilityType, camp: CampState, characters: Cha
     return bonusScore * efficiencyMultiplier;
 };
 
-// 식량 소비 및 배급 정책 처리
+// 식량 소비 및 배급 정책 처리 (포만감 시스템 적용)
 export const processDailyConsumption = (
     camp: CampState, 
     characters: Character[], 
@@ -59,68 +59,85 @@ export const processDailyConsumption = (
     if (livingHumans.length === 0) return;
 
     const rationing = camp.policies?.rationing || 'Normal';
-    let foodPerPerson = 1;
+    let foodItemsPerPerson = 1.0;
+    let hungerRestoreValue = 40;
     let sanityBonus = 0;
     let hpBonus = 2;
 
     if (rationing === 'Generous') {
-        foodPerPerson = 2;
+        foodItemsPerPerson = 2.0;
+        hungerRestoreValue = 60;
         sanityBonus = 5;
         hpBonus = 5;
     } else if (rationing === 'Tight') {
-        foodPerPerson = 0.5;
+        foodItemsPerPerson = 0.5;
+        hungerRestoreValue = 20;
         sanityBonus = -5;
         hpBonus = 0;
     }
 
-    const totalFoodNeeded = Math.ceil(livingHumans.length * foodPerPerson);
-    let foodConsumed = 0;
-
-    // 인벤토리에서 식량 차감 (우선순위 적용)
-    // 인벤토리는 simulation.ts에서 currentInventory로 넘어옴. 
-    // inventoryRemove 배열에 제거할 아이템을 추가해야 함.
-    // 주의: 이미 제거 예정인 아이템은 currentInventory에서 제외된 상태여야 정확함. 
-    // 여기서는 simulation.ts에서 처리 전 인벤토리를 넘겨받으므로 로직상 가상 처리가 필요.
-    
     // 가상 인벤토리 (제거된 것 제외)
     const availableInventory = [...currentInventory];
-    
-    // 식량 찾기 및 소모
-    for (let i = 0; i < totalFoodNeeded; i++) {
-        let foundFood = false;
-        for (const foodType of FOOD_ITEMS) {
-            const idx = availableInventory.indexOf(foodType);
-            if (idx > -1) {
-                availableInventory.splice(idx, 1);
-                inventoryRemove.push(foodType);
-                foodConsumed++;
-                foundFood = true;
-                break;
-            }
-        }
-        if (!foundFood) break; // 식량 고갈
-    }
+    let totalFoodConsumed = 0;
+    let fedCount = 0;
 
-    if (foodConsumed >= totalFoodNeeded) {
-        // 배급 성공
-        livingHumans.forEach(c => {
-            const u = getCharacterUpdate(updates, c.id);
-            u.sanityChange = (u.sanityChange || 0) + sanityBonus;
-            if (c.hp < c.maxHp) {
-                u.hpChange = (u.hpChange || 0) + hpBonus;
+    // 배고픈 순서대로 정렬하여 공평하게 배급 시도
+    const sortedHumans = [...livingHumans].sort((a, b) => (a.hunger || 0) - (b.hunger || 0));
+
+    sortedHumans.forEach(c => {
+        const u = getCharacterUpdate(updates, c.id);
+        let itemsNeeded = foodItemsPerPerson;
+        let itemsActuallyFound = 0;
+
+        // 필요한 아이템 개수만큼 인벤토리에서 찾기
+        // 긴축 배급(0.5)인 경우 2명당 1개 소모 로직이 필요하나, 단순화를 위해 
+        // 각 개인에게 확률적으로 1개를 주거나 0.5개를 누적하는 방식 대신
+        // 전체 소모량을 먼저 계산하지 않고 순차적으로 처리
+        
+        // 0.5개 정책일 경우 50% 확률로 1개 소모 또는 소모 안 함 처리로 근사치 계산
+        if (itemsNeeded === 0.5) {
+            if (Math.random() < 0.5) itemsNeeded = 1;
+            else itemsNeeded = 0;
+        }
+
+        for (let i = 0; i < itemsNeeded; i++) {
+            let found = false;
+            for (const foodType of FOOD_ITEMS) {
+                const idx = availableInventory.indexOf(foodType);
+                if (idx > -1) {
+                    availableInventory.splice(idx, 1);
+                    inventoryRemove.push(foodType);
+                    itemsActuallyFound++;
+                    totalFoodConsumed++;
+                    found = true;
+                    break;
+                }
             }
-        });
-        if (rationing === 'Generous') events.push(`🍖 [풍족한 배급] 모두가 배불리 먹고 기운을 차렸습니다. (HP+5, 정신력+5)`);
-        else if (rationing === 'Tight') events.push(`🥣 [긴축 배급] 부족한 식사량에 모두가 불만을 가집니다. (정신력-5)`);
-        else events.push(`🍲 [식사] 정해진 양의 식사를 마쳤습니다. (HP+2)`);
+            if (!found) break;
+        }
+
+        // 배급 결과 적용
+        if (itemsActuallyFound >= Math.floor(itemsNeeded)) {
+            // 배급 성공 (혹은 아이템이 필요 없는 긴축 정책의 운 좋은 케이스)
+            u.hungerChange = (u.hungerChange || 0) + hungerRestoreValue;
+            u.sanityChange = (u.sanityChange || 0) + sanityBonus;
+            u.hpChange = (u.hpChange || 0) + hpBonus;
+            fedCount++;
+        } else {
+            // 배급 실패 (식량 부족)
+            u.sanityChange = (u.sanityChange || 0) - 5; // 배고픈데 못 먹으면 실망
+        }
+    });
+
+    // 로그 출력
+    if (fedCount === livingHumans.length) {
+        if (rationing === 'Generous') events.push(`🍖 [풍족한 배급] 모두가 배불리 먹고 포만감을 느낍니다. (허기 대폭 회복, 정신력+5)`);
+        else if (rationing === 'Tight') events.push(`🥣 [긴축 배급] 부족한 식사지만 일단 배를 채웠습니다. (허기 소폭 회복, 정신력-5)`);
+        else events.push(`🍲 [식사] 표준 배급이 이루어졌습니다. (허기 회복, HP+2)`);
+    } else if (fedCount > 0) {
+        events.push(`⚠️ [식량 부족] 일부 생존자들이 식량을 배급받지 못했습니다! (${fedCount}/${livingHumans.length}명 식사 완료)`);
     } else {
-        // 식량 부족 (기아 상태)
-        livingHumans.forEach(c => {
-            const u = getCharacterUpdate(updates, c.id);
-            u.hpChange = (u.hpChange || 0) - 10;
-            u.sanityChange = (u.sanityChange || 0) - 10;
-        });
-        events.push(`⚠️ [기아] 식량이 부족하여 생존자들이 굶주리고 있습니다! (전원 HP-10, 정신력-10)`);
+        events.push(`🚨 [기아 위기] 보관된 식량이 전혀 없어 전원이 굶주리고 있습니다!`);
     }
 };
 
@@ -131,13 +148,13 @@ export const processCampEffects = (
     updates: CharacterUpdate[],
     events: string[],
     globalLoot: string[],
-    currentInventory: string[], // Added for consumption logic
-    inventoryRemove: string[], // Added for consumption logic
+    currentInventory: string[],
+    inventoryRemove: string[],
     settings: GameSettings
 ) => {
     if (!camp) return;
 
-    // 0. Daily Consumption (Food)
+    // 0. Daily Consumption (Food) - 포만감 시스템 적용됨
     processDailyConsumption(camp, characters, updates, events, currentInventory, inventoryRemove);
 
     // Facilities
@@ -148,20 +165,16 @@ export const processCampEffects = (
     processBarricade(camp, characters, updates, events);
 };
 
-// 1. 휴게실: 정신력 및 피로도 회복 (배치 시 다른 사람 회복량 증가)
+// 1. 휴게실: 정신력 및 피로도 회복
 const processLounge = (camp: CampState, characters: Character[], updates: CharacterUpdate[], events: string[]) => {
     const level = camp.facilities['Lounge'] || 0;
     if (level === 0) return;
 
     const assignmentBonus = getAssignmentBonus('Lounge', camp, characters, updates);
     
-    // 배치된 인원은 일을 하므로 본인은 회복 보너스를 못 받거나 적게 받음 (getAssignmentBonus에서 피로도 이미 추가됨)
-    // 보너스 점수 1점당 전체 회복량 +1
-    
     let sanityBonus = (level * 2) + assignmentBonus; 
     let fatigueReduction = (level * 3) + assignmentBonus;
 
-    // 정책 영향 (치안이 엄격하면 정신력 회복 감소)
     if (camp.policies?.security === 'Strict') {
         sanityBonus -= 2;
     } else if (camp.policies?.security === 'None') {
@@ -170,7 +183,6 @@ const processLounge = (camp: CampState, characters: Character[], updates: Charac
 
     let recoveredCount = 0;
     characters.forEach(c => {
-        // 배치된 인원은 휴게실 효과(휴식)를 온전히 누리지 못함 (노동 중)
         const isAssigned = (camp.assignments['Lounge'] || []).includes(c.id);
         
         if (c.status !== 'Dead' && c.status !== 'Missing' && c.status !== 'Zombie' && !isAssigned) {
@@ -189,34 +201,30 @@ const processLounge = (camp: CampState, characters: Character[], updates: Charac
     }
 };
 
-// 2. 양호실: 부상 및 감염 치료 (배치 시 치료량 증가)
+// 2. 양호실: 부상 및 감염 치료
 const processInfirmary = (camp: CampState, characters: Character[], updates: CharacterUpdate[], events: string[]) => {
     const level = camp.facilities['Infirmary'] || 0;
     if (level === 0) return;
 
     const assignmentBonus = getAssignmentBonus('Infirmary', camp, characters, updates);
 
-    // 보너스 1점당 회복량 +2, 감염치료 +1
     const hpHeal = (level * 3) + (assignmentBonus * 3); 
     const infectionCure = (level * 2) + (assignmentBonus * 2);
 
     let treatedNames: string[] = [];
 
     characters.forEach(c => {
-        // 배치된 의사도 자가 치료는 가능하지만 효율은 시스템상 일괄 적용
         if (c.status === 'Alive' || c.status === 'Infected') {
             const u = getCharacterUpdate(updates, c.id);
             const currentHp = c.hp + (u.hpChange || 0);
             const currentInf = c.infection + (u.infectionChange || 0);
             let treated = false;
 
-            // 부상 치료
             if (currentHp < c.maxHp) {
                 u.hpChange = (u.hpChange || 0) + hpHeal;
                 treated = true;
             }
 
-            // 감염 억제
             if (currentInf > 0) {
                 u.infectionChange = (u.infectionChange || 0) - infectionCure;
                 treated = true;
@@ -239,10 +247,8 @@ const processGarden = (camp: CampState, globalLoot: string[], events: string[], 
 
     const assignmentBonus = getAssignmentBonus('Garden', camp, characters, updates);
 
-    // 기본 확률 + 보너스 확률 (1점당 10%)
     const chance = (level * 0.25) + (assignmentBonus * 0.15); 
     
-    // 생산 횟수 시도 (100% 넘어가면 확정 1개 + 나머지 확률로 추가)
     let guaranteed = Math.floor(chance);
     let remainder = chance - guaranteed;
     
@@ -266,7 +272,6 @@ const processWorkshop = (camp: CampState, globalLoot: string[], events: string[]
 
     const assignmentBonus = getAssignmentBonus('Workshop', camp, characters, updates);
 
-    // 레벨별 자재 발견 확률
     const chance = (level * 0.2) + (assignmentBonus * 0.15); 
     
     let guaranteed = Math.floor(chance);
@@ -278,8 +283,6 @@ const processWorkshop = (camp: CampState, globalLoot: string[], events: string[]
 
     if (totalProduced > 0) {
         for (let i = 0; i < totalProduced; i++) {
-            const materials = ['목재', '고철', '부품'];
-            // 레벨이 높을수록, 전문가가 있을수록 고급 자재 확률 증가
             let item = '목재';
             const itemRoll = Math.random() * (level + assignmentBonus);
             
@@ -297,22 +300,18 @@ const processBarricade = (camp: CampState, characters: Character[], updates: Cha
     const level = camp.facilities['Barricade'] || 0;
     const assignmentBonus = getAssignmentBonus('Barricade', camp, characters, updates);
     
-    // 기본 습격 확률 15% - (레벨 * 2%) - (보너스 * 3%)
     let raidChance = Math.max(0.02, 0.15 - (level * 0.02) - (assignmentBonus * 0.03)); 
     
-    // 치안 정책 반영
     if (camp.policies?.security === 'Strict') raidChance -= 0.10;
     if (camp.policies?.security === 'None') raidChance += 0.10;
-    raidChance = Math.max(0, raidChance); // 음수 방지
+    raidChance = Math.max(0, raidChance); 
 
     if (Math.random() < raidChance) {
-        // 습격 발생!
         const living = characters.filter(c => c.status === 'Alive' || c.status === 'Infected');
         if (living.length === 0) return;
 
-        // 방어력: 레벨 * 10 + 보너스 * 15
         const defense = (level * 10) + (assignmentBonus * 15);
-        const damage = Math.max(0, 20 - defense + (Math.random() * 20)); // 기본 20~40 데미지
+        const damage = Math.max(0, 20 - defense + (Math.random() * 20)); 
 
         if (damage <= 0) {
             const guardText = assignmentBonus > 0 ? `경비병들의 활약과 ` : "";
@@ -320,7 +319,6 @@ const processBarricade = (camp: CampState, characters: Character[], updates: Cha
         } else {
             events.push(`🧟 [습격] 좀비들이 방벽 틈을 뚫고 들어왔습니다! (방어력으로 피해 ${defense} 경감)`);
             
-            // 랜덤 타겟 1~3명 피해
             const targets = [...living].sort(() => 0.5 - Math.random()).slice(0, Math.ceil(Math.random() * 3));
             targets.forEach(t => {
                 const u = getCharacterUpdate(updates, t.id);

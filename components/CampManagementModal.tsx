@@ -17,7 +17,13 @@ const CampManagementModal: React.FC<Props> = ({ camp, inventory, characters, onU
     const [activeTab, setActiveTab] = useState<'FACILITIES' | 'POLICIES'>('FACILITIES');
     const [pickingFor, setPickingFor] = useState<FacilityType | null>(null);
 
-    // 인벤토리 아이템 카운팅 (자재만 필터링)
+    // 인벤토리 아이템 카운팅 (모든 아이템 카운트 - 업그레이드 체크용)
+    const allItemCounts = inventory.reduce((acc, item) => {
+        acc[item] = (acc[item] || 0) + 1;
+        return acc;
+    }, {} as Record<string, number>);
+
+    // 자재 대시보드용 카운팅 (자재만 필터링)
     const materialCounts = inventory.reduce((acc, item) => {
         if (CONSTRUCTION_MATERIALS.includes(item)) {
             acc[item] = (acc[item] || 0) + 1;
@@ -180,7 +186,7 @@ const CampManagementModal: React.FC<Props> = ({ camp, inventory, characters, onU
                                     let canAfford = true;
                                     if (cost) {
                                         for (const [item, amount] of Object.entries(cost)) {
-                                            if ((materialCounts[item] || 0) < amount) {
+                                            if ((allItemCounts[item] || 0) < amount) {
                                                 canAfford = false;
                                                 break;
                                             }
@@ -262,7 +268,7 @@ const CampManagementModal: React.FC<Props> = ({ camp, inventory, characters, onU
                                                         <div className="text-[10px] font-bold text-slate-500 uppercase mb-2">Cost</div>
                                                         <div className="grid grid-cols-2 gap-1 mb-3">
                                                             {Object.entries(cost).map(([item, amount]) => {
-                                                                const has = materialCounts[item] || 0;
+                                                                const has = allItemCounts[item] || 0;
                                                                 return (
                                                                     <div key={item} className={`flex justify-between px-2 py-1 rounded text-xs ${has >= amount ? 'bg-slate-700 text-slate-300' : 'bg-red-900/30 text-red-400 border border-red-900/50'}`}>
                                                                         <span>{item}</span><span className="font-mono">{has}/{amount}</span>

@@ -345,7 +345,7 @@ export const useGameEngine = () => {
         const cost = config.costPerLevel[nextLevel];
         if (!cost) return;
 
-        // Check Inventory
+        // Check Inventory (All Items)
         const inventoryCounts: Record<string, number> = {};
         inventory.forEach(item => { inventoryCounts[item] = (inventoryCounts[item] || 0) + 1; });
 
@@ -362,7 +362,9 @@ export const useGameEngine = () => {
             for (const [item, count] of Object.entries(cost)) {
                 for (let i = 0; i < count; i++) {
                     const idx = nextInv.indexOf(item);
-                    if (idx > -1) nextInv.splice(idx, 1);
+                    if (idx > -1) {
+                        nextInv.splice(idx, 1);
+                    }
                 }
             }
             return nextInv;
